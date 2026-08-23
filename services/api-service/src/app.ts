@@ -12,6 +12,7 @@ import { profileRoutes } from '@/routes/profile';
 import { balanceRoutes } from '@/routes/balance';
 import { settingsRoutes } from '@/routes/settings';
 import { referralRoutes } from '@/routes/referral';
+import { internalRoutes } from '@/routes/internal';
 import { portfolioRoutes } from '@/routes/portfolio';
 import { onboardingRoutes } from '@/routes/onboarding';
 import { categoriesRoutes } from '@/routes/categories';
@@ -61,5 +62,8 @@ app.route('/api/v1/aapi', aapiRoutes);
 
 // Health check APIs (PAPI)
 app.route('/api/v1/papi/health', healthRoutes);
+
+// Internal APIs (secret-protected DB proxy)
+app.route('/api/v1/iapi', internalRoutes);
 
 export default app;
