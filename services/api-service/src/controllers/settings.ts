@@ -101,7 +101,6 @@ export async function updateNotifications(c: Context) {
 	const body = await c.req.json();
 	const {
 		emailNewMarket,
-		emailOrderFills,
 		emailTradeExecuted,
 		inAppNewMarket,
 		inAppTradeExecuted,
@@ -113,7 +112,6 @@ export async function updateNotifications(c: Context) {
 			where: { userId: user.id },
 			update: {
 				emailNewMarket,
-				emailOrderFills,
 				emailTradeExecuted,
 				inAppNewMarket,
 				inAppTradeExecuted,
@@ -122,7 +120,6 @@ export async function updateNotifications(c: Context) {
 			create: {
 				userId: user.id,
 				emailNewMarket,
-				emailOrderFills,
 				emailTradeExecuted,
 				inAppNewMarket,
 				inAppTradeExecuted,

@@ -38,7 +38,6 @@ export const referralSchema = z.object({
 
 export const notificationPrefsSchema = z.object({
 	emailNewMarket: z.boolean().default(false),
-	emailOrderFills: z.boolean().default(false),
 	emailTradeExecuted: z.boolean().default(false),
 	inAppNewMarket: z.boolean().default(true),
 	inAppTradeExecuted: z.boolean().default(true),
