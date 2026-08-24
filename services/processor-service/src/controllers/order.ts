@@ -1,6 +1,7 @@
 import { logger } from '@/libs/logger';
 import { prisma } from '@probstreet/database';
 import { redisPublisher } from '@/libs/redis/connection';
+import { sendNotification } from '@/libs/notification/dispatcher';
 
 export const recordTradeExecution = async (data: any) => {
 	try {
@@ -426,6 +427,28 @@ export const recordTradeExecution = async (data: any) => {
 			'stream:data',
 			JSON.stringify({ symbol: takerId, type: 'PORTFOLIO_UPDATE' }),
 		);
+
+		// Fire-and-forget: send trade executed notifications to maker + taker
+		// We fetch the market title here since the processor has DB access
+		prisma.market
+			.findUnique({ where: { id: marketId }, select: { title: true } })
+			.then((market) => {
+				sendNotification({
+					type: 'trade.executed',
+					data: {
+						makerId,
+						takerId,
+						marketId,
+						marketTitle: market?.title ?? 'Market',
+						stockType,
+						price: executionPrice,
+						quantity: qty,
+					},
+				});
+			})
+			.catch(() => {
+				/* swallow — notification failure never crashes the processor */
+			});
 	} catch (error) {
 		logger.error(
 			{ error, data, context: 'TRADE_EXECUTED_FAIL' },
