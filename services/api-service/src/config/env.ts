@@ -11,6 +11,8 @@ const checkEnv = (key: string) => {
 };
 
 export const ENV = {
+	NODE_ENV: checkEnv('NODE_ENV'),
+
 	PORT: checkEnv('PORT'),
 
 	ACCESS_TOKEN_SECRET: checkEnv('ACCESS_TOKEN_SECRET'),
@@ -49,4 +51,10 @@ export const ENV = {
 
 	CASHFREE_CLIENT_ID: checkEnv('CASHFREE_CLIENT_ID'),
 	CASHFREE_CLIENT_SECRET: checkEnv('CASHFREE_CLIENT_SECRET'),
+
+	NOTIFICATION_WORKER_URL: checkEnv('NOTIFICATION_WORKER_URL'),
+	WORKER_SECRET: checkEnv('WORKER_SECRET'),
+
+	GMAIL_USER: checkEnv('GMAIL_USER'),
+	GMAIL_APP_PASSWORD: checkEnv('GMAIL_APP_PASSWORD'),
 };

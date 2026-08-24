@@ -6,8 +6,9 @@ import { getClientInfo } from '@/utils/client';
 import { EVENTS } from '@/config/constants';
 import { pushToQueue } from '@/libs/redis/queue';
 import { deleteCookie, getCookie } from 'hono/cookie';
-import { prisma, AuthProvider } from '@probstreet/database';
+import { sendOtpEmail } from '@/libs/nodemailer/mailer';
 import { client as redis } from '@/libs/redis/connection';
+import { prisma, AuthProvider } from '@probstreet/database';
 import {
 	generateAccessToken,
 	generateRefreshTokenString,
@@ -182,7 +183,9 @@ export const initSignin = async (c: Context) => {
 
 		if (!attempts) await redis.set(attemptsKey, 0, 'EX', 900);
 
-		logger.info({ email, otp }, 'Generated OTP');
+		logger.info({ email }, 'Generated OTP');
+
+		await sendOtpEmail(email, otp);
 
 		return c.json({
 			success: true,
