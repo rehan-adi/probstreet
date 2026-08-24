@@ -7,6 +7,7 @@ import { EVENTS } from '@/config/constants';
 import { pushToQueue } from '@/libs/redis/queue';
 import { createMarketSchema } from '@/validations/market';
 import { generatePresignedUrl } from '@/libs/aws/presign';
+import { sendNotification } from '@/libs/notification/dispatcher';
 
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 6);
 
@@ -182,6 +183,16 @@ export const createMarket = async (c: Context) => {
 					{ price: 6.0, quantity: 25 },
 					{ price: 7.0, quantity: 10 },
 				],
+			});
+
+			// Fire-and-forget: notify all subscribed users about the new market
+			// This is non-blocking — it does NOT slow down the admin's response
+			sendNotification({
+				type: 'market.created',
+				data: {
+					marketId: newMarket.id,
+					title: newMarket.title,
+				},
 			});
 		}
 
