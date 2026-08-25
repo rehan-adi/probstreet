@@ -156,6 +156,7 @@ model User {
   paymentVerificationStatus PaymentStatus    @default(NOT_VERIFIED) @map("payment_verification_status")
   referralCode              String           @unique @map("referral_code")
   deletedAt                 DateTime?        @map("deleted_at")
+  fcmToken                  String?          @map("fcm_token")
 
   referrerId String? @map("referrer_id")
   referrer   User?   @relation("UserReferrer", fields: [referrerId], references: [id])
@@ -169,6 +170,7 @@ model User {
   authProviders     LinkedAccount[]
   sessions          Session[]
   notificationPrefs NotificationSettings?
+  notifications     Notification[]
   auditLogs         AuditLog[]
 
   kycs           Kyc[]
@@ -184,6 +186,7 @@ model User {
   takerTrades Trade[] @relation("TakerUser")
 
   platformRevenues PlatformRevenue[]
+  priceAlerts      PriceAlert[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -229,7 +232,6 @@ model NotificationSettings {
   userId             String   @unique @map("user_id")
   user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   emailNewMarket     Boolean  @default(false) @map("email_new_market")
-  emailOrderFills    Boolean  @default(false) @map("email_order_fills")
   emailTradeExecuted Boolean  @default(false) @map("email_trade_executed")
   inAppNewMarket     Boolean  @default(true) @map("in_app_new_market")
   inAppTradeExecuted Boolean  @default(true) @map("in_app_trade_executed")
@@ -237,6 +239,22 @@ model NotificationSettings {
   updatedAt          DateTime @updatedAt @map("updated_at")
 
   @@map("notification_preferences")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  message   String
+  isRead    Boolean  @default(false) @map("is_read")
+  link      String?
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("notifications")
 }
 
 model AuditLog {
@@ -346,30 +364,31 @@ model Referral {
 }
 
 model Market {
-  id              String           @id @default(uuid())
-  title           String
-  symbol          String           @unique
-  yesPrice        Decimal          @map("yes_price") @db.Decimal(14, 2)
-  noPrice         Decimal          @map("no_price") @db.Decimal(14, 2)
-  startTime       DateTime         @map("start_time")
-  endTime         DateTime         @map("end_time")
-  result          String?
-  thumbnail       String?
-  categoryId      String           @map("category_id")
-  category        Category         @relation(fields: [categoryId], references: [id])
-  sourceOfTruth   String           @default("") @map("source_of_truth")
-  eos             String?
-  rules           String?
-  numberOfTraders Int              @default(0) @map("number_of_traders")
-  positions       Position[]
-  orders          Order[]
-  transactions    Transaction[]
-  trades          Trade[]
-  watchlists      Watchlist[]
-  platformRevenues  PlatformRevenue[]
-  status          MarketStatus     @default(OPEN)
-  volume          Decimal          @default(0.00) @db.Decimal(14, 2)
-  createdAt       DateTime         @default(now()) @map("created_at")
+  id               String            @id @default(uuid())
+  title            String
+  symbol           String            @unique
+  yesPrice         Decimal           @map("yes_price") @db.Decimal(14, 2)
+  noPrice          Decimal           @map("no_price") @db.Decimal(14, 2)
+  startTime        DateTime          @map("start_time")
+  endTime          DateTime          @map("end_time")
+  result           String?
+  thumbnail        String?
+  categoryId       String            @map("category_id")
+  category         Category          @relation(fields: [categoryId], references: [id])
+  sourceOfTruth    String            @default("") @map("source_of_truth")
+  eos              String?
+  rules            String?
+  numberOfTraders  Int               @default(0) @map("number_of_traders")
+  positions        Position[]
+  orders           Order[]
+  transactions     Transaction[]
+  trades           Trade[]
+  watchlists       Watchlist[]
+  platformRevenues PlatformRevenue[]
+  priceAlerts      PriceAlert[]
+  status           MarketStatus      @default(OPEN)
+  volume           Decimal           @default(0.00) @db.Decimal(14, 2)
+  createdAt        DateTime          @default(now()) @map("created_at")
 
   @@map("markets")
 }
@@ -478,3 +497,21 @@ model Watchlist {
   @@unique([userId, marketId])
   @@map("watchlists")
 }
+
+model PriceAlert {
+  id           String    @id @default(uuid())
+  userId       String    @map("user_id")
+  marketId     String    @map("market_id")
+  stockType    StockType @map("stock_type")
+  targetPrice  Decimal   @map("target_price") @db.Decimal(14, 2)
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  user   User   @relation(fields: [userId], references: [id])
+  market Market @relation(fields: [marketId], references: [id])
+
+  @@index([marketId, isActive])
+  @@index([userId])
+  @@map("price_alerts")
+}
+
