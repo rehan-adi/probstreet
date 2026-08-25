@@ -14,11 +14,11 @@ import { settingsRoutes } from '@/routes/settings';
 import { referralRoutes } from '@/routes/referral';
 import { internalRoutes } from '@/routes/internal';
 import { portfolioRoutes } from '@/routes/portfolio';
-import priceAlertsRoutes from '@/routes/price-alerts';
 import { onboardingRoutes } from '@/routes/onboarding';
 import { categoriesRoutes } from '@/routes/categories';
 import { transactionRoutes } from '@/routes/transaction';
 import { leaderboardRoutes } from '@/routes/leaderboard';
+import { priceAlertsRoutes } from '@/routes/price-alerts';
 import { verificationRoutes } from '@/routes/verification';
 import { notificationsRoutes } from '@/routes/notifications';
 

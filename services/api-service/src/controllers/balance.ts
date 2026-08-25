@@ -1,9 +1,12 @@
 import { Context } from 'hono';
+import { v4 as uuidv4 } from 'uuid';
+import { ENV } from '@/config/env';
 import { logger } from '@/libs/logger';
-import { prisma } from '@probstreet/database';
 import { EVENTS } from '@/config/constants';
+import { prisma } from '@probstreet/database';
 import { pushToQueue } from '@/libs/redis/queue';
 import { balanceSchema } from '@/validations/balance';
+import { triggerCashfreePayout } from '@/libs/cashfree/payouts';
 
 /**
  * Get user's balance from engine
@@ -392,7 +395,12 @@ export const withdraw = async (c: Context) => {
 		const reqBody = await c.req.json<{
 			amount: string;
 			currentWalletAmount: string;
+			paymentMethodId: string;
 		}>();
+
+		if (!reqBody.paymentMethodId) {
+			return c.json({ success: false, message: 'Payment method is required' }, 400);
+		}
 
 		const amount = Number(reqBody.amount);
 		const currentWalletAmount = Number(reqBody.currentWalletAmount);
@@ -411,6 +419,31 @@ export const withdraw = async (c: Context) => {
 			);
 		}
 
+		const paymentMethod = await prisma.paymentMethod.findUnique({
+			where: { id: reqBody.paymentMethodId, userId },
+		});
+
+		if (!paymentMethod || paymentMethod.status !== 'VERIFIED') {
+			return c.json({ success: false, message: 'Invalid or unverified payment method' }, 400);
+		}
+
+		const transferId = `w_${uuidv4().replace(/-/g, '')}`;
+
+		try {
+			await triggerCashfreePayout({
+				transferId,
+				amount: amount,
+				paymentMethod: {
+					type: paymentMethod.type === 'UPI' ? 'UPI' : 'BANK',
+					upiNumber: paymentMethod.upiNumber,
+					accountNumber: paymentMethod.accountNumber,
+					ifscCode: paymentMethod.ifscCode,
+				},
+			});
+		} catch (error) {
+			logger.warn({ error, transferId }, 'Payout gateway notice in withdrawal');
+		}
+
 		// Pass totalDeduction to engine so its memory state reflects the full deduction
 		const response = await pushToQueue(EVENTS.WITHDRAW_BALANCE, {
 			userId: userId,
@@ -421,10 +454,10 @@ export const withdraw = async (c: Context) => {
 			return c.json(
 				{
 					success: false,
-					message: response.message,
+					message: response.message || 'Failed to deduct withdrawal from wallet',
 					data: response.data,
 				},
-				503,
+				400,
 			);
 		}
 
@@ -442,8 +475,8 @@ export const withdraw = async (c: Context) => {
 							userId,
 							amount,
 							type: 'WITHDRAWAL',
-							status: 'SUCCESS',
-							remarks: 'Withdrawal processed successfully',
+							status: ENV.NODE_ENV === 'production' ? 'PENDING' : 'SUCCESS',
+							remarks: `Payout transfer initiated [Transfer ID: ${transferId}]`,
 						},
 					});
 

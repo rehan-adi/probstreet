@@ -2,12 +2,10 @@ import { Hono } from 'hono';
 import { authorization } from '@/middlewares/authorization';
 import { createAlert, listAlerts, deleteAlert } from '@/controllers/price-alerts';
 
-const app = new Hono();
+export const priceAlertsRoutes = new Hono();
 
-app.use('*', authorization);
+priceAlertsRoutes.use('*', authorization);
 
-app.get('/', listAlerts);
-app.post('/', createAlert);
-app.delete('/:id', deleteAlert);
-
-export default app;
+priceAlertsRoutes.get('/', listAlerts);
+priceAlertsRoutes.post('/', createAlert);
+priceAlertsRoutes.delete('/:id', deleteAlert);

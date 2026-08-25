@@ -15,7 +15,11 @@ export const authorization: MiddlewareHandler = async (c: Context, next) => {
 		}
 
 		if (!token) {
-			logger.warn('No token found in cookies or Authorization header');
+			token = c.req.query('token');
+		}
+
+		if (!token) {
+			logger.warn('No token found in cookies, Authorization header, or query param');
 			return c.json({ success: false, message: 'Unauthorized' }, 401);
 		}
 

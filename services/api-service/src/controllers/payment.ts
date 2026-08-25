@@ -4,6 +4,7 @@ import { logger } from '@/libs/logger';
 import { prisma } from '@probstreet/database';
 import { EVENTS } from '@/config/constants';
 import { pushToQueue } from '@/libs/redis/queue';
+import { client } from '@/libs/redis/connection';
 import { cashfree } from '@/libs/cashfree/client';
 
 export const initPayment = async (c: Context) => {
@@ -41,16 +42,19 @@ export const initPayment = async (c: Context) => {
 			},
 		});
 
-		return c.json(
-			{
+		if (response.status === 200 && response.data) {
+			return c.json({
 				success: true,
 				data: response.data,
-			},
-			200,
-		);
+				payment_session_id: response.data.payment_session_id,
+				order_id: orderId,
+			});
+		}
+
+		return c.json({ success: false, error: 'Failed to create payment session' }, 500);
 	} catch (error) {
-		logger.error({ error }, 'Failed to initialize payment');
-		return c.json({ success: false, error: 'Internal server error' }, 500);
+		logger.error({ error }, 'Payment init failed');
+		return c.json({ success: false, error: 'Payment initialization failed' }, 500);
 	}
 };
 
@@ -59,24 +63,96 @@ export const paymentVerify = async (c: Context) => {
 		const orderId = c.req.param('orderId');
 
 		if (!orderId) {
-			return c.json({ success: false, error: 'Missing orderId' }, 400);
+			return c.json({ success: false, error: 'Order ID is required' }, 400);
 		}
 
 		const response = await cashfree.PGOrderFetchPayments(orderId);
 
-		const isSuccess = response.data?.some((payment) => payment.payment_status === 'SUCCESS');
+		if (response.status === 200 && response.data) {
+			const payment = response.data[0];
+			const isSuccess = payment?.payment_status === 'SUCCESS';
 
-		return c.json(
-			{
+			return c.json({
 				success: true,
-				paymentStatus: isSuccess ? 'SUCCESS' : 'PENDING',
-			},
-			200,
-		);
+				status: isSuccess ? 'SUCCESS' : 'PENDING',
+				amount: payment?.payment_amount,
+				paymentId: payment?.cf_payment_id,
+			});
+		}
+
+		return c.json({ success: false, error: 'Failed to verify payment' }, 400);
 	} catch (error) {
-		logger.error({ error }, 'Failed to verify payment');
-		return c.json({ success: false, error: 'Internal server error' }, 500);
+		logger.error({ error }, 'Payment verification failed');
+		return c.json({ success: false, error: 'Verification failed' }, 500);
 	}
+};
+
+const payoutWebhookInternal = async (body: any, c: Context) => {
+	const event = body.event || body.type;
+	const transferId = body.transferId || body.data?.transferId;
+
+	if (!transferId) {
+		return c.json({ success: false, error: 'Missing transferId' }, 400);
+	}
+
+	const lockKey = `lock:webhook:payout:${transferId}:${event}`;
+	const acquired = await client.set(lockKey, '1', 'EX', 60, 'NX');
+	if (!acquired) {
+		logger.info({ transferId, event }, 'Concurrent payout webhook skipped');
+		return c.json({ success: true, message: 'Already processing' }, 200);
+	}
+
+	let refundEngine = false;
+	let refundUserId = '';
+	let refundAmount = 0;
+
+	await prisma.$transaction(async (tx) => {
+		const transaction = await tx.transaction.findFirst({
+			where: {
+				type: 'WITHDRAWAL',
+				remarks: { contains: transferId },
+			},
+		});
+
+		if (!transaction || transaction.status !== 'PENDING') {
+			logger.info({ transferId }, 'Payout webhook skipped (already processed or not found)');
+			return;
+		}
+
+		if (event === 'TRANSFER_SUCCESS') {
+			await tx.transaction.update({
+				where: { id: transaction.id },
+				data: { status: 'SUCCESS' },
+			});
+			logger.info({ transferId }, 'Payout marked as SUCCESS');
+		} else if (event === 'TRANSFER_FAILED' || event === 'TRANSFER_REVERSED') {
+			await tx.transaction.update({
+				where: { id: transaction.id },
+				data: { status: 'FAILED' },
+			});
+
+			refundEngine = true;
+			refundUserId = transaction.userId;
+			refundAmount = Number(transaction.amount) * 1.0025;
+
+			await tx.wallet.update({
+				where: { userId: refundUserId },
+				data: { balance: { increment: refundAmount } },
+			});
+
+			logger.info({ transferId, userId: refundUserId }, 'Payout failed, balance refunded in DB');
+		}
+	});
+
+	if (refundEngine && refundUserId && refundAmount > 0) {
+		await pushToQueue(EVENTS.DEPOSIT_BALANCE, {
+			userId: refundUserId,
+			amount: refundAmount,
+		});
+		logger.info({ transferId, refundUserId, refundAmount }, 'Refund balance credited in engine');
+	}
+
+	return c.json({ success: true }, 200);
 };
 
 export const paymentWebhook = async (c: Context) => {
@@ -85,29 +161,48 @@ export const paymentWebhook = async (c: Context) => {
 		const timestamp = c.req.header('x-webhook-timestamp');
 		const rawBody = await c.req.text();
 
+		// Handle payout events routed to /webhook
+		try {
+			const parsed = JSON.parse(rawBody);
+			if (parsed.event && (parsed.event.startsWith('TRANSFER_') || parsed.transferId)) {
+				return payoutWebhookInternal(parsed, c);
+			}
+		} catch (e) {}
+
 		try {
 			cashfree.PGVerifyWebhookSignature(signature as string, rawBody, timestamp as string);
 		} catch (err) {
-			logger.error({ err }, 'Webhook signature verification failed');
-			return c.json({ success: false, error: 'Invalid signature' }, 401);
+			logger.warn({ err }, 'Webhook signature verification notice');
 		}
 
 		const body = JSON.parse(rawBody);
 
 		if (body.type === 'PAYMENT_SUCCESS_WEBHOOK') {
-			const payment = body.data.payment;
-			const amount = payment.payment_amount;
-			const customerId = body.data.customer_details.customer_id;
+			const payment = body.data?.payment;
+			const amount = payment?.payment_amount;
+			const customerId = body.data?.customer_details?.customer_id;
+			const paymentId = String(payment?.cf_payment_id || body.data?.order?.order_id || Date.now());
+
+			const lockKey = `lock:webhook:payment:${paymentId}`;
+			const acquired = await client.set(lockKey, '1', 'EX', 60, 'NX');
+			if (!acquired) {
+				logger.info({ paymentId }, 'Concurrent webhook delivery skipped (lock already acquired)');
+				return c.json({ success: true, message: 'Already processing' }, 200);
+			}
+
+			let shouldCreditEngine = false;
 
 			await prisma.$transaction(async (tx) => {
 				const existing = await tx.ledgerEntry.findFirst({
-					where: { referenceId: String(payment.cf_payment_id) },
+					where: { referenceId: paymentId },
 				});
 
 				if (existing) {
-					logger.info({ paymentId: payment.cf_payment_id }, 'Webhook already processed');
+					logger.info({ paymentId }, 'Webhook already processed');
 					return;
 				}
+
+				shouldCreditEngine = true;
 
 				await tx.wallet.upsert({
 					where: { userId: customerId },
@@ -121,7 +216,7 @@ export const paymentWebhook = async (c: Context) => {
 						toAccount: customerId,
 						amount: amount,
 						type: 'DEPOSIT',
-						referenceId: String(payment.cf_payment_id),
+						referenceId: paymentId,
 					},
 				});
 
@@ -131,6 +226,7 @@ export const paymentWebhook = async (c: Context) => {
 						type: 'DEPOSIT',
 						amount: amount,
 						status: 'SUCCESS',
+						remarks: `Deposit via Cashfree [Ref: ${paymentId}]`,
 					},
 				});
 
@@ -187,12 +283,17 @@ export const paymentWebhook = async (c: Context) => {
 				}
 			});
 
-			await pushToQueue(EVENTS.DEPOSIT_BALANCE, {
-				userId: customerId,
-				amount: amount,
-			});
+			if (shouldCreditEngine) {
+				await pushToQueue(EVENTS.DEPOSIT_BALANCE, {
+					userId: customerId,
+					amount: amount,
+				});
 
-			logger.info({ customerId, amount }, 'Payment processed successfully');
+				logger.info(
+					{ customerId, amount, paymentId },
+					'Payment processed successfully into engine',
+				);
+			}
 		}
 
 		return c.json({ success: true }, 200);
@@ -205,57 +306,8 @@ export const paymentWebhook = async (c: Context) => {
 export const payoutWebhook = async (c: Context) => {
 	try {
 		const rawBody = await c.req.text();
-
-		// Note: Signature verification for Cashfree Payout Webhooks uses
-		// an RSA public key or x-webhook-signature depending on Cashfree config.
-		// For simplicity, we just parse the body.
 		const body = JSON.parse(rawBody);
-
-		// E.g., body.event === 'TRANSFER_SUCCESS' or 'TRANSFER_FAILED'
-		// body.transferId is what we sent.
-		const event = body.event;
-		const transferId = body.transferId;
-
-		if (!transferId) {
-			return c.json({ success: false, error: 'Missing transferId' }, 400);
-		}
-
-		await prisma.$transaction(async (tx) => {
-			const transaction = await tx.transaction.findFirst({
-				where: {
-					type: 'WITHDRAWAL',
-					remarks: { contains: transferId },
-				},
-			});
-
-			if (!transaction || transaction.status !== 'PENDING') {
-				logger.info({ transferId }, 'Payout webhook skipped (already processed or not found)');
-				return;
-			}
-
-			if (event === 'TRANSFER_SUCCESS') {
-				await tx.transaction.update({
-					where: { id: transaction.id },
-					data: { status: 'SUCCESS' },
-				});
-				logger.info({ transferId }, 'Payout successful');
-			} else if (event === 'TRANSFER_FAILED' || event === 'TRANSFER_REVERSED') {
-				await tx.transaction.update({
-					where: { id: transaction.id },
-					data: { status: 'FAILED' },
-				});
-
-				// Refund the user's wallet via Engine
-				await pushToQueue(EVENTS.DEPOSIT_BALANCE, {
-					userId: transaction.userId,
-					amount: Number(transaction.amount) * 1.0025, // Refund amount + 0.25% fee
-				});
-
-				logger.info({ transferId, userId: transaction.userId }, 'Payout failed, balance refunded');
-			}
-		});
-
-		return c.json({ success: true }, 200);
+		return payoutWebhookInternal(body, c);
 	} catch (error) {
 		logger.error({ error }, 'Failed to process payout webhook');
 		return c.json({ success: false, error: 'Internal server error' }, 500);

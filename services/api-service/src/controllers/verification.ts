@@ -533,6 +533,7 @@ export const getVerificationDetails = async (c: Context) => {
 			prisma.paymentMethod.findFirst({
 				where: { userId },
 				select: {
+					id: true,
 					type: true,
 					status: true,
 					upiNumber: true,
@@ -545,11 +546,13 @@ export const getVerificationDetails = async (c: Context) => {
 		const paymentMethod = payment
 			? payment.type === 'UPI'
 				? {
+						id: payment.id,
 						type: 'UPI',
 						upiNumber: payment.upiNumber,
 						status: payment.status,
 					}
 				: {
+						id: payment.id,
 						type: 'BANK',
 						accountNumber: payment.accountNumber,
 						ifscCode: payment.ifscCode,

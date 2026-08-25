@@ -132,18 +132,18 @@ export const streamNotifications = async (c: Context) => {
 
 		notificationEmitter.on('new_notification', onNotification);
 
-		const interval = setInterval(async () => {
-			await stream.writeSSE({
-				data: 'ping',
-				event: 'ping',
-			});
-		}, 30000);
-
 		stream.onAbort(() => {
 			notificationEmitter.off('new_notification', onNotification);
-			clearInterval(interval);
 		});
 
-		await new Promise(() => {});
+		while (!stream.aborted) {
+			await stream.sleep(60000);
+			if (!stream.aborted) {
+				await stream.writeSSE({
+					data: 'ping',
+					event: 'ping',
+				});
+			}
+		}
 	});
 };
