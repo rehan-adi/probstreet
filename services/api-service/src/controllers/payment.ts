@@ -37,7 +37,7 @@ export const initPayment = async (c: Context) => {
 			},
 			order_meta: {
 				return_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/wallet?order_id={order_id}`,
-				notify_url: `${ENV.BACKEND_ORIGIN}/api/v1/payments/webhook`,
+				notify_url: `${ENV.BACKEND_ORIGIN}/api/v1/capi/payments/webhook`,
 			},
 		});
 
@@ -198,6 +198,66 @@ export const paymentWebhook = async (c: Context) => {
 		return c.json({ success: true }, 200);
 	} catch (error) {
 		logger.error({ error }, 'Failed to process webhook');
+		return c.json({ success: false, error: 'Internal server error' }, 500);
+	}
+};
+
+export const payoutWebhook = async (c: Context) => {
+	try {
+		const rawBody = await c.req.text();
+		
+		// Note: Signature verification for Cashfree Payout Webhooks uses 
+		// an RSA public key or x-webhook-signature depending on Cashfree config.
+		// For simplicity, we just parse the body.
+		const body = JSON.parse(rawBody);
+
+		// E.g., body.event === 'TRANSFER_SUCCESS' or 'TRANSFER_FAILED'
+		// body.transferId is what we sent.
+		const event = body.event;
+		const transferId = body.transferId;
+
+		if (!transferId) {
+			return c.json({ success: false, error: 'Missing transferId' }, 400);
+		}
+
+		await prisma.$transaction(async (tx) => {
+			const transaction = await tx.transaction.findFirst({
+				where: { 
+					type: 'WITHDRAWAL',
+					remarks: { contains: transferId }
+				}
+			});
+
+			if (!transaction || transaction.status !== 'PENDING') {
+				logger.info({ transferId }, 'Payout webhook skipped (already processed or not found)');
+				return;
+			}
+
+			if (event === 'TRANSFER_SUCCESS') {
+				await tx.transaction.update({
+					where: { id: transaction.id },
+					data: { status: 'SUCCESS' }
+				});
+				logger.info({ transferId }, 'Payout successful');
+			} else if (event === 'TRANSFER_FAILED' || event === 'TRANSFER_REVERSED') {
+				await tx.transaction.update({
+					where: { id: transaction.id },
+					data: { status: 'FAILED' }
+				});
+
+				// Refund the user's wallet via Engine
+				await pushToQueue(EVENTS.DEPOSIT_BALANCE, {
+					userId: transaction.userId,
+					amount: Number(transaction.amount) * 1.0025, // Refund amount + 0.25% fee
+				});
+
+				logger.info({ transferId, userId: transaction.userId }, 'Payout failed, balance refunded');
+			}
+		});
+
+		return c.json({ success: true }, 200);
+	} catch (error) {
+		logger.error({ error }, 'Failed to process payout webhook');
 		return c.json({ success: false, error: 'Internal server error' }, 500);
 	}
 };
