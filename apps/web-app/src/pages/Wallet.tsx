@@ -36,7 +36,7 @@ export default function WalletPage() {
 
 	return (
 		<div className="w-full bg-[#f4f4f5] dark:bg-[#090C1A] flex justify-center px-4 md:pt-16 pt-16 pb-4 transition-colors min-h-screen">
-			<div className="w-full max-w-[910px] flex flex-col gap-8">
+			<div className="w-full max-w-227.5 flex flex-col gap-8">
 				<div>
 					<h2 className="text-sm text-[#262626] dark:text-gray-400 font-normal">Total Balance</h2>
 					{isLoading ? (
@@ -49,7 +49,7 @@ export default function WalletPage() {
 				</div>
 
 				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
-					<div className="bg-white dark:bg-[#1C1C1E] p-5 rounded-xl border border-gray-400/20 dark:border-white/10 flex flex-col justify-between items-center text-center gap-4 transition-colors min-h-[220px]">
+					<div className="bg-white dark:bg-[#1C1C1E] p-5 rounded-xl border border-gray-400/20 dark:border-white/10 flex flex-col justify-between items-center text-center gap-4 transition-colors min-h-55">
 						<div className="flex flex-col items-center gap-3">
 							<img src={depositWalletIcon} alt="Deposit Icon" className="w-8 h-8 dark:invert" />
 							<h3 className="text-sm text-[#545454] dark:text-gray-400">Deposit</h3>
@@ -70,7 +70,7 @@ export default function WalletPage() {
 					</div>
 
 					{/* Winnings */}
-					<div className="bg-white dark:bg-[#1C1C1E] p-5 rounded-xl border border-gray-400/20 dark:border-white/10 flex flex-col justify-between items-center text-center gap-4 transition-colors min-h-[220px]">
+					<div className="bg-white dark:bg-[#1C1C1E] p-5 rounded-xl border border-gray-400/20 dark:border-white/10 flex flex-col justify-between items-center text-center gap-4 transition-colors min-h-55">
 						<div className="flex flex-col items-center gap-3">
 							<img src={winningsWalletIcon} alt="Winnings Icon" className="w-8 h-8 dark:invert" />
 							<h3 className="text-sm text-[#545454] dark:text-gray-400">Winnings</h3>
@@ -101,7 +101,7 @@ export default function WalletPage() {
 					</div>
 
 					{/* Transaction History */}
-					<div className="bg-white dark:bg-[#1C1C1E] p-5 rounded-xl border border-gray-400/20 dark:border-white/10 flex flex-col justify-between items-center text-center gap-4 transition-colors min-h-[220px]">
+					<div className="bg-white dark:bg-[#1C1C1E] p-5 rounded-xl border border-gray-400/20 dark:border-white/10 flex flex-col justify-between items-center text-center gap-4 transition-colors min-h-55">
 						<div className="flex flex-col items-center gap-3">
 							<img
 								src={transactionWalletIcon}

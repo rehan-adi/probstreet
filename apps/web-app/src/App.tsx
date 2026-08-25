@@ -27,6 +27,7 @@ import AdminMarkets from '@/pages/admin/Markets';
 import LeaderboardPage from '@/pages/Leaderboard';
 import CreateEvent from '@/pages/admin/CreateEvent';
 import VerificationgePage from '@/pages/Verification';
+import ControlCentrePage from '@/pages/ControlCentre';
 import AuthModal from '@/components/modals/AuthModal';
 import AdminTransactions from '@/pages/admin/Transactions';
 import AdminVerifications from '@/pages/admin/Verifications';
@@ -75,6 +76,7 @@ function AppContent() {
 							<Route index element={<WalletPage />} />
 							<Route path="recharge" element={<RechargePage />} />
 							<Route path="withdraw" element={<WithdrawPage />} />
+							<Route path="control-centre" element={<ControlCentrePage />} />
 						</Route>
 						<Route path="/portfolio" element={<Portfolio />} />
 						<Route path="/wishlist" element={<WishlistPage />} />

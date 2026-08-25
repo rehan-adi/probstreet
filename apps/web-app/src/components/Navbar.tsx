@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useState, useRef, useEffect } from 'react';
+import { getNotifications, markNotificationsAsRead } from '@/api/notifications';
 import {
 	Menu,
 	Gift,
@@ -33,7 +34,7 @@ import { useBalanceQuery } from '@/hooks/queries/balance';
 
 export default function Navbar() {
 	const { user } = useAuthStore();
-	const { t, i18n } = useTranslation();
+	const { t } = useTranslation();
 	const { openOnboardModal } = useModalStore();
 	const { theme, toggleTheme } = useThemeStore();
 	const { data: balance, isLoading: balanceLoading } = useBalanceQuery();
@@ -43,6 +44,9 @@ export default function Navbar() {
 	const [isSearchOpen, setIsSearchOpen] = useState(false);
 	const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 	const [showHowItWorks, setShowHowItWorks] = useState(false);
+
+	const [notifications, setNotifications] = useState<any[]>([]);
+	const [unreadCount, setUnreadCount] = useState(0);
 
 	const menuRef = useRef<HTMLDivElement>(null);
 	const profileRef = useRef<HTMLDivElement>(null);
@@ -59,6 +63,39 @@ export default function Navbar() {
 		document.addEventListener('mousedown', handleClickOutside);
 		return () => document.removeEventListener('mousedown', handleClickOutside);
 	}, []);
+
+	useEffect(() => {
+		if (user) {
+			getNotifications().then((res) => {
+				if (res.success) {
+					setNotifications(res.data.notifications);
+					setUnreadCount(res.data.unreadCount);
+				}
+			});
+
+			const eventSource = new EventSource(
+				`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/v1/capi/notifications/stream`,
+				{ withCredentials: true },
+			);
+
+			eventSource.addEventListener('notification', (e) => {
+				const newNotification = JSON.parse(e.data);
+				setNotifications((prev) => [newNotification, ...prev]);
+				setUnreadCount((prev) => prev + 1);
+			});
+
+			return () => eventSource.close();
+		}
+	}, [user]);
+
+	const handleOpenNotifs = async () => {
+		setIsNotificationOpen(!isNotificationOpen);
+		if (!isNotificationOpen && unreadCount > 0) {
+			await markNotificationsAsRead();
+			setUnreadCount(0);
+			setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+		}
+	};
 
 	const handleLogout = async () => {
 		try {
@@ -217,10 +254,15 @@ export default function Navbar() {
 
 									<div ref={notifRef} className="relative">
 										<button
-											onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+											onClick={handleOpenNotifs}
 											className="flex items-center justify-center w-9 h-8 p-0.5 border border-gray-200 dark:border-white/10 cursor-pointer rounded-md hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-gray-700 dark:text-gray-300 relative"
 										>
 											<Bell size={19} className="text-black dark:text-white" />
+											{unreadCount > 0 && (
+												<span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-4 text-center">
+													{unreadCount > 99 ? '99+' : unreadCount}
+												</span>
+											)}
 										</button>
 										<AnimatePresence>
 											{isNotificationOpen && (
@@ -228,18 +270,50 @@ export default function Navbar() {
 													initial={{ opacity: 0, y: 10, scale: 0.95 }}
 													animate={{ opacity: 1, y: 0, scale: 1 }}
 													exit={{ opacity: 0, y: 10, scale: 0.95 }}
-													className="absolute right-0 top-12 w-64 bg-white dark:bg-[#1C1C1E] shadow-xl rounded-xl border border-gray-100 dark:border-white/10 p-4 text-center z-50"
+													className="absolute right-0 top-12 w-80 max-h-100 overflow-y-auto bg-white dark:bg-[#1C1C1E] shadow-xl rounded-xl border border-gray-100 dark:border-white/10 p-2 z-50 flex flex-col gap-1"
 												>
-													<Bell
-														size={32}
-														className="mx-auto text-gray-300 dark:text-gray-600 mb-2"
-													/>
-													<p className="text-sm font-medium text-gray-800 dark:text-gray-200">
-														No new notifications
-													</p>
-													<p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-														You're all caught up!
-													</p>
+													<div className="px-3 py-2 border-b border-gray-100 dark:border-zinc-800 mb-1">
+														<h3 className="font-semibold text-gray-900 dark:text-white">
+															Notifications
+														</h3>
+													</div>
+													{notifications.length === 0 ? (
+														<div className="p-4 text-center">
+															<Bell
+																size={32}
+																className="mx-auto text-gray-300 dark:text-gray-600 mb-2"
+															/>
+															<p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+																No new notifications
+															</p>
+															<p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+																You're all caught up!
+															</p>
+														</div>
+													) : (
+														notifications.map((n) => (
+															<Link
+																key={n.id}
+																to={n.link || '#'}
+																className="flex flex-col p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition text-left relative overflow-hidden group"
+															>
+																{!n.isRead && (
+																	<div className="absolute top-1/2 -translate-y-1/2 left-1.5 w-1.5 h-1.5 bg-blue-500 rounded-full" />
+																)}
+																<div className={`${!n.isRead ? 'pl-4' : ''}`}>
+																	<p className="text-sm font-semibold text-gray-900 dark:text-white mb-0.5">
+																		{n.title}
+																	</p>
+																	<p className="text-xs text-gray-500 dark:text-zinc-400 line-clamp-2">
+																		{n.message}
+																	</p>
+																	<p className="text-[10px] text-gray-400 dark:text-zinc-500 mt-1">
+																		{new Date(n.createdAt).toLocaleDateString()}
+																	</p>
+																</div>
+															</Link>
+														))
+													)}
 												</motion.div>
 											)}
 										</AnimatePresence>
