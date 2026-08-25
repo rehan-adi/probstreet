@@ -8,6 +8,8 @@ export function startPriceAlertCron() {
 
 	cron.schedule('*/50 * * * * *', async () => {
 		try {
+			logger.info('Checking for active price alerts...');
+
 			const activeAlerts = await prisma.priceAlert.findMany({
 				where: { isActive: true },
 				include: {
