@@ -19,9 +19,11 @@ export const useWithdrawMutation = () => {
 		mutationFn: ({
 			amount,
 			currentWalletAmount,
+			paymentMethodId,
 		}: {
 			amount: string;
 			currentWalletAmount: string;
-		}) => withdraw(amount, currentWalletAmount),
+			paymentMethodId: string;
+		}) => withdraw(amount, currentWalletAmount, paymentMethodId),
 	});
 };

@@ -12,6 +12,6 @@ export const deposit = (amount: string) => {
 	return api.post('/balance/deposit', { amount });
 };
 
-export const withdraw = (amount: string, currentWalletAmount: string) => {
-	return api.post('/balance/withdraw', { amount, currentWalletAmount });
+export const withdraw = (amount: string, currentWalletAmount: string, paymentMethodId: string) => {
+	return api.post('/balance/withdraw', { amount, currentWalletAmount, paymentMethodId });
 };

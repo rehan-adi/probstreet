@@ -20,17 +20,24 @@ export default function RechargePage() {
 		}
 		mutate(amount, {
 			onSuccess: async (res) => {
-				if (res.success && res.data?.payment_session_id) {
+				const paymentSessionId =
+					res?.data?.payment_session_id ||
+					res?.payment_session_id ||
+					res?.data?.data?.payment_session_id;
+
+				if (paymentSessionId) {
 					try {
 						const cashfree = await load({ mode: 'sandbox' });
 						cashfree.checkout({
-							paymentSessionId: res.data.payment_session_id,
+							paymentSessionId,
 							redirectTarget: '_self',
 						});
 					} catch (err) {
 						console.error('Failed to load Cashfree SDK', err);
 						alert('Failed to initialize payment gateway.');
 					}
+				} else {
+					alert('Failed to initialize payment gateway.');
 				}
 			},
 			onError: (err) => {
@@ -41,13 +48,13 @@ export default function RechargePage() {
 	};
 
 	return (
-		<div className="w-full flex justify-center items-center bg-[#f4f4f5] dark:bg-[#090C1A] md:py-36 py-14 px-2 md:px-0 transition-colors">
-			<div className="max-w-[910px] w-full px-4">
-				<h1 className="text-2xl md:text-4xl font-semibold md:mb-8 mb-4 text-gray-900 dark:text-white">
+		<div className="w-full flex justify-center bg-[#f4f4f5] dark:bg-[#090C1A] md:py-24 py-20 min-h-screen transition-colors">
+			<div className="max-w-227.5 w-full px-4">
+				<h1 className="text-4xl font-semibold md:mb-8 mb-4 text-gray-900 dark:text-white">
 					Deposit
 				</h1>
 
-				<div className="bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-white/10 max-w-[550px] rounded-xl py-6 px-4 space-y-6 transition-colors">
+				<div className="bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-white/10 max-w-137.5 rounded-xl py-6 px-4 space-y-6 transition-colors shadow-sm">
 					<div className="space-y-2">
 						<div className="text-base font-semibold text-gray-900 dark:text-white">
 							Deposit amount
@@ -86,13 +93,7 @@ export default function RechargePage() {
 									: 'bg-black text-white hover:bg-gray-900 dark:bg-white dark:text-black dark:hover:bg-gray-200 cursor-pointer'
 							}`}
 						>
-							{isPending ? (
-								<>
-									<Loader2 className="animate-spin w-5 h-5" />
-								</>
-							) : (
-								'Recharge'
-							)}
+							{isPending ? <Loader2 className="animate-spin w-5 h-5" /> : 'Recharge'}
 						</button>
 					</div>
 				</div>

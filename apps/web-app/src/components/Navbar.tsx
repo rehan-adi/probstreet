@@ -64,8 +64,10 @@ export default function Navbar() {
 		return () => document.removeEventListener('mousedown', handleClickOutside);
 	}, []);
 
+	const userId = user?.id;
+
 	useEffect(() => {
-		if (user) {
+		if (userId) {
 			getNotifications().then((res) => {
 				if (res.success) {
 					setNotifications(res.data.notifications);
@@ -73,20 +75,28 @@ export default function Navbar() {
 				}
 			});
 
-			const eventSource = new EventSource(
-				`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/v1/capi/notifications/stream`,
-				{ withCredentials: true },
-			);
+			const streamBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1/capi';
+			const eventSource = new EventSource(`${streamBase}/notifications/stream`, {
+				withCredentials: true,
+			});
 
 			eventSource.addEventListener('notification', (e) => {
-				const newNotification = JSON.parse(e.data);
-				setNotifications((prev) => [newNotification, ...prev]);
-				setUnreadCount((prev) => prev + 1);
+				try {
+					const newNotification = JSON.parse(e.data);
+					setNotifications((prev) => [newNotification, ...prev]);
+					setUnreadCount((prev) => prev + 1);
+				} catch (err) {
+					console.error('Failed to parse incoming notification:', err);
+				}
 			});
+
+			eventSource.onerror = () => {
+				// Prevent aggressive spam if disconnected
+			};
 
 			return () => eventSource.close();
 		}
-	}, [user]);
+	}, [userId]);
 
 	const handleOpenNotifs = async () => {
 		setIsNotificationOpen(!isNotificationOpen);

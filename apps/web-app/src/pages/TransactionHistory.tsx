@@ -1,6 +1,15 @@
 import { useState } from 'react';
-import { ChevronRight, Loader2 } from 'lucide-react';
+import {
+	ChevronRight,
+	Loader2,
+	ArrowUpRight,
+	ArrowDownLeft,
+	Clock,
+	CheckCircle2,
+	XCircle,
+} from 'lucide-react';
 import { useGetTransactionHistoryQuery } from '@/hooks/queries/transaction';
+import { formatAmount } from '@/lib/format';
 
 const tabs = ['All', 'Deposit', 'Withdraw'];
 
@@ -11,11 +20,45 @@ export default function TransactionHistoryPage() {
 
 	const transactions = data?.data.data || [];
 
+	const isDebit = (type: string) => {
+		return ['WITHDRAWAL', 'TRADE_LOSS', 'FEE', 'BUY'].includes(type);
+	};
+
 	const filteredTransactions = transactions.filter((t: any) => {
 		if (selectedTab === 'All') return true;
-		const isDeposit = parseFloat(t.amount) > 0;
-		return selectedTab === 'Deposit' ? isDeposit : !isDeposit;
+		const debit = isDebit(t.type);
+		return selectedTab === 'Deposit' ? !debit : debit;
 	});
+
+	const getStatusDisplay = (status: string) => {
+		switch (status) {
+			case 'SUCCESS':
+				return (
+					<span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+						<CheckCircle2 className="w-3 h-3" />
+						SUCCESS
+					</span>
+				);
+			case 'PENDING':
+				return (
+					<span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+						<Clock className="w-3 h-3 animate-spin" />
+						PENDING
+					</span>
+				);
+			case 'FAILED':
+				return (
+					<span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400">
+						<XCircle className="w-3 h-3" />
+						FAILED
+					</span>
+				);
+			default:
+				return (
+					<span className="text-xs font-medium text-gray-600 dark:text-gray-400">{status}</span>
+				);
+		}
+	};
 
 	if (isLoading) {
 		return (
@@ -67,9 +110,9 @@ export default function TransactionHistoryPage() {
 							<button
 								key={tab}
 								onClick={() => setSelectedTab(tab)}
-								className={`px-4 py-1 rounded-md text-base transition-colors cursor-pointer ${
+								className={`px-4 py-1.5 rounded-md text-sm transition-colors cursor-pointer ${
 									selectedTab === tab
-										? 'bg-[#262626] dark:bg-white text-white dark:text-black font-medium'
+										? 'bg-[#262626] dark:bg-white text-white dark:text-black font-semibold shadow-xs'
 										: 'bg-white dark:bg-[#1C1C1E] border border-gray-400/20 dark:border-white/10 text-gray-800 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5'
 								}`}
 							>
@@ -82,58 +125,83 @@ export default function TransactionHistoryPage() {
 				{/* Transactions Section */}
 				<div className="space-y-4">
 					{/* Header */}
-					<div className="flex justify-between text-xs font-semibold text-gray-900 dark:text-gray-200 py-5 border-b border-gray-400/25 dark:border-white/10">
-						<p className="md:w-[60%] w-[40%] text-sm font-semibold">Transactions</p>
-						<div className="md:w-[40%] w-[70%] flex justify-between md:gap-10 gap-0">
-							<p className="text-sm text-start font-semibold">Order ID</p>
-							<p className="text-sm text-center font-semibold">Status</p>
-							<p className="text-sm font-semibold text-end">Amount</p>
+					<div className="flex justify-between text-xs font-semibold text-gray-500 dark:text-gray-400 py-4 border-b border-gray-400/25 dark:border-white/10 uppercase tracking-wide">
+						<p className="md:w-[50%] w-[40%]">Transaction Details</p>
+						<div className="md:w-[50%] w-[60%] flex justify-between items-center">
+							<p className="w-1/3 text-center">Ref ID</p>
+							<p className="w-1/3 text-center">Status</p>
+							<p className="w-1/3 text-right">Amount</p>
 						</div>
 					</div>
 
-					{filteredTransactions.map((txn: any) => (
-						<div key={txn.id} className="pb-4 border-b border-gray-400/25 dark:border-white/10">
-							<div className="flex justify-between items-start">
-								<div className="md:w-2/3 w-1/3 overflow-hidden flex flex-col gap-1.5">
-									<p className="text-sm font-medium text-gray-900 dark:text-white">{txn.type}</p>
-									<p className="text-sm text-gray-600 dark:text-gray-400">{txn.remarks}</p>
-									<p className="text-xs text-gray-500 dark:text-gray-500">
-										{txn.createdAt
-											? new Date(txn.createdAt).toLocaleString('en-US', {
-													month: 'long',
-													day: 'numeric',
-													year: 'numeric',
-													hour: 'numeric',
-													minute: 'numeric',
-													hour12: true,
-												})
-											: 'Invalid Date'}
-									</p>
+					{filteredTransactions.map((txn: any) => {
+						const debit = isDebit(txn.type);
+						return (
+							<div
+								key={txn.id}
+								className="py-4 border-b border-gray-400/25 dark:border-white/10 hover:bg-black/2 dark:hover:bg-white/2 transition-colors rounded-lg px-2"
+							>
+								<div className="flex justify-between items-center">
+									{/* Transaction Type & Details */}
+									<div className="md:w-[50%] w-[40%] flex items-start gap-3">
+										<div
+											className={`p-2 rounded-full mt-0.5 ${
+												debit
+													? 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400'
+													: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+											}`}
+										>
+											{debit ? (
+												<ArrowUpRight className="w-4 h-4" />
+											) : (
+												<ArrowDownLeft className="w-4 h-4" />
+											)}
+										</div>
+										<div className="flex flex-col gap-0.5 overflow-hidden">
+											<p className="text-sm font-bold text-gray-900 dark:text-white">{txn.type}</p>
+											<p className="text-xs text-gray-600 dark:text-gray-400 truncate max-w-xs md:max-w-md">
+												{txn.remarks || (debit ? 'Funds withdrawn' : 'Funds added to wallet')}
+											</p>
+											<p className="text-[11px] text-gray-400 dark:text-gray-500">
+												{txn.createdAt
+													? new Date(txn.createdAt).toLocaleString('en-US', {
+															month: 'short',
+															day: 'numeric',
+															year: 'numeric',
+															hour: 'numeric',
+															minute: 'numeric',
+															hour12: true,
+														})
+													: 'N/A'}
+											</p>
+										</div>
+									</div>
+
+									{/* Order ID, Status, Amount */}
+									<div className="md:w-[50%] w-[60%] flex justify-between items-center">
+										<p className="w-1/3 text-center text-xs text-gray-600 dark:text-gray-400 font-mono">
+											{txn.id.slice(0, 8).toUpperCase()}
+										</p>
+
+										<div className="w-1/3 flex justify-center">{getStatusDisplay(txn.status)}</div>
+
+										<p
+											className={`w-1/3 text-right font-mono font-bold text-sm md:text-base ${
+												debit
+													? 'text-red-600 dark:text-red-400'
+													: 'text-emerald-600 dark:text-emerald-400'
+											}`}
+										>
+											{debit ? `-₹${formatAmount(txn.amount)}` : `+₹${formatAmount(txn.amount)}`}
+										</p>
+									</div>
 								</div>
-
-								<p className="w-1/4 text-center text-sm text-gray-700 dark:text-gray-300 mt-0 md:mt-1 break-all font-mono">
-									{txn.id.slice(0, 8).toUpperCase()}
-								</p>
-
-								<p className="w-1/6 text-center text-sm md:font-semibold font-medium text-emerald-600 dark:text-emerald-400 md:mt-1 mt-0">
-									{txn.status}
-								</p>
-
-								<p
-									className={`w-1/6 text-right md:text-base text-sm font-semibold md:mt-1 mt-0 ${
-										txn.amount > 0
-											? 'text-green-600 dark:text-green-400'
-											: 'text-red-600 dark:text-red-400'
-									}`}
-								>
-									{txn.amount > 0 ? `+₹${txn.amount}` : `-₹${Math.abs(txn.amount)}`}
-								</p>
 							</div>
-						</div>
-					))}
+						);
+					})}
 
 					{filteredTransactions.length === 0 && (
-						<p className="text-center text-gray-500 dark:text-gray-400 text-sm mt-10">
+						<p className="text-center text-gray-500 dark:text-gray-400 text-sm py-12">
 							No transactions found.
 						</p>
 					)}

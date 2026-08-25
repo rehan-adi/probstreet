@@ -23,7 +23,7 @@ export default function WalletPage() {
 	};
 
 	const goToWithdraw = () => {
-		navigate('/withdraw');
+		navigate('/wallet/withdraw');
 	};
 
 	const goToverification = () => {
@@ -32,6 +32,10 @@ export default function WalletPage() {
 
 	const goToTransactionHistory = () => {
 		navigate('/transaction-history');
+	};
+
+	const goToControlCentre = () => {
+		navigate('/wallet/control-centre');
 	};
 
 	return (
@@ -186,11 +190,14 @@ export default function WalletPage() {
 								Control Centre
 							</h3>
 							<p className="text-xs text-[#757575] dark:text-gray-400">
-								{' '}
-								Limits for responsible trading
+								Manage Price Alerts & limits
 							</p>
-							<button className="w-36 h-9 cursor-pointer mt-4 flex items-center justify-center text-sm font-semibold rounded-full text-black dark:text-white border border-gray-400/60 dark:border-white/20">
-								Coming soon...
+							<button
+								onClick={goToControlCentre}
+								className="w-16 h-9 cursor-pointer mt-4 flex items-center justify-center rounded-full border border-gray-400/60 dark:border-white/20 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+								aria-label="Open Control Centre"
+							>
+								<ArrowRight className="w-6 h-6 text-black dark:text-white" />
 							</button>
 						</div>
 					</div>

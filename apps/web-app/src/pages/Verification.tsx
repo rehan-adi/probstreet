@@ -3,11 +3,14 @@ import { Loader2 } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import kycTitleIcon from '@/assets/images/kyc_title.avif';
+import { useQueryClient } from '@tanstack/react-query';
 import { VerificationPreview } from '@/components/VerificationPreview';
 import { useSubmitKycMutation, useSubmitPaymentMutation } from '@/hooks/mutations/verification';
 import { useGetVerificationStatus, useGetVerificationDetails } from '@/hooks/queries/verification';
 
 export default function KycVerificationPage() {
+	const queryClient = useQueryClient();
+
 	// kyc related states
 	const [panName, setPanName] = useState('');
 	const [panNumber, setPanNumber] = useState('');
@@ -19,8 +22,8 @@ export default function KycVerificationPage() {
 	const [bankAccountNumber, setBankAccountNumber] = useState('');
 	const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'BANK'>('BANK');
 
-	const { data: verificationData } = useGetVerificationDetails();
-	const { data: statusData, isLoading, refetch } = useGetVerificationStatus();
+	const { data: verificationData, isLoading: isLoadingDetails } = useGetVerificationDetails();
+	const { data: statusData, isLoading: isLoadingStatus } = useGetVerificationStatus();
 	const { mutate: submitKyc, isPending: kycPending } = useSubmitKycMutation();
 	const { mutate: submitPayment, isPending: paymentPending } = useSubmitPaymentMutation();
 
@@ -30,7 +33,8 @@ export default function KycVerificationPage() {
 			{ panName, panNumber, DOB: DOB.toISOString().split('T')[0] },
 			{
 				onSuccess: () => {
-					refetch();
+					queryClient.invalidateQueries({ queryKey: ['verificationStatus'] });
+					queryClient.invalidateQueries({ queryKey: ['verificationDetails'] });
 				},
 			},
 		);
@@ -48,7 +52,8 @@ export default function KycVerificationPage() {
 			},
 			{
 				onSuccess: () => {
-					refetch();
+					queryClient.invalidateQueries({ queryKey: ['verificationStatus'] });
+					queryClient.invalidateQueries({ queryKey: ['verificationDetails'] });
 				},
 			},
 		);
@@ -57,7 +62,7 @@ export default function KycVerificationPage() {
 	const isValidPan = (pan: string) => /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan);
 	const isFormValid = panName.trim() !== '' && isValidPan(panNumber) && DOB !== null;
 
-	if (isLoading) {
+	if (isLoadingStatus) {
 		return (
 			<div className="flex justify-center bg-[#f4f4f5] dark:bg-[#090C1A] items-center h-screen transition-colors">
 				<Loader2 className="animate-spin w-6 h-6 text-gray-600 dark:text-gray-400" />
@@ -67,9 +72,14 @@ export default function KycVerificationPage() {
 
 	const { kycVerificationStatus, paymentVerificationStatus } = statusData?.data.data || {};
 
+	const isKycComplete = kycVerificationStatus === 'PENDING' || kycVerificationStatus === 'VERIFIED';
+	const isPaymentComplete =
+		paymentVerificationStatus === 'PENDING' || paymentVerificationStatus === 'VERIFIED';
+	const isAllComplete = isKycComplete && isPaymentComplete;
+
 	return (
 		<div className="w-full min-h-screen bg-[#f4f4f5] dark:bg-[#090C1A] flex justify-center items-start text-gray-900 dark:text-white transition-colors pb-12">
-			<div className="max-w-[950px] flex flex-col items-start px-4 md:py-2 w-full pt-20 md:pt-[90px]">
+			<div className="max-w-237.5 flex flex-col items-start px-4 md:py-2 w-full pt-20 md:pt-22.5">
 				<div className="flex items-center mb-6 gap-4">
 					<img
 						src={kycTitleIcon}
@@ -85,9 +95,10 @@ export default function KycVerificationPage() {
 				</div>
 
 				<div className="w-full rounded-xl">
-					{(kycVerificationStatus === 'NOT_VERIFIED' || kycVerificationStatus === 'REJECTED') && (
+					{/* Step 1: KYC PAN Form (if not verified or rejected) */}
+					{(!isKycComplete || kycVerificationStatus === 'REJECTED') && (
 						<div className="w-full bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-white/10 rounded-xl py-6 px-6 shadow-sm transition-colors">
-							<div className="text-sm max-w-[357px] rounded-lg mb-6">
+							<div className="text-sm max-w-89.25 rounded-lg mb-6">
 								<h3 className="text-[10px] mb-1.5 font-semibold text-red-600 dark:text-red-400 tracking-wide uppercase">
 									IMPORTANT
 								</h3>
@@ -97,7 +108,7 @@ export default function KycVerificationPage() {
 								</p>
 							</div>
 
-							<div className="space-y-6 max-w-[357px]">
+							<div className="space-y-6 max-w-89.25">
 								<div>
 									<label className="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1.5">
 										Name (as in PAN card)
@@ -157,14 +168,10 @@ export default function KycVerificationPage() {
 						</div>
 					)}
 
-					{((kycVerificationStatus === 'PENDING' &&
-						(paymentVerificationStatus === 'NOT_VERIFIED' ||
-							paymentVerificationStatus === 'REJECTED')) ||
-						(kycVerificationStatus === 'VERIFIED' &&
-							(paymentVerificationStatus === 'NOT_VERIFIED' ||
-								paymentVerificationStatus === 'REJECTED'))) && (
+					{/* Step 2: Payment Details Form (if KYC complete, but Payment not complete or rejected) */}
+					{isKycComplete && (!isPaymentComplete || paymentVerificationStatus === 'REJECTED') && (
 						<div className="w-full rounded-xl bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-white/10 min-h-[40vh] py-6 px-6 shadow-sm transition-colors">
-							<div className="text-sm max-w-[357px] rounded-lg mb-6">
+							<div className="text-sm max-w-89.25 rounded-lg mb-6">
 								<h3 className="text-[10px] mb-2 font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">
 									PAYMENT DETAILS
 								</h3>
@@ -174,7 +181,7 @@ export default function KycVerificationPage() {
 								</p>
 							</div>
 
-							<div className="space-y-6 max-w-[350px]">
+							<div className="space-y-6 max-w-87.5">
 								<div>
 									<label className="block text-gray-800 dark:text-gray-200 mb-2 font-medium text-sm">
 										Select Payment Method
@@ -260,10 +267,15 @@ export default function KycVerificationPage() {
 						</div>
 					)}
 
-					{((kycVerificationStatus === 'PENDING' && paymentVerificationStatus === 'PENDING') ||
-						(kycVerificationStatus === 'VERIFIED' && paymentVerificationStatus === 'VERIFIED')) && (
-						<VerificationPreview data={verificationData?.data.data} />
-					)}
+					{/* Step 3: All Details Submitted & Under Review or Verified */}
+					{isAllComplete &&
+						(isLoadingDetails ? (
+							<div className="flex justify-center items-center py-16 bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-white/10 rounded-xl">
+								<Loader2 className="animate-spin w-6 h-6 text-gray-600 dark:text-gray-400" />
+							</div>
+						) : (
+							<VerificationPreview data={verificationData?.data?.data} />
+						))}
 				</div>
 			</div>
 		</div>

@@ -78,6 +78,9 @@ function AppContent() {
 							<Route path="withdraw" element={<WithdrawPage />} />
 							<Route path="control-centre" element={<ControlCentrePage />} />
 						</Route>
+						<Route path="/withdraw" element={<WithdrawPage />} />
+						<Route path="/recharge" element={<RechargePage />} />
+						<Route path="/control-centre" element={<ControlCentrePage />} />
 						<Route path="/portfolio" element={<Portfolio />} />
 						<Route path="/wishlist" element={<WishlistPage />} />
 						<Route path="/settings" element={<SettingsPage />} />

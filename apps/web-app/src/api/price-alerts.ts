@@ -1,14 +1,7 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-
-const api = axios.create({
-	baseURL: `${API_URL}/api/v1/capi/price-alerts`,
-	withCredentials: true,
-});
+import { api } from '@/lib/axios';
 
 export const getPriceAlerts = async () => {
-	const response = await api.get('/');
+	const response = await api.get('/price-alerts');
 	return response.data;
 };
 
@@ -17,11 +10,11 @@ export const createOrUpdatePriceAlert = async (data: {
 	stockType: 'YES' | 'NO';
 	targetPrice: number;
 }) => {
-	const response = await api.post('/', data);
+	const response = await api.post('/price-alerts', data);
 	return response.data;
 };
 
 export const deletePriceAlert = async (id: string) => {
-	const response = await api.delete(`/${id}`);
+	const response = await api.delete(`/price-alerts/${id}`);
 	return response.data;
 };
