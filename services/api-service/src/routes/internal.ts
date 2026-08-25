@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { ENV } from '@/config/env';
 import { prisma } from '@probstreet/database';
+import { notificationEmitter } from '@/controllers/notifications';
 
 // Internal routes for the Notification Worker to read/write DB data.
 // These are NOT exposed publicly. They are protected by a shared secret.
@@ -108,7 +109,7 @@ internalRoutes.post('/notification/save', async (c) => {
 	try {
 		const { userId, type, title, message, link, metadata } = await c.req.json();
 
-		await prisma.notification.create({
+		const notification = await prisma.notification.create({
 			data: {
 				userId,
 				type,
@@ -118,6 +119,8 @@ internalRoutes.post('/notification/save', async (c) => {
 				metadata: metadata ?? undefined,
 			},
 		});
+
+		notificationEmitter.emit('new_notification', notification);
 
 		return c.json({ success: true });
 	} catch (err: any) {
@@ -147,6 +150,21 @@ internalRoutes.post('/notification/save-bulk', async (c) => {
 				link: link ?? null,
 				metadata: metadata ?? undefined,
 			})),
+		});
+
+		// Assuming we don't return the full objects from createMany, we might just emit simpler events
+		// Or loop and emit them so SSE can pick it up
+		userIds.forEach((uid) => {
+			notificationEmitter.emit('new_notification', {
+				userId: uid,
+				type,
+				title,
+				message,
+				link: link ?? null,
+				metadata: metadata ?? undefined,
+				createdAt: new Date(),
+				isRead: false,
+			});
 		});
 
 		return c.json({ success: true, count: userIds.length });

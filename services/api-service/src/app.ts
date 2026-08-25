@@ -14,11 +14,13 @@ import { settingsRoutes } from '@/routes/settings';
 import { referralRoutes } from '@/routes/referral';
 import { internalRoutes } from '@/routes/internal';
 import { portfolioRoutes } from '@/routes/portfolio';
+import priceAlertsRoutes from '@/routes/price-alerts';
 import { onboardingRoutes } from '@/routes/onboarding';
 import { categoriesRoutes } from '@/routes/categories';
 import { transactionRoutes } from '@/routes/transaction';
 import { leaderboardRoutes } from '@/routes/leaderboard';
 import { verificationRoutes } from '@/routes/verification';
+import { notificationsRoutes } from '@/routes/notifications';
 
 const app = new Hono();
 
@@ -55,7 +57,9 @@ app.route('/api/v1/capi/onboarding', onboardingRoutes);
 app.route('/api/v1/capi/categories', categoriesRoutes);
 app.route('/api/v1/capi/transaction', transactionRoutes);
 app.route('/api/v1/capi/leaderboard', leaderboardRoutes);
+app.route('/api/v1/capi/price-alerts', priceAlertsRoutes);
 app.route('/api/v1/capi/verification', verificationRoutes);
+app.route('/api/v1/capi/notifications', notificationsRoutes);
 
 // Admin APIs (AAPI)
 app.route('/api/v1/aapi', aapiRoutes);

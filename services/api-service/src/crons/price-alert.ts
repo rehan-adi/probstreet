@@ -33,19 +33,32 @@ export function startPriceAlertCron() {
 				}
 
 				if (isTriggered) {
-					// 1. Dispatch notification
-					await sendNotification({
-						type: 'price.alert',
-						data: {
+					// Check if user has holdings (quantity > 0) in this market
+					const userPosition = await prisma.position.findFirst({
+						where: {
 							userId: alert.userId,
 							marketId: alert.marketId,
-							marketTitle: alert.market.title,
-							currentPrice,
-							stockType: alert.stockType,
-							fcmToken: alert.user.fcmToken,
-							email: alert.user.notificationPrefs?.emailNewMarket ? alert.user.email : null,
+							...(alert.stockType === 'YES'
+								? { yesQuantity: { gt: 0 } }
+								: { noQuantity: { gt: 0 } }),
 						},
 					});
+
+					if (userPosition) {
+						// 1. Dispatch notification
+						await sendNotification({
+							type: 'price.alert',
+							data: {
+								userId: alert.userId,
+								marketId: alert.marketId,
+								marketTitle: alert.market.title,
+								currentPrice,
+								stockType: alert.stockType,
+								fcmToken: alert.user.fcmToken,
+								email: alert.user.notificationPrefs?.emailNewMarket ? alert.user.email : null,
+							},
+						});
+					}
 
 					// 2. Mark as inactive (one-shot)
 					await prisma.priceAlert.update({
@@ -54,8 +67,8 @@ export function startPriceAlertCron() {
 					});
 
 					logger.info(
-						{ alertId: alert.id, userId: alert.userId },
-						'Price alert triggered and deactivated',
+						{ alertId: alert.id, userId: alert.userId, sent: !!userPosition },
+						'Price alert processed and deactivated',
 					);
 				}
 			}
