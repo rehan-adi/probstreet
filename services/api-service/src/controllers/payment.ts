@@ -205,8 +205,8 @@ export const paymentWebhook = async (c: Context) => {
 export const payoutWebhook = async (c: Context) => {
 	try {
 		const rawBody = await c.req.text();
-		
-		// Note: Signature verification for Cashfree Payout Webhooks uses 
+
+		// Note: Signature verification for Cashfree Payout Webhooks uses
 		// an RSA public key or x-webhook-signature depending on Cashfree config.
 		// For simplicity, we just parse the body.
 		const body = JSON.parse(rawBody);
@@ -222,10 +222,10 @@ export const payoutWebhook = async (c: Context) => {
 
 		await prisma.$transaction(async (tx) => {
 			const transaction = await tx.transaction.findFirst({
-				where: { 
+				where: {
 					type: 'WITHDRAWAL',
-					remarks: { contains: transferId }
-				}
+					remarks: { contains: transferId },
+				},
 			});
 
 			if (!transaction || transaction.status !== 'PENDING') {
@@ -236,13 +236,13 @@ export const payoutWebhook = async (c: Context) => {
 			if (event === 'TRANSFER_SUCCESS') {
 				await tx.transaction.update({
 					where: { id: transaction.id },
-					data: { status: 'SUCCESS' }
+					data: { status: 'SUCCESS' },
 				});
 				logger.info({ transferId }, 'Payout successful');
 			} else if (event === 'TRANSFER_FAILED' || event === 'TRANSFER_REVERSED') {
 				await tx.transaction.update({
 					where: { id: transaction.id },
-					data: { status: 'FAILED' }
+					data: { status: 'FAILED' },
 				});
 
 				// Refund the user's wallet via Engine
