@@ -109,6 +109,19 @@ internalRoutes.post('/notification/save', async (c) => {
 	try {
 		const { userId, type, title, message, link, metadata } = await c.req.json();
 
+		const prefs = await prisma.notificationSettings.findUnique({
+			where: { userId },
+		});
+
+		if (prefs) {
+			if (type === 'NEW_MARKET' && !prefs.inAppNewMarket)
+				return c.json({ success: true, skipped: true });
+			if (type === 'TRADE_EXECUTED' && !prefs.inAppTradeExecuted)
+				return c.json({ success: true, skipped: true });
+			if (type === 'PRICE_ALERT' && !prefs.inAppPriceAlerts)
+				return c.json({ success: true, skipped: true });
+		}
+
 		const notification = await prisma.notification.create({
 			data: {
 				userId,
@@ -141,8 +154,31 @@ internalRoutes.post('/notification/save-bulk', async (c) => {
 			metadata?: Record<string, any>;
 		}>();
 
+		let finalUserIds = userIds;
+
+		// Filter users based on their in-app preferences
+		if (type === 'NEW_MARKET' || type === 'TRADE_EXECUTED' || type === 'PRICE_ALERT') {
+			const prefs = await prisma.notificationSettings.findMany({
+				where: { userId: { in: userIds } },
+			});
+			const optInMap = new Map(prefs.map((p) => [p.userId, p]));
+
+			finalUserIds = userIds.filter((uid) => {
+				const p = optInMap.get(uid);
+				if (!p) return true; // fallback to default true if no record exists
+				if (type === 'NEW_MARKET') return p.inAppNewMarket;
+				if (type === 'TRADE_EXECUTED') return p.inAppTradeExecuted;
+				if (type === 'PRICE_ALERT') return p.inAppPriceAlerts;
+				return true;
+			});
+		}
+
+		if (finalUserIds.length === 0) {
+			return c.json({ success: true, skipped: true });
+		}
+
 		await prisma.notification.createMany({
-			data: userIds.map((userId) => ({
+			data: finalUserIds.map((userId) => ({
 				userId,
 				type,
 				title,
@@ -154,7 +190,7 @@ internalRoutes.post('/notification/save-bulk', async (c) => {
 
 		// Assuming we don't return the full objects from createMany, we might just emit simpler events
 		// Or loop and emit them so SSE can pick it up
-		userIds.forEach((uid) => {
+		finalUserIds.forEach((uid) => {
 			notificationEmitter.emit('new_notification', {
 				userId: uid,
 				type,
@@ -167,7 +203,7 @@ internalRoutes.post('/notification/save-bulk', async (c) => {
 			});
 		});
 
-		return c.json({ success: true, count: userIds.length });
+		return c.json({ success: true, count: finalUserIds.length });
 	} catch (err: any) {
 		return c.json({ error: err.message }, 500);
 	}
