@@ -141,3 +141,5 @@ vite.config.ts.timestamp-*
 
 matching-engine (Go)
 /services/matching-engine/bin/
+
+/services/notification-service/.wrangler/
