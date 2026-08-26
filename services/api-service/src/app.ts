@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { ENV } from '@/config/env';
 import { logger } from 'hono/logger';
 
 import { aapiRoutes } from '@/routes/admin';
@@ -27,7 +28,7 @@ const app = new Hono();
 app.use(logger());
 app.use(
 	cors({
-		origin: ['http://localhost:5173'],
+		origin: ENV.CORS_ORIGIN.split(',').map((o) => o.trim()),
 		allowHeaders: ['Content-Type', 'Authorization', 'X-Custom-Header'],
 		allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
 		exposeHeaders: ['Content-Length', 'X-Custom-Header'],

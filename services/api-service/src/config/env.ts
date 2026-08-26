@@ -1,62 +1,62 @@
-import { logger } from '@/libs/logger';
+import { z } from 'zod';
 
-const checkEnv = (key: string) => {
-	const value = Bun.env[key];
+const envSchema = z.object({
+	NODE_ENV: z.enum(['development', 'production', 'staging']).default('development'),
 
-	if (!value) {
-		logger.error(`Missing required environment variable: ${key}`);
-		throw new Error(`Missing required environment variable: ${key}`);
-	}
-	return value;
-};
+	PORT: z.string().min(1),
 
-export const ENV = {
-	NODE_ENV: checkEnv('NODE_ENV'),
+	ACCESS_TOKEN_SECRET: z.string().min(1),
+	REFRESH_TOKEN_SECRET: z.string().min(1),
+	ACCESS_TOKEN_EXPIRY: z.string().min(1),
+	REFRESH_TOKEN_EXPIRY: z.string().min(1),
 
-	PORT: checkEnv('PORT'),
+	BACKEND_ORIGIN: z.string().url(),
+	CORS_ORIGIN: z.string().min(1),
+	FRONTEND_URL: z.string().url(),
 
-	ACCESS_TOKEN_SECRET: checkEnv('ACCESS_TOKEN_SECRET'),
-	REFRESH_TOKEN_SECRET: checkEnv('REFRESH_TOKEN_SECRET'),
-	ACCESS_TOKEN_EXPIRY: checkEnv('ACCESS_TOKEN_EXPIRY'),
-	REFRESH_TOKEN_EXPIRY: checkEnv('REFRESH_TOKEN_EXPIRY'),
+	REDIS_HOST: z.string().min(1),
+	REDIS_PORT: z.string().min(1),
 
-	BACKEND_ORIGIN: checkEnv('BACKEND_ORIGIN'),
+	REDIS_PUBSUB_HOST: z.string().min(1),
+	REDIS_PUBSUB_PORT: z.string().min(1),
 
-	REDIS_HOST: checkEnv('REDIS_HOST'),
-	REDIS_PORT: checkEnv('REDIS_PORT'),
+	GOOGLE_CLIENT_ID: z.string().min(1),
+	GOOGLE_CLIENT_SECRET: z.string().min(1),
+	GOOGLE_REDIRECT_URI: z.string().url(),
 
-	REDIS_PUBSUB_HOST: checkEnv('REDIS_PUBSUB_HOST'),
-	REDIS_PUBSUB_PORT: checkEnv('REDIS_PUBSUB_PORT'),
+	DISCORD_CLIENT_ID: z.string().min(1),
+	DISCORD_CLIENT_SECRET: z.string().min(1),
+	DISCORD_REDIRECT_URI: z.string().url(),
 
-	RESEND_API_KEY: checkEnv('RESEND_API_KEY'),
+	TELEGRAM_BOT_TOKEN: z.string().min(1),
 
-	GOOGLE_CLIENT_ID: checkEnv('GOOGLE_CLIENT_ID'),
-	GOOGLE_CLIENT_SECRET: checkEnv('GOOGLE_CLIENT_SECRET'),
-	GOOGLE_REDIRECT_URI: checkEnv('GOOGLE_REDIRECT_URI'),
+	TWILIO_SID: z.string().min(1),
+	TWILIO_TOKEN: z.string().min(1),
+	TWILIO_NUMBER: z.string().min(1),
 
-	DISCORD_CLIENT_ID: checkEnv('DISCORD_CLIENT_ID'),
-	DISCORD_CLIENT_SECRET: checkEnv('DISCORD_CLIENT_SECRET'),
-	DISCORD_REDIRECT_URI: checkEnv('DISCORD_REDIRECT_URI'),
+	AWS_REGION: z.string().min(1),
+	AWS_S3_BUCKET: z.string().min(1),
+	AWS_ACCESS_KEY_ID: z.string().min(1),
+	AWS_SECRET_ACCESS_KEY: z.string().min(1),
 
-	TELEGRAM_BOT_TOKEN: checkEnv('TELEGRAM_BOT_TOKEN'),
+	CASHFREE_CLIENT_ID: z.string().min(1),
+	CASHFREE_CLIENT_SECRET: z.string().min(1),
+	CASHFREE_PAYOUT_CLIENT_ID: z.string().min(1),
+	CASHFREE_PAYOUT_CLIENT_SECRET: z.string().min(1),
 
-	TWILIO_SID: checkEnv('TWILIO_SID'),
-	TWILIO_TOKEN: checkEnv('TWILIO_TOKEN'),
-	TWILIO_NUMBER: checkEnv('TWILIO_NUMBER'),
+	NOTIFICATION_WORKER_URL: z.string().url(),
+	WORKER_SECRET: z.string().min(1),
 
-	AWS_REGION: checkEnv('AWS_REGION'),
-	AWS_S3_BUCKET: checkEnv('AWS_S3_BUCKET'),
-	AWS_ACCESS_KEY_ID: checkEnv('AWS_ACCESS_KEY_ID'),
-	AWS_SECRET_ACCESS_KEY: checkEnv('AWS_SECRET_ACCESS_KEY'),
+	GMAIL_USER: z.string().email(),
+	GMAIL_APP_PASSWORD: z.string().min(1),
+});
 
-	CASHFREE_CLIENT_ID: checkEnv('CASHFREE_CLIENT_ID'),
-	CASHFREE_CLIENT_SECRET: checkEnv('CASHFREE_CLIENT_SECRET'),
-	CASHFREE_PAYOUT_CLIENT_ID: checkEnv('CASHFREE_PAYOUT_CLIENT_ID'),
-	CASHFREE_PAYOUT_CLIENT_SECRET: checkEnv('CASHFREE_PAYOUT_CLIENT_SECRET'),
+const parsed = envSchema.safeParse(Bun.env);
 
-	NOTIFICATION_WORKER_URL: checkEnv('NOTIFICATION_WORKER_URL'),
-	WORKER_SECRET: checkEnv('WORKER_SECRET'),
+if (!parsed.success) {
+	const issues = parsed.error.issues.map((i) => `  • ${i.path.join('.')}: ${i.message}`).join('\n');
+	console.error(`\nInvalid environment variables:\n${issues}\n`);
+	process.exit(1);
+}
 
-	GMAIL_USER: checkEnv('GMAIL_USER'),
-	GMAIL_APP_PASSWORD: checkEnv('GMAIL_APP_PASSWORD'),
-};
+export const ENV = parsed.data;
