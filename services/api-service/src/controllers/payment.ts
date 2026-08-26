@@ -37,7 +37,7 @@ export const initPayment = async (c: Context) => {
 				customer_name: 'Probstreet User',
 			},
 			order_meta: {
-				return_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/wallet?order_id={order_id}`,
+				return_url: `${ENV.FRONTEND_URL}/wallet?order_id={order_id}`,
 				notify_url: `${ENV.BACKEND_ORIGIN}/api/v1/capi/payments/webhook`,
 			},
 		});
@@ -93,10 +93,22 @@ export const paymentWebhook = async (c: Context) => {
 		const timestamp = c.req.header('x-webhook-timestamp');
 		const rawBody = await c.req.text();
 
+		if (!signature || !timestamp) {
+			logger.warn('Webhook rejected: missing signature or timestamp headers');
+			return c.json(
+				{
+					success: false,
+					error: 'Unauthorized',
+				},
+				401,
+			);
+		}
+
 		try {
-			cashfree.PGVerifyWebhookSignature(signature as string, rawBody, timestamp as string);
+			cashfree.PGVerifyWebhookSignature(signature, rawBody, timestamp);
 		} catch (err) {
-			logger.warn({ err }, 'Webhook signature verification notice');
+			logger.warn({ err }, 'Webhook rejected: invalid signature');
+			return c.json({ success: false, error: 'Unauthorized' }, 401);
 		}
 
 		const body = JSON.parse(rawBody);
