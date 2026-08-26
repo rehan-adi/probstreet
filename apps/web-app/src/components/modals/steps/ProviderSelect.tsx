@@ -2,7 +2,7 @@ import api from '@/config/axios';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '@/store/auth';
 import { useModalStore } from '@/store/modal';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2, Mail, Clock } from 'lucide-react';
 import { useGoogleLogin } from '@react-oauth/google';
 
@@ -363,25 +363,4 @@ export default function ProviderSelect({
 			</div>
 		</motion.div>
 	);
-}
-
-function TelegramWidget({ botName }: { botName: string }) {
-	const containerRef = useRef<HTMLDivElement>(null);
-
-	useEffect(() => {
-		if (!containerRef.current) return;
-		if (containerRef.current.hasChildNodes()) return;
-
-		const script = document.createElement('script');
-		script.src = 'https://telegram.org/js/telegram-widget.js?22';
-		script.setAttribute('data-telegram-login', botName);
-		script.setAttribute('data-size', 'large');
-		script.setAttribute('data-onauth', 'onTelegramAuth(user)');
-		script.setAttribute('data-request-access', 'write');
-		script.async = true;
-
-		containerRef.current.appendChild(script);
-	}, [botName]);
-
-	return <div ref={containerRef} />;
 }

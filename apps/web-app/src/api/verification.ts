@@ -31,6 +31,7 @@ export const verify = (
 	paymentStatus?: string,
 	kycRemark?: string,
 	paymentRemark?: string,
+	paymentMethodId?: string,
 ) => {
 	return adminApi.post('/verification/verify', {
 		userId,
@@ -38,6 +39,7 @@ export const verify = (
 		kycRemark,
 		paymentStatus,
 		paymentRemark,
+		paymentMethodId,
 	});
 };
 

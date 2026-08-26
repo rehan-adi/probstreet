@@ -233,6 +233,7 @@ model NotificationSettings {
   user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   emailNewMarket     Boolean  @default(false) @map("email_new_market")
   emailTradeExecuted Boolean  @default(false) @map("email_trade_executed")
+  emailPriceAlerts   Boolean  @default(false) @map("email_price_alerts")
   inAppNewMarket     Boolean  @default(true) @map("in_app_new_market")
   inAppTradeExecuted Boolean  @default(true) @map("in_app_trade_executed")
   inAppPriceAlerts   Boolean  @default(false) @map("in_app_price_alerts")

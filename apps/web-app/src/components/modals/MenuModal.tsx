@@ -12,7 +12,7 @@ const LANGUAGES = [
 	{ code: 'bn', name: 'বাংলা', flag: '🇧🇩' },
 ];
 
-export default function MenuModal({ onClose }: { onClose: () => void }) {
+export default function MenuModal({ onClose: _onClose }: { onClose?: () => void }) {
 	const { t, i18n } = useTranslation();
 	const { theme, toggleTheme } = useThemeStore();
 

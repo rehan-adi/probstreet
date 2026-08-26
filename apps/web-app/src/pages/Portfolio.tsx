@@ -325,10 +325,14 @@ export default function Portfolio() {
 							</select>
 						)}
 						{activeTab === 'positions' && (
-							<select className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer flex-1 sm:flex-none">
-								<option>All Status</option>
-								<option>Active</option>
-								<option>Closed</option>
+							<select
+								value={statusFilter}
+								onChange={(e) => setStatusFilter(e.target.value)}
+								className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer flex-1 sm:flex-none"
+							>
+								<option value="All">All Status</option>
+								<option value="Active">Active</option>
+								<option value="Closed">Closed</option>
 							</select>
 						)}
 						{activeTab === 'open' && (
@@ -434,9 +438,15 @@ export default function Portfolio() {
 											}
 											return rows;
 										})
-										.filter((row) =>
-											row.market?.title?.toLowerCase().includes(searchQuery.toLowerCase()),
-										)
+										.filter((row) => {
+											const matchesSearch = (row.market?.title || '')
+												.toLowerCase()
+												.includes(searchQuery.toLowerCase());
+											if (!matchesSearch) return false;
+											if (statusFilter === 'Active') return row.market?.status === 'OPEN';
+											if (statusFilter === 'Closed') return row.market?.status === 'CLOSED';
+											return true;
+										})
 										.map((row) => (
 											<div
 												key={row.uniqueId}
@@ -492,13 +502,27 @@ export default function Portfolio() {
 													</span>
 												</div>
 												<div className="flex justify-end">
-													<button
-														onClick={() => handleSell(row)}
-														disabled={processing === `sell-${row.uniqueId}`}
-														className="text-xs bg-gray-900 text-white dark:bg-white dark:text-black rounded-md px-4 py-1.5 font-bold hover:opacity-80 transition-opacity cursor-pointer shadow-sm disabled:opacity-50"
-													>
-														{processing === `sell-${row.uniqueId}` ? 'Selling...' : 'Sell'}
-													</button>
+													{row.market?.status === 'CLOSED' ? (
+														<span
+															className={`text-[11px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider ${
+																(row.market?.result || '').toUpperCase() === row.side.toUpperCase()
+																	? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+																	: 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
+															}`}
+														>
+															{(row.market?.result || '').toUpperCase() === row.side.toUpperCase()
+																? 'Won'
+																: 'Lost'}
+														</span>
+													) : (
+														<button
+															onClick={() => handleSell(row)}
+															disabled={processing === `sell-${row.uniqueId}`}
+															className="text-xs bg-gray-900 text-white dark:bg-white dark:text-black rounded-md px-4 py-1.5 font-bold hover:opacity-80 transition-opacity cursor-pointer shadow-sm disabled:opacity-50"
+														>
+															{processing === `sell-${row.uniqueId}` ? 'Selling...' : 'Sell'}
+														</button>
+													)}
 												</div>
 											</div>
 										))}

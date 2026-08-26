@@ -52,6 +52,9 @@ export const resolveMarket = async (c: Context) => {
 
 export const getDashboardMetrics = async (c: Context) => {
 	try {
+		const periodParam = c.req.query('period') || '7d';
+		const days = periodParam === '90d' ? 90 : periodParam === '30d' ? 30 : 7;
+
 		// 1. Total Active Users
 		const totalUsers = await prisma.user.count();
 
@@ -70,9 +73,14 @@ export const getDashboardMetrics = async (c: Context) => {
 		});
 		const totalVolume = volumeResult._sum.volume || 0;
 
-		// Chart Data: Last 7 days Revenue and Volume (Gap-filled)
+		// 5. Pending Verifications Count
+		const pendingKycCount = await prisma.kyc.count({ where: { status: 'PENDING' } });
+		const pendingPaymentCount = await prisma.paymentMethod.count({ where: { status: 'PENDING' } });
+		const totalPendingVerifications = pendingKycCount + pendingPaymentCount;
+
+		// Chart Data: Dynamic Days Revenue and Volume (Gap-filled)
 		const revenueChart: { date: string; amount: number; volume: number }[] = [];
-		for (let i = 6; i >= 0; i--) {
+		for (let i = days - 1; i >= 0; i--) {
 			const d = new Date();
 			d.setDate(d.getDate() - i);
 			revenueChart.push({
@@ -82,16 +90,16 @@ export const getDashboardMetrics = async (c: Context) => {
 			});
 		}
 
-		const sevenDaysAgo = new Date();
-		sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+		const periodStartDate = new Date();
+		periodStartDate.setDate(periodStartDate.getDate() - days);
 
 		const recentRevenue = await prisma.platformRevenue.findMany({
-			where: { createdAt: { gte: sevenDaysAgo } },
+			where: { createdAt: { gte: periodStartDate } },
 			select: { amount: true, createdAt: true },
 		});
 
 		const recentMarkets = await prisma.market.findMany({
-			where: { createdAt: { gte: sevenDaysAgo } },
+			where: { createdAt: { gte: periodStartDate } },
 			select: { volume: true, createdAt: true },
 		});
 
@@ -120,6 +128,15 @@ export const getDashboardMetrics = async (c: Context) => {
 			{ name: 'Closed', value: closedMarketsCount },
 		];
 
+		// Recent 5 transactions
+		const recentTransactions = await prisma.transaction.findMany({
+			take: 5,
+			orderBy: { createdAt: 'desc' },
+			include: {
+				user: { select: { username: true, email: true } },
+			},
+		});
+
 		return c.json({
 			success: true,
 			data: {
@@ -127,8 +144,12 @@ export const getDashboardMetrics = async (c: Context) => {
 				totalMarkets,
 				totalRevenue: Number(totalRevenue),
 				totalVolume: Number(totalVolume),
+				totalPendingVerifications,
+				pendingKycCount,
+				pendingPaymentCount,
 				revenueChart,
 				marketDistribution,
+				recentTransactions,
 			},
 		});
 	} catch (error) {

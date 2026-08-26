@@ -52,13 +52,13 @@ export default function HowItWorksModal({ onClose }: { onClose: () => void }) {
 		}
 	};
 
-	const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+	const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
 		if (info.offset.y > 100 || info.velocity.y > 500) {
 			onClose();
 		}
 	};
 
-	const modalVariants = isMobile
+	const modalVariants: any = isMobile
 		? {
 				hidden: { y: '100%' },
 				visible: { y: 0, transition: { type: 'spring', damping: 25, stiffness: 300 } },

@@ -20,7 +20,7 @@ export const useVerifyMutation = () => {
 		mutationKey: ['verify'],
 		mutationFn: ({ phone, otp }: { phone: string; otp: string }) => verify(otp, phone),
 		onSuccess: (response) => {
-			const { data, token } = response.data;
+			const { data } = response.data;
 
 			useAuthStore.getState().login(data);
 		},

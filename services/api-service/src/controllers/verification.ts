@@ -810,9 +810,9 @@ export const getPendingVerifications = async (c: Context) => {
 				},
 				paymentMethods: {
 					orderBy: { submittedAt: 'desc' },
-					take: 1,
 					where: { status: 'PENDING' },
 					select: {
+						id: true,
 						type: true,
 						upiNumber: true,
 						accountNumber: true,
@@ -877,13 +877,15 @@ export const updatePendingVerification = async (c: Context) => {
 			);
 		}
 
-		const { userId, kycStatus, paymentStatus, kycRemark, paymentRemark } = await c.req.json<{
-			userId: string;
-			kycStatus?: string;
-			paymentStatus?: string;
-			kycRemark?: string;
-			paymentRemark?: string;
-		}>();
+		const { userId, kycStatus, paymentStatus, kycRemark, paymentRemark, paymentMethodId } =
+			await c.req.json<{
+				userId: string;
+				kycStatus?: string;
+				paymentStatus?: string;
+				kycRemark?: string;
+				paymentRemark?: string;
+				paymentMethodId?: string;
+			}>();
 
 		if (!userId) {
 			return c.json(
@@ -939,12 +941,15 @@ export const updatePendingVerification = async (c: Context) => {
 					throw new Error('Invalid Payment status');
 				}
 
-				const payment = await tx.paymentMethod.findFirst({
-					where: { userId, status: 'PENDING' },
-					orderBy: { submittedAt: 'desc' },
+				if (!paymentMethodId) {
+					throw new Error('paymentMethodId is required to update payment status');
+				}
+
+				const payment = await tx.paymentMethod.findUnique({
+					where: { id: paymentMethodId },
 				});
 
-				if (payment) {
+				if (payment && payment.userId === userId && payment.status === 'PENDING') {
 					await tx.paymentMethod.update({
 						where: { id: payment.id },
 						data: {
@@ -963,7 +968,7 @@ export const updatePendingVerification = async (c: Context) => {
 						});
 					}
 
-					logger.info({ userId }, 'payment status update');
+					logger.info({ userId, paymentMethodId }, 'payment status update');
 				}
 			}
 

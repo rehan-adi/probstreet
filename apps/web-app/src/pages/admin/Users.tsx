@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { adminApi } from '@/config/axios';
 import { toast } from 'sonner';
-import { Loader2, Search, User, Mail, Phone, CalendarDays } from 'lucide-react';
+import { Loader2, Search, User, Mail, Phone, CalendarDays, ShieldCheck } from 'lucide-react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import {
 	flexRender,
@@ -11,17 +11,6 @@ import {
 	getSortedRowModel,
 	useReactTable,
 } from '@tanstack/react-table';
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { formatDate } from '@/lib/format';
 
 export default function AdminUsers() {
@@ -55,14 +44,14 @@ export default function AdminUsers() {
 				const user = row.original;
 				return (
 					<div className="flex items-center gap-3">
-						<div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-700 dark:text-blue-400 font-bold border border-blue-200 dark:border-blue-800">
+						<div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center text-gray-800 dark:text-gray-200 font-bold text-xs border border-transparent dark:border-white/5">
 							{user.username?.charAt(0).toUpperCase() || 'U'}
 						</div>
 						<div className="flex flex-col">
-							<span className="font-medium text-gray-900 dark:text-white">
+							<span className="font-semibold text-sm text-gray-900 dark:text-white">
 								{user.username || 'No username'}
 							</span>
-							<span className="text-xs text-gray-500 dark:text-gray-400">
+							<span className="text-[11px] font-mono text-gray-400 dark:text-gray-500">
 								ID: {user.id.substring(0, 8)}...
 							</span>
 						</div>
@@ -76,21 +65,21 @@ export default function AdminUsers() {
 			cell: ({ row }: any) => {
 				const user = row.original;
 				return (
-					<div className="flex flex-col gap-1">
+					<div className="flex flex-col gap-0.5">
 						{user.email && (
-							<div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-								<Mail className="w-3 h-3 mr-1.5 opacity-70" />
+							<div className="flex items-center text-xs font-medium text-gray-600 dark:text-gray-300">
+								<Mail className="w-3 h-3 mr-1.5 opacity-50" />
 								{user.email}
 							</div>
 						)}
 						{user.phone && (
-							<div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-								<Phone className="w-3 h-3 mr-1.5 opacity-70" />
+							<div className="flex items-center text-xs font-medium text-gray-600 dark:text-gray-300">
+								<Phone className="w-3 h-3 mr-1.5 opacity-50" />
 								{user.phone}
 							</div>
 						)}
 						{!user.email && !user.phone && (
-							<span className="text-sm text-gray-500">No contact info</span>
+							<span className="text-xs italic text-gray-400">No contact info</span>
 						)}
 					</div>
 				);
@@ -98,85 +87,41 @@ export default function AdminUsers() {
 		},
 		{
 			accessorKey: 'kycVerificationStatus',
-			header: 'KYC Status',
+			header: 'KYC',
 			cell: ({ row }: any) => {
 				const status = row.getValue('kycVerificationStatus');
-				if (status === 'VERIFIED')
-					return (
-						<Badge
-							variant="outline"
-							className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
-						>
-							Verified
-						</Badge>
-					);
-				if (status === 'PENDING')
-					return (
-						<Badge
-							variant="outline"
-							className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
-						>
-							Pending
-						</Badge>
-					);
-				if (status === 'REJECTED')
-					return (
-						<Badge
-							variant="outline"
-							className="bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20"
-						>
-							Rejected
-						</Badge>
-					);
 				return (
-					<Badge
-						variant="outline"
-						className="text-gray-500 border-gray-200 dark:border-white/10 dark:text-gray-400"
-					>
-						Not Verified
-					</Badge>
+					<span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2 py-1 rounded-md uppercase tracking-wider border ${
+						status === 'VERIFIED'
+							? 'bg-gray-100 text-gray-900 border-gray-200 dark:bg-white/10 dark:text-white dark:border-white/20'
+							: status === 'PENDING'
+							? 'bg-gray-50 text-gray-600 border-gray-200 dark:bg-white/5 dark:text-gray-400 dark:border-white/10'
+							: 'bg-transparent text-gray-400 border-gray-200 dark:border-white/5'
+					}`}>
+						{status === 'VERIFIED' && <div className="w-1.5 h-1.5 rounded-full bg-black dark:bg-white" />}
+						{status === 'PENDING' && <div className="w-1.5 h-1.5 rounded-full bg-gray-400" />}
+						{status === 'VERIFIED' ? 'Verified' : status === 'PENDING' ? 'Pending' : 'Unverified'}
+					</span>
 				);
 			},
 		},
 		{
 			accessorKey: 'paymentVerificationStatus',
-			header: 'Payment Status',
+			header: 'Payment',
 			cell: ({ row }: any) => {
 				const status = row.getValue('paymentVerificationStatus');
-				if (status === 'VERIFIED')
-					return (
-						<Badge
-							variant="outline"
-							className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
-						>
-							Verified
-						</Badge>
-					);
-				if (status === 'PENDING')
-					return (
-						<Badge
-							variant="outline"
-							className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
-						>
-							Pending
-						</Badge>
-					);
-				if (status === 'REJECTED')
-					return (
-						<Badge
-							variant="outline"
-							className="bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20"
-						>
-							Rejected
-						</Badge>
-					);
 				return (
-					<Badge
-						variant="outline"
-						className="text-gray-500 border-gray-200 dark:border-white/10 dark:text-gray-400"
-					>
-						Not Verified
-					</Badge>
+					<span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2 py-1 rounded-md uppercase tracking-wider border ${
+						status === 'VERIFIED'
+							? 'bg-gray-100 text-gray-900 border-gray-200 dark:bg-white/10 dark:text-white dark:border-white/20'
+							: status === 'PENDING'
+							? 'bg-gray-50 text-gray-600 border-gray-200 dark:bg-white/5 dark:text-gray-400 dark:border-white/10'
+							: 'bg-transparent text-gray-400 border-gray-200 dark:border-white/5'
+					}`}>
+						{status === 'VERIFIED' && <div className="w-1.5 h-1.5 rounded-full bg-black dark:bg-white" />}
+						{status === 'PENDING' && <div className="w-1.5 h-1.5 rounded-full bg-gray-400" />}
+						{status === 'VERIFIED' ? 'Verified' : status === 'PENDING' ? 'Pending' : 'Unverified'}
+					</span>
 				);
 			},
 		},
@@ -185,19 +130,13 @@ export default function AdminUsers() {
 			header: 'Role',
 			cell: ({ row }: any) => {
 				const role = row.getValue('role');
-				if (role === 'ADMIN')
-					return (
-						<Badge
-							variant="secondary"
-							className="bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400"
-						>
-							Admin
-						</Badge>
-					);
 				return (
-					<Badge variant="outline" className="text-gray-600 dark:text-gray-400">
-						User
-					</Badge>
+					<div className="flex items-center gap-1.5">
+						{role === 'ADMIN' && <ShieldCheck className="w-3.5 h-3.5 text-black dark:text-white" />}
+						<span className={`text-xs font-bold ${role === 'ADMIN' ? 'text-gray-900 dark:text-white' : 'text-gray-500'}`}>
+							{role === 'ADMIN' ? 'Admin' : 'User'}
+						</span>
+					</div>
 				);
 			},
 		},
@@ -205,8 +144,8 @@ export default function AdminUsers() {
 			accessorKey: 'createdAt',
 			header: 'Joined At',
 			cell: ({ row }: any) => (
-				<div className="flex items-center text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
-					<CalendarDays className="w-4 h-4 mr-1 opacity-70" />
+				<div className="flex items-center text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+					<CalendarDays className="w-3.5 h-3.5 mr-1.5 opacity-50" />
 					{formatDate(row.getValue('createdAt'))}
 				</div>
 			),
@@ -235,8 +174,9 @@ export default function AdminUsers() {
 	if (loading) {
 		return (
 			<AdminLayout>
-				<div className="flex justify-center items-center h-[calc(100vh-100px)]">
-					<Loader2 className="animate-spin w-8 h-8 text-blue-600 dark:text-blue-500" />
+				<div className="flex flex-col items-center justify-center h-[calc(100vh-100px)] gap-3">
+					<Loader2 className="animate-spin w-6 h-6 text-gray-600 dark:text-gray-400" />
+					<p className="text-sm font-medium text-gray-500">Loading users...</p>
 				</div>
 			</AdminLayout>
 		);
@@ -244,105 +184,96 @@ export default function AdminUsers() {
 
 	return (
 		<AdminLayout>
-			<div className="space-y-6">
+			<div className="space-y-6 max-w-[1400px] mx-auto">
+				{/* Top Header */}
 				<div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
 					<div>
-						<h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+						<h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
 							Users
-						</h2>
-						<p className="text-gray-500 dark:text-gray-400 mt-2">
-							Manage all registered users on the platform.
+						</h1>
+						<p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+							Manage registered accounts and verification statuses.
 						</p>
 					</div>
-				</div>
 
-				<div className="flex items-center justify-end">
 					<div className="relative w-full sm:w-80">
-						<Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500 dark:text-gray-400" />
-						<Input
-							placeholder="Search by username, email, phone..."
+						<Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+						<input
+							type="text"
+							placeholder="Search by username, email, ID..."
 							value={globalFilter ?? ''}
 							onChange={(e) => setGlobalFilter(e.target.value)}
-							className="pl-9 bg-white dark:bg-[#1C1C1E] border-gray-200 dark:border-white/10 focus-visible:ring-blue-500"
+							className="w-full pl-9 pr-4 py-2 text-sm bg-white dark:bg-[#121214] border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition shadow-sm"
 						/>
 					</div>
 				</div>
 
-				<div className="rounded-xl border bg-white dark:bg-[#1C1C1E] dark:border-white/10 shadow-sm overflow-hidden">
+				{/* Table Container */}
+				<div className="bg-white dark:bg-[#121214] border border-gray-200 dark:border-white/5 rounded-xl shadow-xs overflow-hidden relative">
 					<div className="overflow-x-auto">
-						<Table>
-							<TableHeader className="bg-gray-50 dark:bg-[#2C2C2E]">
+						<table className="w-full text-left text-sm whitespace-nowrap">
+							<thead className="bg-gray-50 dark:bg-white/5 border-b border-gray-200 dark:border-white/5 text-gray-500 dark:text-gray-400 font-semibold text-xs tracking-wide">
 								{table.getHeaderGroups().map((headerGroup) => (
-									<TableRow
-										key={headerGroup.id}
-										className="border-gray-200 dark:border-white/10 hover:bg-transparent"
-									>
+									<tr key={headerGroup.id}>
 										{headerGroup.headers.map((header) => (
-											<TableHead
-												key={header.id}
-												className="text-gray-600 dark:text-gray-400 font-medium whitespace-nowrap"
-											>
+											<th key={header.id} className="py-3.5 px-4 uppercase">
 												{header.isPlaceholder
 													? null
 													: flexRender(header.column.columnDef.header, header.getContext())}
-											</TableHead>
+											</th>
 										))}
-									</TableRow>
+									</tr>
 								))}
-							</TableHeader>
-							<TableBody>
+							</thead>
+							<tbody className="divide-y divide-gray-100 dark:divide-white/5">
 								{table.getRowModel().rows?.length ? (
 									table.getRowModel().rows.map((row) => (
-										<TableRow
+										<tr
 											key={row.id}
-											data-state={row.getIsSelected() && 'selected'}
-											className="border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+											className="hover:bg-gray-50/80 dark:hover:bg-white/5 transition-colors group"
 										>
 											{row.getVisibleCells().map((cell) => (
-												<TableCell key={cell.id} className="py-3 px-4">
+												<td key={cell.id} className="py-4 px-4">
 													{flexRender(cell.column.columnDef.cell, cell.getContext())}
-												</TableCell>
+												</td>
 											))}
-										</TableRow>
+										</tr>
 									))
 								) : (
-									<TableRow>
-										<TableCell colSpan={columns.length} className="h-32 text-center">
+									<tr>
+										<td colSpan={columns.length} className="h-48 text-center">
 											<div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
-												<User className="w-8 h-8 mb-2 opacity-20" />
-												<p>No users found.</p>
+												<User className="w-8 h-8 mb-3 opacity-20" />
+												<p className="text-sm font-medium">No users found.</p>
 											</div>
-										</TableCell>
-									</TableRow>
+										</td>
+									</tr>
 								)}
-							</TableBody>
-						</Table>
+							</tbody>
+						</table>
 					</div>
-				</div>
 
-				<div className="flex items-center justify-between py-4">
-					<div className="text-sm text-gray-500 dark:text-gray-400">
-						Showing {table.getRowModel().rows.length} of {users.length} users
-					</div>
-					<div className="flex items-center space-x-2">
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={() => table.previousPage()}
-							disabled={!table.getCanPreviousPage()}
-							className="border-gray-200 dark:border-white/10 dark:bg-transparent dark:text-white dark:hover:bg-white/10"
-						>
-							Previous
-						</Button>
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={() => table.nextPage()}
-							disabled={!table.getCanNextPage()}
-							className="border-gray-200 dark:border-white/10 dark:bg-transparent dark:text-white dark:hover:bg-white/10"
-						>
-							Next
-						</Button>
+					{/* Pagination Footer */}
+					<div className="flex items-center justify-between py-3 px-4 border-t border-gray-200 dark:border-white/5 bg-gray-50/50 dark:bg-transparent">
+						<div className="text-xs font-medium text-gray-500 dark:text-gray-400">
+							Showing <span className="text-gray-900 dark:text-white">{table.getRowModel().rows.length}</span> of <span className="text-gray-900 dark:text-white">{users.length}</span> users
+						</div>
+						<div className="flex items-center gap-2">
+							<button
+								onClick={() => table.previousPage()}
+								disabled={!table.getCanPreviousPage()}
+								className="px-3 py-1.5 text-xs font-semibold rounded-md border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 disabled:opacity-50 transition cursor-pointer"
+							>
+								Prev
+							</button>
+							<button
+								onClick={() => table.nextPage()}
+								disabled={!table.getCanNextPage()}
+								className="px-3 py-1.5 text-xs font-semibold rounded-md border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 disabled:opacity-50 transition cursor-pointer"
+							>
+								Next
+							</button>
+						</div>
 					</div>
 				</div>
 			</div>

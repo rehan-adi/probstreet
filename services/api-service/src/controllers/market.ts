@@ -315,7 +315,7 @@ export const getAllMarket = async (c: Context) => {
 	try {
 		const rawMarkets = await prisma.market.findMany({
 			where: {
-				status: 'OPEN',
+				status: { in: ['OPEN', 'CLOSED'] },
 			},
 			orderBy: {
 				createdAt: 'desc',
@@ -331,6 +331,7 @@ export const getAllMarket = async (c: Context) => {
 				categoryId: true,
 				status: true,
 				symbol: true,
+				result: true,
 				category: {
 					select: { categoryName: true },
 				},
@@ -421,7 +422,7 @@ export const getMarketsByCategory = async (c: Context) => {
 		const markets = await prisma.market.findMany({
 			where: {
 				categoryId: category.id,
-				status: 'OPEN',
+				status: { in: ['OPEN', 'CLOSED'] },
 			},
 			orderBy: {
 				createdAt: 'desc',
@@ -437,6 +438,7 @@ export const getMarketsByCategory = async (c: Context) => {
 				thumbnail: true,
 				status: true,
 				symbol: true,
+				result: true,
 			},
 		});
 
@@ -563,6 +565,7 @@ export const getMarketDetails = async (c: Context) => {
 					startTime: true,
 					sourceOfTruth: true,
 					status: true,
+					result: true,
 					numberOfTraders: true,
 					category: {
 						select: { categoryName: true },
@@ -646,9 +649,17 @@ export const getMarketDetails = async (c: Context) => {
 			} else if (marketId) {
 				const m = await prisma.market.findUnique({
 					where: { id: marketId },
-					select: { category: { select: { categoryName: true } } },
+					select: {
+						status: true,
+						result: true,
+						category: { select: { categoryName: true } },
+					},
 				});
 				if (m?.category?.categoryName) categoryName = m.category.categoryName;
+				if (response.data) {
+					response.data.status = m?.status || response.data.status || 'OPEN';
+					response.data.result = m?.result || response.data.result || null;
+				}
 			}
 
 			// If engine data exists, attach it
@@ -703,7 +714,7 @@ export const searchMarkets = async (c: Context) => {
 		const [markets, total] = await Promise.all([
 			prisma.market.findMany({
 				where: {
-					status: 'OPEN',
+					status: { in: ['OPEN', 'CLOSED'] },
 					OR: [
 						{ title: { contains: q, mode: 'insensitive' } },
 						{ symbol: { contains: q, mode: 'insensitive' } },
@@ -724,7 +735,7 @@ export const searchMarkets = async (c: Context) => {
 			}),
 			prisma.market.count({
 				where: {
-					status: 'OPEN',
+					status: { in: ['OPEN', 'CLOSED'] },
 					OR: [
 						{ title: { contains: q, mode: 'insensitive' } },
 						{ symbol: { contains: q, mode: 'insensitive' } },

@@ -51,6 +51,8 @@ interface Market {
 	endTime: string;
 	category?: string;
 	sourceOfTruth?: string;
+	status?: string;
+	result?: string;
 	overview: {
 		SourceOfTruth?: string;
 		StartDate?: string;
@@ -702,7 +704,86 @@ export default function EventDetails() {
 				</div>
 
 				<div className="w-[30%] max-[1160px]:w-[35%] max-[970px]:hidden lg:sticky lg:top-32 self-start max-h-[calc(100vh-130px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] scrollbar-none pb-10">
-					{isAuthenticated ? (
+					{market.status === 'CLOSED' ? (
+						<div className="space-y-6">
+							<div className="bg-card border border-border rounded-2xl p-6 shadow-sm overflow-hidden relative">
+								<div
+									className={`absolute top-0 left-0 right-0 h-1.5 ${
+										(market.result || '').toUpperCase() === 'YES'
+											? 'bg-emerald-500'
+											: (market.result || '').toUpperCase() === 'NO'
+												? 'bg-red-500'
+												: 'bg-blue-500'
+									}`}
+								/>
+								
+								<div className="flex items-center justify-between pb-4 border-b border-border">
+									<div className="flex items-center gap-2">
+										<span className="relative flex h-2.5 w-2.5">
+											<span
+												className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+													(market.result || '').toUpperCase() === 'YES'
+														? 'bg-emerald-400'
+														: 'bg-red-400'
+												}`}
+											/>
+											<span
+												className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+													(market.result || '').toUpperCase() === 'YES'
+														? 'bg-emerald-500'
+														: 'bg-red-500'
+												}`}
+											/>
+										</span>
+										<span className="text-xs font-black uppercase tracking-wider text-muted-foreground">
+											Market Concluded
+										</span>
+									</div>
+									<span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+										Resolved
+									</span>
+								</div>
+
+								<div className="py-6 text-center">
+									<p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">
+										Winning Outcome
+									</p>
+									<div className="inline-flex items-center justify-center gap-3">
+										<span
+											className={`text-4xl font-black px-6 py-2 rounded-xl shadow-xs uppercase tracking-tight ${
+												(market.result || '').toUpperCase() === 'YES'
+													? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+													: (market.result || '').toUpperCase() === 'NO'
+														? 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
+														: 'bg-muted text-foreground'
+											}`}
+										>
+											{market.result || 'Settled'}
+										</span>
+									</div>
+									<p className="text-xs text-muted-foreground mt-4 leading-relaxed max-w-xs mx-auto">
+										Trading has concluded for this market. All winning shares have been settled at ₹10.00 each.
+									</p>
+								</div>
+
+								<div className="bg-muted/40 rounded-xl p-4 border border-border/60 space-y-3">
+									<div className="flex justify-between text-xs">
+										<span className="text-muted-foreground font-medium">Final Yes Payout:</span>
+										<span className="font-bold text-foreground">
+											{(market.result || '').toUpperCase() === 'YES' ? '₹10.00' : '₹0.00'}
+										</span>
+									</div>
+									<div className="flex justify-between text-xs">
+										<span className="text-muted-foreground font-medium">Final No Payout:</span>
+										<span className="font-bold text-foreground">
+											{(market.result || '').toUpperCase() === 'NO' ? '₹10.00' : '₹0.00'}
+										</span>
+									</div>
+								</div>
+							</div>
+							<MarketNews />
+						</div>
+					) : isAuthenticated ? (
 						<>
 							<PlaceOrder
 								symbol={market.symbol}
@@ -771,34 +852,59 @@ export default function EventDetails() {
 			</div>
 
 			{/* Mobile Bottom Order Bar (Opens PlaceOrder or Signin) */}
-			<div className="hidden max-[970px]:flex justify-between items-center px-6 py-4 bg-card border-t border-border bottom-0 fixed w-full z-50 gap-4">
-				<button
-					onClick={() => {
-						if (!isAuthenticated) {
-							openOnboardModal();
-							return;
-						}
-						setInnerTab('Yes');
-						setIsMobileOrderOpen(true);
-					}}
-					className="text-green-600 border border-green-200 bg-green-50 dark:bg-green-950/30 text-sm px-3 py-3 rounded-lg w-full font-bold cursor-pointer"
-				>
-					Yes ₹{market.yesPrice}
-				</button>
-				<button
-					onClick={() => {
-						if (!isAuthenticated) {
-							openOnboardModal();
-							return;
-						}
-						setInnerTab('No');
-						setIsMobileOrderOpen(true);
-					}}
-					className="text-red-600 border border-red-200 bg-red-50 dark:bg-red-950/30 text-sm px-3 py-3 rounded-lg w-full font-bold cursor-pointer"
-				>
-					No ₹{market.noPrice}
-				</button>
-			</div>
+			{market.status === 'CLOSED' ? (
+				<div className="hidden max-[970px]:flex items-center justify-between px-6 py-4 bg-card border-t border-border bottom-0 fixed w-full z-50">
+					<div className="flex items-center gap-2">
+						<span
+							className={`w-2.5 h-2.5 rounded-full ${
+								(market.result || '').toUpperCase() === 'YES' ? 'bg-emerald-500' : 'bg-red-500'
+							}`}
+						/>
+						<span className="text-xs font-bold uppercase text-muted-foreground">Market Resolved</span>
+					</div>
+					<div className="flex items-center gap-2">
+						<span className="text-xs font-medium text-muted-foreground">Winner:</span>
+						<span
+							className={`text-xs font-black uppercase px-3 py-1 rounded-md ${
+								(market.result || '').toUpperCase() === 'YES'
+									? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+									: 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
+							}`}
+						>
+							{market.result || 'Settled'}
+						</span>
+					</div>
+				</div>
+			) : (
+				<div className="hidden max-[970px]:flex justify-between items-center px-6 py-4 bg-card border-t border-border bottom-0 fixed w-full z-50 gap-4">
+					<button
+						onClick={() => {
+							if (!isAuthenticated) {
+								openOnboardModal();
+								return;
+							}
+							setInnerTab('Yes');
+							setIsMobileOrderOpen(true);
+						}}
+						className="text-green-600 border border-green-200 bg-green-50 dark:bg-green-950/30 text-sm px-3 py-3 rounded-lg w-full font-bold cursor-pointer"
+					>
+						Yes ₹{market.yesPrice}
+					</button>
+					<button
+						onClick={() => {
+							if (!isAuthenticated) {
+								openOnboardModal();
+								return;
+							}
+							setInnerTab('No');
+							setIsMobileOrderOpen(true);
+						}}
+						className="text-red-600 border border-red-200 bg-red-50 dark:bg-red-950/30 text-sm px-3 py-3 rounded-lg w-full font-bold cursor-pointer"
+					>
+						No ₹{market.noPrice}
+					</button>
+				</div>
+			)}
 
 			{/* Mobile Order Popup/Drawer */}
 			{isMobileOrderOpen && (

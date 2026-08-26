@@ -19,18 +19,6 @@ import {
 	getSortedRowModel,
 	useReactTable,
 } from '@tanstack/react-table';
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatINR, formatDate } from '@/lib/format';
 
 export default function AdminTransactions() {
@@ -64,15 +52,15 @@ export default function AdminTransactions() {
 	const getTransactionIcon = (type: string) => {
 		switch (type) {
 			case 'DEPOSIT':
-				return <ArrowDownRight className="w-4 h-4" />;
+				return <ArrowDownRight className="w-3.5 h-3.5" />;
 			case 'WITHDRAWAL':
-				return <ArrowUpRight className="w-4 h-4" />;
+				return <ArrowUpRight className="w-3.5 h-3.5" />;
 			case 'TRADE':
-				return <Banknote className="w-4 h-4" />;
+				return <Banknote className="w-3.5 h-3.5" />;
 			case 'FEE':
-				return <CreditCard className="w-4 h-4" />;
+				return <CreditCard className="w-3.5 h-3.5" />;
 			default:
-				return <WalletCards className="w-4 h-4" />;
+				return <WalletCards className="w-3.5 h-3.5" />;
 		}
 	};
 
@@ -83,7 +71,7 @@ export default function AdminTransactions() {
 			cell: ({ row }: any) => {
 				const id = row.getValue('id');
 				return (
-					<div className="font-mono text-xs text-gray-500 dark:text-gray-400">
+					<div className="font-mono text-[11px] font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-white/5 px-2 py-1 rounded w-fit border border-gray-100 dark:border-white/5">
 						{id.substring(0, 12)}...
 					</div>
 				);
@@ -96,7 +84,7 @@ export default function AdminTransactions() {
 				const user = row.original.user;
 				return (
 					<div className="flex flex-col">
-						<span className="font-medium text-gray-900 dark:text-white">
+						<span className="font-semibold text-sm text-gray-900 dark:text-white">
 							{user?.username || 'System'}
 						</span>
 						<span className="text-xs text-gray-500 dark:text-gray-400">{user?.email || 'N/A'}</span>
@@ -109,29 +97,11 @@ export default function AdminTransactions() {
 			header: 'Type',
 			cell: ({ row }: any) => {
 				const type = row.getValue('type');
-
-				let badgeClass =
-					'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700';
-
-				if (type === 'DEPOSIT') {
-					badgeClass =
-						'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20';
-				} else if (type === 'WITHDRAWAL') {
-					badgeClass =
-						'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20';
-				} else if (type === 'TRADE') {
-					badgeClass =
-						'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-500/20';
-				} else if (type === 'FEE') {
-					badgeClass =
-						'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20';
-				}
-
 				return (
-					<Badge variant="outline" className={`flex w-fit items-center gap-1 ${badgeClass}`}>
+					<span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-md tracking-wide border bg-gray-50 text-gray-700 border-gray-200 dark:bg-white/5 dark:text-gray-300 dark:border-white/10">
 						{getTransactionIcon(type)}
 						{type}
-					</Badge>
+					</span>
 				);
 			},
 		},
@@ -147,12 +117,12 @@ export default function AdminTransactions() {
 
 				return (
 					<div
-						className={`font-semibold ${
+						className={`font-bold text-sm tracking-tight ${
 							isPositive
 								? 'text-emerald-600 dark:text-emerald-400'
 								: isNegative
-									? 'text-red-600 dark:text-red-400'
-									: 'text-gray-900 dark:text-white'
+									? 'text-gray-900 dark:text-white'
+									: 'text-gray-500 dark:text-gray-400'
 						}`}
 					>
 						{isPositive ? '+' : isNegative ? '-' : ''}
@@ -166,39 +136,38 @@ export default function AdminTransactions() {
 			header: 'Status',
 			cell: ({ row }: any) => {
 				const status = row.getValue('status');
+				
 				if (status === 'COMPLETED' || status === 'SUCCESS') {
 					return (
-						<span className="flex items-center text-sm font-medium text-emerald-600 dark:text-emerald-400">
-							<span className="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>Completed
+						<span className="flex items-center text-xs font-bold text-emerald-600 dark:text-emerald-400">
+							<span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>Completed
 						</span>
 					);
 				}
 				if (status === 'PENDING') {
 					return (
-						<span className="flex items-center text-sm font-medium text-amber-600 dark:text-amber-400">
-							<span className="w-2 h-2 rounded-full bg-amber-500 mr-2 animate-pulse"></span>Pending
+						<span className="flex items-center text-xs font-bold text-gray-600 dark:text-gray-400">
+							<span className="w-1.5 h-1.5 rounded-full bg-gray-500 mr-1.5 animate-pulse"></span>Pending
 						</span>
 					);
 				}
 				if (status === 'FAILED') {
 					return (
-						<span className="flex items-center text-sm font-medium text-red-600 dark:text-red-400">
-							<span className="w-2 h-2 rounded-full bg-red-500 mr-2"></span>Failed
+						<span className="flex items-center text-xs font-bold text-red-600 dark:text-red-400">
+							<span className="w-1.5 h-1.5 rounded-full bg-red-500 mr-1.5"></span>Failed
 						</span>
 					);
 				}
-				return <span className="text-sm text-gray-500">{status}</span>;
+				return <span className="text-xs font-bold text-gray-500 uppercase">{status}</span>;
 			},
 		},
 		{
 			accessorKey: 'createdAt',
 			header: 'Date',
 			cell: ({ row }: any) => (
-				<div className="flex flex-col">
-					<span className="text-sm text-gray-900 dark:text-white whitespace-nowrap">
-						{formatDate(row.getValue('createdAt'))}
-					</span>
-				</div>
+				<span className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap font-medium">
+					{formatDate(row.getValue('createdAt'))}
+				</span>
 			),
 		},
 	];
@@ -225,134 +194,128 @@ export default function AdminTransactions() {
 	if (loading) {
 		return (
 			<AdminLayout>
-				<div className="flex justify-center items-center h-[calc(100vh-100px)]">
-					<Loader2 className="animate-spin w-8 h-8 text-blue-600 dark:text-blue-500" />
+				<div className="flex flex-col items-center justify-center h-[calc(100vh-100px)] gap-3">
+					<Loader2 className="animate-spin w-6 h-6 text-gray-600 dark:text-gray-400" />
+					<p className="text-sm font-medium text-gray-500">Loading transactions...</p>
 				</div>
 			</AdminLayout>
 		);
 	}
 
+	const filterOptions = ['ALL', 'DEPOSIT', 'WITHDRAWAL', 'TRADE', 'FEE'];
+
 	return (
 		<AdminLayout>
-			<div className="space-y-6">
-				<div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+			<div className="space-y-6 max-w-[1400px] mx-auto">
+				{/* Header */}
+				<div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
 					<div>
-						<h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+						<h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
 							Transactions
-						</h2>
-						<p className="text-gray-500 dark:text-gray-400 mt-2">
-							View all financial activity across the platform.
+						</h1>
+						<p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+							View and monitor all financial activity across the platform.
 						</p>
 					</div>
-				</div>
 
-				<div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-					<Tabs value={typeFilter} onValueChange={setTypeFilter} className="w-full sm:w-auto">
-						<TabsList className="bg-gray-100 dark:bg-[#1C1C1E] h-auto flex-wrap">
-							<TabsTrigger value="ALL" className="py-2">
-								All
-							</TabsTrigger>
-							<TabsTrigger value="DEPOSIT" className="py-2">
-								Deposits
-							</TabsTrigger>
-							<TabsTrigger value="WITHDRAWAL" className="py-2">
-								Withdrawals
-							</TabsTrigger>
-							<TabsTrigger value="TRADE" className="py-2">
-								Trades
-							</TabsTrigger>
-							<TabsTrigger value="FEE" className="py-2">
-								Fees
-							</TabsTrigger>
-						</TabsList>
-					</Tabs>
+					<div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+						{/* Custom Filter Tabs */}
+						<div className="flex p-1 bg-gray-100 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/5 w-full sm:w-auto overflow-x-auto custom-scrollbar">
+							{filterOptions.map((opt) => (
+								<button
+									key={opt}
+									onClick={() => setTypeFilter(opt)}
+									className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all whitespace-nowrap ${
+										typeFilter === opt
+											? 'bg-white dark:bg-[#2C2C2E] text-gray-900 dark:text-white shadow-sm border border-gray-200 dark:border-white/10'
+											: 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 border border-transparent'
+									}`}
+								>
+									{opt === 'ALL' ? 'All' : opt.charAt(0) + opt.slice(1).toLowerCase() + 's'}
+								</button>
+							))}
+						</div>
 
-					<div className="relative w-full sm:w-72">
-						<Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500 dark:text-gray-400" />
-						<Input
-							placeholder="Search transactions..."
-							value={globalFilter ?? ''}
-							onChange={(e) => setGlobalFilter(e.target.value)}
-							className="pl-9 bg-white dark:bg-[#1C1C1E] border-gray-200 dark:border-white/10 focus-visible:ring-blue-500"
-						/>
+						{/* Search Bar */}
+						<div className="relative w-full sm:w-64 shrink-0">
+							<Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+							<input
+								type="text"
+								placeholder="Search transactions..."
+								value={globalFilter ?? ''}
+								onChange={(e) => setGlobalFilter(e.target.value)}
+								className="w-full pl-9 pr-4 py-2 text-sm bg-white dark:bg-[#121214] border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition shadow-sm"
+							/>
+						</div>
 					</div>
 				</div>
 
-				<div className="rounded-xl border bg-white dark:bg-[#1C1C1E] dark:border-white/10 shadow-sm overflow-hidden">
+				{/* Table Container */}
+				<div className="bg-white dark:bg-[#121214] border border-gray-200 dark:border-white/5 rounded-xl shadow-xs overflow-hidden relative">
 					<div className="overflow-x-auto">
-						<Table>
-							<TableHeader className="bg-gray-50 dark:bg-[#2C2C2E]">
+						<table className="w-full text-left text-sm whitespace-nowrap">
+							<thead className="bg-gray-50 dark:bg-white/5 border-b border-gray-200 dark:border-white/5 text-gray-500 dark:text-gray-400 font-semibold text-xs tracking-wide">
 								{table.getHeaderGroups().map((headerGroup) => (
-									<TableRow
-										key={headerGroup.id}
-										className="border-gray-200 dark:border-white/10 hover:bg-transparent"
-									>
+									<tr key={headerGroup.id}>
 										{headerGroup.headers.map((header) => (
-											<TableHead
-												key={header.id}
-												className="text-gray-600 dark:text-gray-400 font-medium whitespace-nowrap"
-											>
+											<th key={header.id} className="py-3.5 px-4 uppercase">
 												{header.isPlaceholder
 													? null
 													: flexRender(header.column.columnDef.header, header.getContext())}
-											</TableHead>
+											</th>
 										))}
-									</TableRow>
+									</tr>
 								))}
-							</TableHeader>
-							<TableBody>
+							</thead>
+							<tbody className="divide-y divide-gray-100 dark:divide-white/5">
 								{table.getRowModel().rows?.length ? (
 									table.getRowModel().rows.map((row) => (
-										<TableRow
+										<tr
 											key={row.id}
-											data-state={row.getIsSelected() && 'selected'}
-											className="border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+											className="hover:bg-gray-50/80 dark:hover:bg-white/5 transition-colors group"
 										>
 											{row.getVisibleCells().map((cell) => (
-												<TableCell key={cell.id} className="py-3 px-4">
+												<td key={cell.id} className="py-4 px-4">
 													{flexRender(cell.column.columnDef.cell, cell.getContext())}
-												</TableCell>
+												</td>
 											))}
-										</TableRow>
+										</tr>
 									))
 								) : (
-									<TableRow>
-										<TableCell colSpan={columns.length} className="h-32 text-center">
+									<tr>
+										<td colSpan={columns.length} className="h-48 text-center">
 											<div className="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
-												<WalletCards className="w-8 h-8 mb-2 opacity-20" />
-												<p>No transactions found.</p>
+												<WalletCards className="w-8 h-8 mb-3 opacity-20" />
+												<p className="text-sm font-medium">No transactions found.</p>
 											</div>
-										</TableCell>
-									</TableRow>
+										</td>
+									</tr>
 								)}
-							</TableBody>
-						</Table>
+							</tbody>
+						</table>
 					</div>
-				</div>
 
-				<div className="flex items-center justify-between py-4">
-					<div className="text-sm text-gray-500 dark:text-gray-400">
-						Showing {table.getRowModel().rows.length} of {filteredTransactions.length} transactions
-					</div>
-					<div className="flex items-center space-x-2">
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={() => table.previousPage()}
-							disabled={!table.getCanPreviousPage()}
-							className="border-gray-200 dark:border-white/10 dark:bg-transparent dark:text-white dark:hover:bg-white/10"
-						>
-							Previous
-						</Button>
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={() => table.nextPage()}
-							disabled={!table.getCanNextPage()}
-							className="border-gray-200 dark:border-white/10 dark:bg-transparent dark:text-white dark:hover:bg-white/10"
-						>
-							Next
-						</Button>
+					{/* Pagination Footer */}
+					<div className="flex items-center justify-between py-3 px-4 border-t border-gray-200 dark:border-white/5 bg-gray-50/50 dark:bg-transparent">
+						<div className="text-xs font-medium text-gray-500 dark:text-gray-400">
+							Showing <span className="text-gray-900 dark:text-white">{table.getRowModel().rows.length}</span> of <span className="text-gray-900 dark:text-white">{filteredTransactions.length}</span> transactions
+						</div>
+						<div className="flex items-center gap-2">
+							<button
+								onClick={() => table.previousPage()}
+								disabled={!table.getCanPreviousPage()}
+								className="px-3 py-1.5 text-xs font-semibold rounded-md border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 disabled:opacity-50 transition cursor-pointer"
+							>
+								Prev
+							</button>
+							<button
+								onClick={() => table.nextPage()}
+								disabled={!table.getCanNextPage()}
+								className="px-3 py-1.5 text-xs font-semibold rounded-md border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 disabled:opacity-50 transition cursor-pointer"
+							>
+								Next
+							</button>
+						</div>
 					</div>
 				</div>
 			</div>

@@ -14,25 +14,38 @@ export const useThemeStore = create<ThemeState>()(
 			toggleTheme: () =>
 				set((state) => {
 					const newTheme = state.theme === 'light' ? 'dark' : 'light';
-					if (newTheme === 'dark') {
-						document.documentElement.classList.add('dark');
-					} else {
-						document.documentElement.classList.remove('dark');
+					if (typeof document !== 'undefined') {
+						if (newTheme === 'dark') {
+							document.documentElement.classList.add('dark');
+						} else {
+							document.documentElement.classList.remove('dark');
+						}
 					}
 					return { theme: newTheme };
 				}),
 			setTheme: (theme) =>
 				set(() => {
-					if (theme === 'dark') {
-						document.documentElement.classList.add('dark');
-					} else {
-						document.documentElement.classList.remove('dark');
+					if (typeof document !== 'undefined') {
+						if (theme === 'dark') {
+							document.documentElement.classList.add('dark');
+						} else {
+							document.documentElement.classList.remove('dark');
+						}
 					}
 					return { theme };
 				}),
 		}),
 		{
 			name: 'theme-storage',
+			onRehydrateStorage: () => (state) => {
+				if (typeof document !== 'undefined') {
+					if (state?.theme === 'dark') {
+						document.documentElement.classList.add('dark');
+					} else if (state?.theme === 'light') {
+						document.documentElement.classList.remove('dark');
+					}
+				}
+			},
 		},
 	),
 );

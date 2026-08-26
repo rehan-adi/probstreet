@@ -1,17 +1,14 @@
 import { toast } from 'sonner';
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { getPriceAlerts, deletePriceAlert } from '@/api/price-alerts';
 import {
 	BellRing,
 	Trash2,
 	TrendingUp,
 	TrendingDown,
-	ArrowLeft,
 	ShieldCheck,
 	SlidersHorizontal,
-	ExternalLink,
-	Sparkles,
 	Clock,
 	Zap,
 } from 'lucide-react';
@@ -30,7 +27,6 @@ interface PriceAlert {
 }
 
 export default function ControlCentrePage() {
-	const navigate = useNavigate();
 	const [alerts, setAlerts] = useState<PriceAlert[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [activeTab, setActiveTab] = useState<'alerts' | 'limits'>('alerts');

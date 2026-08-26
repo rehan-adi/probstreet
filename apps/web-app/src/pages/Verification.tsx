@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -78,18 +78,12 @@ export default function KycVerificationPage() {
 	const {
 		kycVerificationStatus,
 		paymentVerificationStatus,
-		paymentMethods = [],
 	} = statusData?.data.data || {};
 
 	const isKycComplete = kycVerificationStatus === 'PENDING' || kycVerificationStatus === 'VERIFIED';
 	const isPaymentComplete =
 		paymentVerificationStatus === 'PENDING' || paymentVerificationStatus === 'VERIFIED';
 	const isAllComplete = isKycComplete && isPaymentComplete;
-
-	const hasBank = paymentMethods.some((pm: any) => pm.type === 'BANK');
-	const hasUpi = paymentMethods.some((pm: any) => pm.type === 'UPI');
-
-	// Auto-select logic removed to allow adding multiple accounts
 
 	return (
 		<div className="w-full min-h-screen bg-[#f4f4f5] dark:bg-[#090C1A] flex justify-center items-start text-gray-900 dark:text-white transition-colors pb-12">

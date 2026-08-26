@@ -75,7 +75,7 @@ export default function SearchModal({ onClose }: { onClose: () => void }) {
 				dragListener={false}
 				dragConstraints={{ top: 0 }}
 				dragElastic={0.2}
-				onDragEnd={(e, { offset, velocity }) => {
+				onDragEnd={(_, { offset, velocity }) => {
 					if (offset.y > 100 || velocity.y > 500) {
 						onClose();
 					}

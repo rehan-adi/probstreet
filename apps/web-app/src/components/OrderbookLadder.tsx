@@ -22,7 +22,7 @@ const OrderRow = React.memo(
 		order,
 		cumulative,
 		maxCum,
-		isHovered,
+		isHovered: _isHovered,
 		isHighlighted,
 		isBoundary,
 		onHover,
