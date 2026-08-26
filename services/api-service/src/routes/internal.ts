@@ -1,12 +1,21 @@
 import { Hono } from 'hono';
 import { ENV } from '@/config/env';
+import * as nodemailer from 'nodemailer';
 import { prisma } from '@probstreet/database';
-import { notificationEmitter } from '@/controllers/notifications';
+import { notifyUser } from '@/controllers/notifications';
 
 // Internal routes for the Notification Worker to read/write DB data.
 // These are NOT exposed publicly. They are protected by a shared secret.
 
 export const internalRoutes = new Hono();
+
+const mailer = nodemailer.createTransport({
+	service: 'gmail',
+	auth: {
+		user: process.env.GMAIL_USER,
+		pass: process.env.GMAIL_APP_PASSWORD,
+	},
+});
 
 internalRoutes.use('*', async (c, next) => {
 	const secret = c.req.header('x-worker-secret');
@@ -133,7 +142,7 @@ internalRoutes.post('/notification/save', async (c) => {
 			},
 		});
 
-		notificationEmitter.emit('new_notification', notification);
+		notifyUser(userId, notification);
 
 		return c.json({ success: true });
 	} catch (err: any) {
@@ -188,10 +197,8 @@ internalRoutes.post('/notification/save-bulk', async (c) => {
 			})),
 		});
 
-		// Assuming we don't return the full objects from createMany, we might just emit simpler events
-		// Or loop and emit them so SSE can pick it up
 		finalUserIds.forEach((uid) => {
-			notificationEmitter.emit('new_notification', {
+			notifyUser(uid, {
 				userId: uid,
 				type,
 				title,
@@ -206,5 +213,20 @@ internalRoutes.post('/notification/save-bulk', async (c) => {
 		return c.json({ success: true, count: finalUserIds.length });
 	} catch (err: any) {
 		return c.json({ error: err.message }, 500);
+	}
+});
+
+internalRoutes.post('/notification/send-email', async (c) => {
+	try {
+		const { to, subject, html } = await c.req.json<{ to: string; subject: string; html: string }>();
+		await mailer.sendMail({
+			from: `"Probstreet" <${process.env.GMAIL_USER}>`,
+			to,
+			subject,
+			html,
+		});
+		return c.json({ success: true });
+	} catch (error: any) {
+		return c.json({ success: false, error: error.message }, 500);
 	}
 });

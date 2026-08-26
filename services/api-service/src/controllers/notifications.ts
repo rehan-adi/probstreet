@@ -1,12 +1,23 @@
 import { Context } from 'hono';
 import { logger } from '@/libs/logger';
-import { EventEmitter } from 'events';
-import { streamSSE } from 'hono/streaming';
 import { prisma } from '@probstreet/database';
+import { client } from '@/libs/redis/connection';
 
-export const notificationEmitter = new EventEmitter();
-
-notificationEmitter.setMaxListeners(1000);
+export const notifyUser = async (userId: string, data: any) => {
+	try {
+		await client.publish(
+			'stream:data',
+			JSON.stringify({
+				...data,
+				type: 'NOTIFICATION',
+				notificationType: data.type,
+				symbol: userId,
+			}),
+		);
+	} catch (error) {
+		logger.error({ error }, 'Failed to publish notification to redis');
+	}
+};
 
 export const getNotifications = async (c: Context) => {
 	try {
@@ -99,51 +110,4 @@ export const markAsRead = async (c: Context) => {
 			500,
 		);
 	}
-};
-
-export const streamNotifications = async (c: Context) => {
-	const user = c.get('user');
-
-	if (!user)
-		return c.json(
-			{
-				success: false,
-				error: 'Unauthorized',
-			},
-			401,
-		);
-
-	const userId = user.id;
-
-	return streamSSE(c, async (stream) => {
-		await stream.writeSSE({
-			data: JSON.stringify({ type: 'connected' }),
-			event: 'connected',
-		});
-
-		const onNotification = async (notification: any) => {
-			if (notification.userId === userId) {
-				await stream.writeSSE({
-					data: JSON.stringify(notification),
-					event: 'notification',
-				});
-			}
-		};
-
-		notificationEmitter.on('new_notification', onNotification);
-
-		stream.onAbort(() => {
-			notificationEmitter.off('new_notification', onNotification);
-		});
-
-		while (!stream.aborted) {
-			await stream.sleep(60000);
-			if (!stream.aborted) {
-				await stream.writeSSE({
-					data: 'ping',
-					event: 'ping',
-				});
-			}
-		}
-	});
 };
