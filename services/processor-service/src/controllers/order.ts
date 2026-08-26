@@ -512,7 +512,7 @@ export const handleOrderCancelled = async (data: any) => {
 
 		await prisma.$transaction(async (tx) => {
 			if (orderId) {
-				await tx.order.update({
+				await tx.order.updateMany({
 					where: { id: orderId },
 					data: { status: 'CANCELLED' },
 				});
