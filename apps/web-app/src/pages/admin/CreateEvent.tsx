@@ -14,9 +14,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Card, CardContent } from '@/components/ui/card';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const steps = ['Basic Info', 'Timeline', 'Thumbnail'];
 
@@ -192,7 +192,11 @@ const CreateEvent = () => {
 									</SelectTrigger>
 									<SelectContent className="bg-white dark:bg-[#1C1C1E] border-gray-200 dark:border-white/10 rounded-xl shadow-xl">
 										{categories.map((category: any) => (
-											<SelectItem key={category.id} value={category.id} className="cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 focus:bg-gray-50 dark:focus:bg-white/5 rounded-lg mx-1 my-0.5">
+											<SelectItem
+												key={category.id}
+												value={category.id}
+												className="cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 focus:bg-gray-50 dark:focus:bg-white/5 rounded-lg mx-1 my-0.5"
+											>
 												{category.categoryName}
 											</SelectItem>
 										))}
@@ -321,7 +325,9 @@ const CreateEvent = () => {
 			case 2:
 				return (
 					<div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
-						<h3 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Thumbnail</h3>
+						<h3 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">
+							Thumbnail
+						</h3>
 
 						<label
 							htmlFor="file-upload"
@@ -333,7 +339,10 @@ const CreateEvent = () => {
 							)}
 						>
 							<UploadCloud
-								className={cn('w-12 h-12 mb-4 transition-colors', form.thumbnail ? 'text-gray-900 dark:text-white' : 'text-gray-400')}
+								className={cn(
+									'w-12 h-12 mb-4 transition-colors',
+									form.thumbnail ? 'text-gray-900 dark:text-white' : 'text-gray-400',
+								)}
 							/>
 							<span
 								className={cn(
@@ -389,10 +398,17 @@ const CreateEvent = () => {
 							<div
 								className={cn(
 									'h-1.5 flex-1 rounded-full transition-colors duration-500',
-									step >= i ? 'bg-gray-900 dark:bg-white shadow-sm' : 'bg-gray-200 dark:bg-white/10',
+									step >= i
+										? 'bg-gray-900 dark:bg-white shadow-sm'
+										: 'bg-gray-200 dark:bg-white/10',
 								)}
 							/>
-							<span className={cn('text-[10px] font-bold uppercase tracking-wider', step >= i ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-600')}>
+							<span
+								className={cn(
+									'text-[10px] font-bold uppercase tracking-wider',
+									step >= i ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-600',
+								)}
+							>
 								{s}
 							</span>
 						</div>
@@ -401,7 +417,7 @@ const CreateEvent = () => {
 
 				<Card className="border-gray-200 dark:border-white/5 bg-white dark:bg-[#1C1C1E] shadow-xl dark:shadow-2xl dark:shadow-black/50 rounded-2xl overflow-hidden backdrop-blur-xl">
 					<CardContent className="p-6 md:p-8">
-						<div className="min-h-[350px]">{renderStep()}</div>
+						<div className="min-h-87.5">{renderStep()}</div>
 
 						<div className="flex items-center justify-between mt-10 pt-6 border-t border-gray-100 dark:border-white/5">
 							<button
@@ -426,7 +442,7 @@ const CreateEvent = () => {
 									type="button"
 									onClick={handleSubmit}
 									disabled={isPending}
-									className="px-6 py-2.5 rounded-xl font-bold text-sm bg-gray-900 hover:bg-black text-white dark:bg-white dark:hover:bg-gray-100 dark:text-black shadow-md transition-all disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-white/50 flex items-center justify-center gap-2 min-w-[140px]"
+									className="px-6 py-2.5 rounded-xl font-bold text-sm bg-gray-900 hover:bg-black text-white dark:bg-white dark:hover:bg-gray-100 dark:text-black shadow-md transition-all disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:focus:ring-white/50 flex items-center justify-center gap-2 min-w-35"
 								>
 									{isPending ? (
 										<>

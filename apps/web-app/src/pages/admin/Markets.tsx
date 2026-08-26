@@ -1,7 +1,7 @@
 import { toast } from 'sonner';
+import { createPortal } from 'react-dom';
 import { adminApi } from '@/config/axios';
 import { useEffect, useState, useCallback } from 'react';
-import { createPortal } from 'react-dom';
 import AdminLayout from '@/components/admin/AdminLayout';
 import {
 	Loader2,
@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import { formatINR, formatDate } from '@/lib/format';
 
-// ─── Resolve Modal ────────────────────────────────────────────────────────────
 function ResolveModal({
 	market,
 	resolvingId,
@@ -36,9 +35,9 @@ function ResolveModal({
 			onClick={(e) => {
 				if (e.target === e.currentTarget && !busy) onClose();
 			}}
-			className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+			className="fixed inset-0 z-99999 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
 		>
-			<div className="bg-white dark:bg-[#121214] border border-gray-200 dark:border-white/10 rounded-2xl w-full max-w-[360px] shadow-2xl dark:shadow-black/50 overflow-hidden">
+			<div className="bg-white dark:bg-[#121214] border border-gray-200 dark:border-white/10 rounded-2xl w-full max-w-90 shadow-2xl dark:shadow-black/50 overflow-hidden">
 				{/* Header */}
 				<div className="flex items-start justify-between p-5 border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/5">
 					<div className="flex-1 min-w-0 pr-3">
@@ -59,7 +58,7 @@ function ResolveModal({
 
 				{/* Warning */}
 				<div className="mx-5 mt-5 p-3.5 rounded-xl flex gap-3 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10">
-					<AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5 text-gray-600 dark:text-gray-400" />
+					<AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-gray-600 dark:text-gray-400" />
 					<p className="text-xs font-medium text-gray-700 dark:text-gray-300 leading-relaxed">
 						This action is irreversible. Funds will be distributed immediately after resolution.
 					</p>
@@ -213,7 +212,7 @@ export default function AdminMarkets() {
 
 	return (
 		<AdminLayout>
-			<div className="space-y-6 max-w-[1400px] mx-auto">
+			<div className="space-y-6 max-w-350 mx-auto">
 				{/* Header */}
 				<div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
 					<div>
@@ -298,7 +297,7 @@ export default function AdminMarkets() {
 											>
 												{/* Title */}
 												<td className="px-4 py-4">
-													<div className="flex items-center gap-3 max-w-[200px] sm:max-w-[300px]">
+													<div className="flex items-center gap-3 max-w-50 sm:max-w-75">
 														{market.thumbnail ? (
 															<img
 																src={market.thumbnail}
@@ -373,8 +372,12 @@ export default function AdminMarkets() {
 					{!loading && totalPages > 1 && (
 						<div className="flex items-center justify-between py-3 px-4 border-t border-gray-200 dark:border-white/5 bg-gray-50/50 dark:bg-transparent">
 							<span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-								Showing <span className="text-gray-900 dark:text-white">{page * PAGE_SIZE + 1}</span>–<span className="text-gray-900 dark:text-white">{Math.min((page + 1) * PAGE_SIZE, filtered.length)}</span> of{' '}
-								<span className="text-gray-900 dark:text-white">{filtered.length}</span> markets
+								Showing{' '}
+								<span className="text-gray-900 dark:text-white">{page * PAGE_SIZE + 1}</span>–
+								<span className="text-gray-900 dark:text-white">
+									{Math.min((page + 1) * PAGE_SIZE, filtered.length)}
+								</span>{' '}
+								of <span className="text-gray-900 dark:text-white">{filtered.length}</span> markets
 							</span>
 							<div className="flex items-center gap-2">
 								<button

@@ -136,7 +136,7 @@ export default function AdminTransactions() {
 			header: 'Status',
 			cell: ({ row }: any) => {
 				const status = row.getValue('status');
-				
+
 				if (status === 'COMPLETED' || status === 'SUCCESS') {
 					return (
 						<span className="flex items-center text-xs font-bold text-emerald-600 dark:text-emerald-400">
@@ -147,7 +147,8 @@ export default function AdminTransactions() {
 				if (status === 'PENDING') {
 					return (
 						<span className="flex items-center text-xs font-bold text-gray-600 dark:text-gray-400">
-							<span className="w-1.5 h-1.5 rounded-full bg-gray-500 mr-1.5 animate-pulse"></span>Pending
+							<span className="w-1.5 h-1.5 rounded-full bg-gray-500 mr-1.5 animate-pulse"></span>
+							Pending
 						</span>
 					);
 				}
@@ -206,7 +207,7 @@ export default function AdminTransactions() {
 
 	return (
 		<AdminLayout>
-			<div className="space-y-6 max-w-[1400px] mx-auto">
+			<div className="space-y-6 max-w-350 mx-auto">
 				{/* Header */}
 				<div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
 					<div>
@@ -298,7 +299,13 @@ export default function AdminTransactions() {
 					{/* Pagination Footer */}
 					<div className="flex items-center justify-between py-3 px-4 border-t border-gray-200 dark:border-white/5 bg-gray-50/50 dark:bg-transparent">
 						<div className="text-xs font-medium text-gray-500 dark:text-gray-400">
-							Showing <span className="text-gray-900 dark:text-white">{table.getRowModel().rows.length}</span> of <span className="text-gray-900 dark:text-white">{filteredTransactions.length}</span> transactions
+							Showing{' '}
+							<span className="text-gray-900 dark:text-white">
+								{table.getRowModel().rows.length}
+							</span>{' '}
+							of{' '}
+							<span className="text-gray-900 dark:text-white">{filteredTransactions.length}</span>{' '}
+							transactions
 						</div>
 						<div className="flex items-center gap-2">
 							<button

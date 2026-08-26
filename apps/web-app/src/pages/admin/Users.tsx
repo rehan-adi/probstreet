@@ -1,8 +1,6 @@
-import { useEffect, useState } from 'react';
-import { adminApi } from '@/config/axios';
 import { toast } from 'sonner';
-import { Loader2, Search, User, Mail, Phone, CalendarDays, ShieldCheck } from 'lucide-react';
-import AdminLayout from '@/components/admin/AdminLayout';
+import { adminApi } from '@/config/axios';
+import { useEffect, useState } from 'react';
 import {
 	flexRender,
 	getCoreRowModel,
@@ -12,6 +10,8 @@ import {
 	useReactTable,
 } from '@tanstack/react-table';
 import { formatDate } from '@/lib/format';
+import AdminLayout from '@/components/admin/AdminLayout';
+import { Loader2, Search, User, Mail, Phone, CalendarDays, ShieldCheck } from 'lucide-react';
 
 export default function AdminUsers() {
 	const [users, setUsers] = useState<any[]>([]);
@@ -91,14 +91,18 @@ export default function AdminUsers() {
 			cell: ({ row }: any) => {
 				const status = row.getValue('kycVerificationStatus');
 				return (
-					<span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2 py-1 rounded-md uppercase tracking-wider border ${
-						status === 'VERIFIED'
-							? 'bg-gray-100 text-gray-900 border-gray-200 dark:bg-white/10 dark:text-white dark:border-white/20'
-							: status === 'PENDING'
-							? 'bg-gray-50 text-gray-600 border-gray-200 dark:bg-white/5 dark:text-gray-400 dark:border-white/10'
-							: 'bg-transparent text-gray-400 border-gray-200 dark:border-white/5'
-					}`}>
-						{status === 'VERIFIED' && <div className="w-1.5 h-1.5 rounded-full bg-black dark:bg-white" />}
+					<span
+						className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2 py-1 rounded-md uppercase tracking-wider border ${
+							status === 'VERIFIED'
+								? 'bg-gray-100 text-gray-900 border-gray-200 dark:bg-white/10 dark:text-white dark:border-white/20'
+								: status === 'PENDING'
+									? 'bg-gray-50 text-gray-600 border-gray-200 dark:bg-white/5 dark:text-gray-400 dark:border-white/10'
+									: 'bg-transparent text-gray-400 border-gray-200 dark:border-white/5'
+						}`}
+					>
+						{status === 'VERIFIED' && (
+							<div className="w-1.5 h-1.5 rounded-full bg-black dark:bg-white" />
+						)}
 						{status === 'PENDING' && <div className="w-1.5 h-1.5 rounded-full bg-gray-400" />}
 						{status === 'VERIFIED' ? 'Verified' : status === 'PENDING' ? 'Pending' : 'Unverified'}
 					</span>
@@ -111,14 +115,18 @@ export default function AdminUsers() {
 			cell: ({ row }: any) => {
 				const status = row.getValue('paymentVerificationStatus');
 				return (
-					<span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2 py-1 rounded-md uppercase tracking-wider border ${
-						status === 'VERIFIED'
-							? 'bg-gray-100 text-gray-900 border-gray-200 dark:bg-white/10 dark:text-white dark:border-white/20'
-							: status === 'PENDING'
-							? 'bg-gray-50 text-gray-600 border-gray-200 dark:bg-white/5 dark:text-gray-400 dark:border-white/10'
-							: 'bg-transparent text-gray-400 border-gray-200 dark:border-white/5'
-					}`}>
-						{status === 'VERIFIED' && <div className="w-1.5 h-1.5 rounded-full bg-black dark:bg-white" />}
+					<span
+						className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2 py-1 rounded-md uppercase tracking-wider border ${
+							status === 'VERIFIED'
+								? 'bg-gray-100 text-gray-900 border-gray-200 dark:bg-white/10 dark:text-white dark:border-white/20'
+								: status === 'PENDING'
+									? 'bg-gray-50 text-gray-600 border-gray-200 dark:bg-white/5 dark:text-gray-400 dark:border-white/10'
+									: 'bg-transparent text-gray-400 border-gray-200 dark:border-white/5'
+						}`}
+					>
+						{status === 'VERIFIED' && (
+							<div className="w-1.5 h-1.5 rounded-full bg-black dark:bg-white" />
+						)}
 						{status === 'PENDING' && <div className="w-1.5 h-1.5 rounded-full bg-gray-400" />}
 						{status === 'VERIFIED' ? 'Verified' : status === 'PENDING' ? 'Pending' : 'Unverified'}
 					</span>
@@ -133,7 +141,9 @@ export default function AdminUsers() {
 				return (
 					<div className="flex items-center gap-1.5">
 						{role === 'ADMIN' && <ShieldCheck className="w-3.5 h-3.5 text-black dark:text-white" />}
-						<span className={`text-xs font-bold ${role === 'ADMIN' ? 'text-gray-900 dark:text-white' : 'text-gray-500'}`}>
+						<span
+							className={`text-xs font-bold ${role === 'ADMIN' ? 'text-gray-900 dark:text-white' : 'text-gray-500'}`}
+						>
 							{role === 'ADMIN' ? 'Admin' : 'User'}
 						</span>
 					</div>
@@ -184,7 +194,7 @@ export default function AdminUsers() {
 
 	return (
 		<AdminLayout>
-			<div className="space-y-6 max-w-[1400px] mx-auto">
+			<div className="space-y-6 max-w-350 mx-auto">
 				{/* Top Header */}
 				<div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
 					<div>
@@ -256,7 +266,11 @@ export default function AdminUsers() {
 					{/* Pagination Footer */}
 					<div className="flex items-center justify-between py-3 px-4 border-t border-gray-200 dark:border-white/5 bg-gray-50/50 dark:bg-transparent">
 						<div className="text-xs font-medium text-gray-500 dark:text-gray-400">
-							Showing <span className="text-gray-900 dark:text-white">{table.getRowModel().rows.length}</span> of <span className="text-gray-900 dark:text-white">{users.length}</span> users
+							Showing{' '}
+							<span className="text-gray-900 dark:text-white">
+								{table.getRowModel().rows.length}
+							</span>{' '}
+							of <span className="text-gray-900 dark:text-white">{users.length}</span> users
 						</div>
 						<div className="flex items-center gap-2">
 							<button

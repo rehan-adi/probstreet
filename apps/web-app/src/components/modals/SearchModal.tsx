@@ -62,7 +62,7 @@ export default function SearchModal({ onClose }: { onClose: () => void }) {
 
 	return (
 		<div
-			className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/40 backdrop-blur-sm md:hidden"
+			className="fixed inset-0 z-100 flex flex-col justify-end bg-black/40 backdrop-blur-sm md:hidden"
 			onClick={onClose}
 		>
 			<motion.div
@@ -80,12 +80,12 @@ export default function SearchModal({ onClose }: { onClose: () => void }) {
 						onClose();
 					}
 				}}
-				className="w-full h-[85vh] bg-card rounded-t-[24px] shadow-xl flex flex-col overflow-hidden"
+				className="w-full h-[85vh] bg-card rounded-t-3xl shadow-xl flex flex-col overflow-hidden"
 				onClick={(e) => e.stopPropagation()}
 			>
 				{/* Mobile Drag Handle */}
 				<div
-					className="w-full flex justify-center py-4 cursor-grab active:cursor-grabbing z-20 touch-none shrink-0 bg-card rounded-t-[24px]"
+					className="w-full flex justify-center py-4 cursor-grab active:cursor-grabbing z-20 touch-none shrink-0 bg-card rounded-t-3xl"
 					onPointerDown={(e) => dragControls.start(e)}
 				>
 					<div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full" />
@@ -130,7 +130,7 @@ export default function SearchModal({ onClose }: { onClose: () => void }) {
 										<img
 											src={market.image_url}
 											alt={market.title}
-											className="w-10 h-10 rounded-md object-cover flex-shrink-0"
+											className="w-10 h-10 rounded-md object-cover shrink-0"
 										/>
 										<div className="flex-1 min-w-0">
 											<p className="text-sm font-medium text-foreground truncate">{market.title}</p>

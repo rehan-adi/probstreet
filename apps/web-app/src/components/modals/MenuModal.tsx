@@ -23,7 +23,7 @@ export default function MenuModal({ onClose: _onClose }: { onClose?: () => void 
 			initial={{ opacity: 0, y: -10 }}
 			animate={{ opacity: 1, y: 0 }}
 			exit={{ opacity: 0, y: -10 }}
-			className="absolute right-0 top-12 bg-white shadow-xl rounded-xl py-3 px-2 text-sm border border-gray-100 flex flex-col z-50 min-w-[240px]"
+			className="absolute right-0 top-12 bg-white shadow-xl rounded-xl py-3 px-2 text-sm border border-gray-100 flex flex-col z-50 min-w-60"
 			onClick={(e) => e.stopPropagation()}
 		>
 			<div className="flex flex-col gap-1 border-b border-gray-100 pb-2 mb-2 px-2">

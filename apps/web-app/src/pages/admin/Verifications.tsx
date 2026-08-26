@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { useEffect, useState } from 'react';
 import {
 	Loader2,
 	CheckCircle,
@@ -11,9 +11,9 @@ import {
 	RefreshCw,
 	ShieldCheck,
 } from 'lucide-react';
+import { formatDate } from '@/lib/format';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { getAllPendingVerifications, verify } from '@/api/verification';
-import { formatDate } from '@/lib/format';
 
 interface VerificationTask {
 	taskId: string;
@@ -89,7 +89,9 @@ export default function AdminVerifications() {
 				});
 
 				// Sort by oldest first so admins process FIFO
-				flatTasks.sort((a, b) => new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime());
+				flatTasks.sort(
+					(a, b) => new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime(),
+				);
 
 				setTasks(flatTasks);
 				if (showToast) toast.success('Verifications refreshed');
@@ -107,10 +109,7 @@ export default function AdminVerifications() {
 		fetchVerifications();
 	}, []);
 
-	const handleVerify = async (
-		task: VerificationTask,
-		action: 'APPROVE' | 'REJECT',
-	) => {
+	const handleVerify = async (task: VerificationTask, action: 'APPROVE' | 'REJECT') => {
 		setProcessingId(task.taskId);
 		try {
 			const status = action === 'APPROVE' ? 'VERIFIED' : 'REJECTED';
@@ -122,7 +121,7 @@ export default function AdminVerifications() {
 				task.type === 'PAYMENT' ? status : undefined,
 				task.type === 'KYC' ? remark : undefined,
 				task.type === 'PAYMENT' ? remark : undefined,
-				task.type === 'PAYMENT' ? task.pmData?.id : undefined
+				task.type === 'PAYMENT' ? task.pmData?.id : undefined,
 			);
 
 			if (res.data?.success) {
@@ -168,7 +167,7 @@ export default function AdminVerifications() {
 
 	return (
 		<AdminLayout>
-			<div className="space-y-6 max-w-[1400px] mx-auto">
+			<div className="space-y-6 max-w-350 mx-auto">
 				{/* Top Header */}
 				<div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
 					<div>
@@ -194,7 +193,9 @@ export default function AdminVerifications() {
 				<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 					<div className="bg-white dark:bg-[#121214] p-5 rounded-2xl border border-gray-200 dark:border-white/5 flex items-center justify-between shadow-sm">
 						<div>
-							<p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Total Pending</p>
+							<p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+								Total Pending
+							</p>
 							<p className="text-3xl font-black text-gray-900 dark:text-white mt-1">
 								{tasks.length}
 							</p>
@@ -206,7 +207,9 @@ export default function AdminVerifications() {
 
 					<div className="bg-white dark:bg-[#121214] p-5 rounded-2xl border border-gray-200 dark:border-white/5 flex items-center justify-between shadow-sm">
 						<div>
-							<p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Pending KYC</p>
+							<p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+								Pending KYC
+							</p>
 							<p className="text-3xl font-black text-gray-900 dark:text-white mt-1">{kycCount}</p>
 						</div>
 						<div className="p-3 rounded-full bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white border border-gray-100 dark:border-white/5">
@@ -288,9 +291,7 @@ export default function AdminVerifications() {
 							<div className="w-14 h-14 rounded-full bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white flex items-center justify-center mb-4 border border-gray-200 dark:border-white/10">
 								<ShieldCheck className="w-6 h-6" />
 							</div>
-							<h3 className="text-lg font-bold text-gray-900 dark:text-white">
-								All Caught Up!
-							</h3>
+							<h3 className="text-lg font-bold text-gray-900 dark:text-white">All Caught Up!</h3>
 							<p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm mt-2">
 								{searchQuery
 									? 'No verifications match your search query.'
@@ -359,9 +360,19 @@ export default function AdminVerifications() {
 																{kycData.panName}
 															</p>
 															<p className="text-xs text-gray-500 dark:text-gray-400 font-mono flex gap-2">
-																<span>PAN: <span className="text-gray-900 dark:text-white font-bold">{kycData.panNumber}</span></span>
+																<span>
+																	PAN:{' '}
+																	<span className="text-gray-900 dark:text-white font-bold">
+																		{kycData.panNumber}
+																	</span>
+																</span>
 																{kycData.dob && (
-																	<span>• DOB: <span className="text-gray-900 dark:text-white font-semibold">{new Date(kycData.dob).toLocaleDateString()}</span></span>
+																	<span>
+																		• DOB:{' '}
+																		<span className="text-gray-900 dark:text-white font-semibold">
+																			{new Date(kycData.dob).toLocaleDateString()}
+																		</span>
+																	</span>
 																)}
 															</p>
 														</div>
@@ -373,12 +384,25 @@ export default function AdminVerifications() {
 															<p className="text-xs text-gray-500 dark:text-gray-400 font-mono">
 																{pmData.type === 'UPI' ? (
 																	<span>
-																		VPA: <span className="text-gray-900 dark:text-white font-bold">{pmData.upiNumber}</span>
+																		VPA:{' '}
+																		<span className="text-gray-900 dark:text-white font-bold">
+																			{pmData.upiNumber}
+																		</span>
 																	</span>
 																) : (
 																	<span className="flex gap-2">
-																		<span>A/C: <span className="text-gray-900 dark:text-white font-bold">{pmData.accountNumber}</span></span>
-																		<span>• IFSC: <span className="text-gray-900 dark:text-white font-bold">{pmData.ifscCode}</span></span>
+																		<span>
+																			A/C:{' '}
+																			<span className="text-gray-900 dark:text-white font-bold">
+																				{pmData.accountNumber}
+																			</span>
+																		</span>
+																		<span>
+																			• IFSC:{' '}
+																			<span className="text-gray-900 dark:text-white font-bold">
+																				{pmData.ifscCode}
+																			</span>
+																		</span>
 																	</span>
 																)}
 															</p>
@@ -404,7 +428,7 @@ export default function AdminVerifications() {
 														<button
 															onClick={() => handleVerify(task, 'APPROVE')}
 															disabled={isProcessing}
-															className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg bg-gray-900 text-white hover:bg-black dark:bg-white dark:text-black dark:hover:bg-gray-100 transition shadow-sm disabled:opacity-50 min-w-[90px]"
+															className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg bg-gray-900 text-white hover:bg-black dark:bg-white dark:text-black dark:hover:bg-gray-100 transition shadow-sm disabled:opacity-50 min-w-22.5"
 														>
 															{isProcessing ? (
 																<Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -417,7 +441,7 @@ export default function AdminVerifications() {
 														<button
 															onClick={() => handleVerify(task, 'REJECT')}
 															disabled={isProcessing}
-															className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 dark:bg-transparent dark:text-gray-300 dark:border-white/20 dark:hover:bg-white/5 transition disabled:opacity-50 min-w-[90px]"
+															className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 dark:bg-transparent dark:text-gray-300 dark:border-white/20 dark:hover:bg-white/5 transition disabled:opacity-50 min-w-22.5"
 														>
 															{isProcessing ? (
 																<Loader2 className="w-3.5 h-3.5 animate-spin" />

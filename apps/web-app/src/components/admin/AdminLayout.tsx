@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
 	LayoutDashboard,
@@ -17,10 +17,10 @@ import {
 	Menu,
 	X,
 } from 'lucide-react';
-import logo from '@/assets/images/logo.avif';
-import darkLogo from '@/assets/images/dark-logo.avif';
 import { useAuthStore } from '@/store/auth';
+import logo from '@/assets/images/logo.avif';
 import { useThemeStore } from '@/store/theme';
+import darkLogo from '@/assets/images/dark-logo.avif';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface AdminLayoutProps {
@@ -144,7 +144,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 					>
 						<div className="p-3 border-b border-gray-100 dark:border-white/5 mb-1 bg-gray-50/50 dark:bg-white/5 rounded-t-lg">
 							<p className="text-sm font-bold text-gray-900 dark:text-white">Admin Account</p>
-							<p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">{user?.email}</p>
+							<p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+								{user?.email}
+							</p>
 						</div>
 
 						<div className="p-1 space-y-0.5">
@@ -258,7 +260,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 						</Link>
 
 						<div className="hidden md:flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-							<span className="font-bold text-gray-900 dark:text-white text-base">{getPageTitle()}</span>
+							<span className="font-bold text-gray-900 dark:text-white text-base">
+								{getPageTitle()}
+							</span>
 						</div>
 					</div>
 

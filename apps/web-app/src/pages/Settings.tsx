@@ -179,7 +179,9 @@ export default function Settings() {
 									<h3 className="text-sm font-bold text-gray-900 dark:text-white shrink-0">
 										Email
 									</h3>
-									<div className="text-gray-500 dark:text-gray-400 text-sm font-medium">{user?.email}</div>
+									<div className="text-gray-500 dark:text-gray-400 text-sm font-medium">
+										{user?.email}
+									</div>
 								</div>
 							</div>
 
@@ -192,9 +194,11 @@ export default function Settings() {
 										onChange={(e) => setBio(e.target.value)}
 										maxLength={200}
 										placeholder="Tell others about yourself"
-										className="w-full bg-transparent outline-none resize-none text-sm text-gray-900 dark:text-white min-h-[80px] placeholder:text-gray-400 dark:placeholder:text-gray-500"
+										className="w-full bg-transparent outline-none resize-none text-sm text-gray-900 dark:text-white min-h-20 placeholder:text-gray-400 dark:placeholder:text-gray-500"
 									/>
-									<div className="text-right text-xs font-semibold text-gray-400 mt-2">{bio.length}/200</div>
+									<div className="text-right text-xs font-semibold text-gray-400 mt-2">
+										{bio.length}/200
+									</div>
 								</div>
 							</div>
 
@@ -234,7 +238,9 @@ export default function Settings() {
 											<p className="text-sm font-bold text-gray-900 dark:text-white">
 												Current Session
 											</p>
-											<p className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-0.5">Mac OS • Chrome • Active now</p>
+											<p className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-0.5">
+												Mac OS • Chrome • Active now
+											</p>
 										</div>
 									</div>
 									<button className="text-sm text-gray-500 dark:text-gray-400 font-bold hover:text-black dark:hover:text-white transition-colors cursor-pointer">
@@ -298,7 +304,7 @@ export default function Settings() {
 													handleUpdateNotifications('emailNewMarket', !emailNewMarket);
 												}}
 											/>
-											<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-[#222] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black dark:peer-checked:bg-white transition-colors"></div>
+											<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-[#222] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black dark:peer-checked:bg-white transition-colors"></div>
 										</label>
 									</div>
 
@@ -321,10 +327,10 @@ export default function Settings() {
 													handleUpdateNotifications('emailTradeExecuted', !emailTradeExecuted);
 												}}
 											/>
-											<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-[#222] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black dark:peer-checked:bg-white transition-colors"></div>
+											<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-[#222] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black dark:peer-checked:bg-white transition-colors"></div>
 										</label>
 									</div>
-									
+
 									<div className="p-6 flex items-center justify-between gap-8">
 										<div>
 											<h4 className="text-sm font-bold text-gray-900 dark:text-white">
@@ -344,7 +350,7 @@ export default function Settings() {
 													handleUpdateNotifications('emailPriceAlerts', !emailPriceAlerts);
 												}}
 											/>
-											<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-[#222] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black dark:peer-checked:bg-white transition-colors"></div>
+											<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-[#222] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black dark:peer-checked:bg-white transition-colors"></div>
 										</label>
 									</div>
 								</div>
@@ -378,7 +384,7 @@ export default function Settings() {
 													handleUpdateNotifications('inAppNewMarket', !inAppNewMarket);
 												}}
 											/>
-											<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-[#222] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black dark:peer-checked:bg-white transition-colors"></div>
+											<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-[#222] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black dark:peer-checked:bg-white transition-colors"></div>
 										</label>
 									</div>
 
@@ -401,7 +407,7 @@ export default function Settings() {
 													handleUpdateNotifications('inAppTradeExecuted', !inAppTradeExecuted);
 												}}
 											/>
-											<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-[#222] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black dark:peer-checked:bg-white transition-colors"></div>
+											<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-[#222] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black dark:peer-checked:bg-white transition-colors"></div>
 										</label>
 									</div>
 
@@ -424,7 +430,7 @@ export default function Settings() {
 													handleUpdateNotifications('inAppPriceAlerts', !inAppPriceAlerts);
 												}}
 											/>
-											<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-[#222] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black dark:peer-checked:bg-white transition-colors"></div>
+											<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-[#222] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black dark:peer-checked:bg-white transition-colors"></div>
 										</label>
 									</div>
 								</div>

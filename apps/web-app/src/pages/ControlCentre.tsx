@@ -159,7 +159,7 @@ export default function ControlCentrePage() {
 					</div>
 
 					{/* Tab Content */}
-					<div className="min-h-[400px]">
+					<div className="min-h-100">
 						{activeTab === 'alerts' && (
 							<div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
 								{loading ? (
@@ -170,7 +170,7 @@ export default function ControlCentrePage() {
 										</p>
 									</div>
 								) : alerts.length === 0 ? (
-									<div className="bg-white dark:bg-[#0a0a0a] rounded-2xl p-12 text-center border border-gray-200 dark:border-white/5 shadow-sm flex flex-col items-center justify-center min-h-[400px]">
+									<div className="bg-white dark:bg-[#0a0a0a] rounded-2xl p-12 text-center border border-gray-200 dark:border-white/5 shadow-sm flex flex-col items-center justify-center min-h-100">
 										<div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-6 shadow-inner">
 											<BellRing className="w-8 h-8" />
 										</div>

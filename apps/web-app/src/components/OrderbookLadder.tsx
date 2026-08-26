@@ -90,11 +90,11 @@ const OrderRow = React.memo(
 				onMouseEnter={onHover}
 				onMouseLeave={onLeave}
 				onClick={onClick}
-				className={`relative grid grid-cols-3 items-center h-[30px] px-4 cursor-pointer tabular-nums text-sm transition-colors duration-150 ${flashBg} ${highlightBg} ${borderClass} z-10 hover:z-20 ${!isHighlighted ? 'hover:bg-muted/50' : ''}`}
+				className={`relative grid grid-cols-3 items-center h-7.5 px-4 cursor-pointer tabular-nums text-sm transition-colors duration-150 ${flashBg} ${highlightBg} ${borderClass} z-10 hover:z-20 ${!isHighlighted ? 'hover:bg-muted/50' : ''}`}
 			>
 				{/* Cumulative Depth Bar */}
 				<div
-					className={`absolute top-0 bottom-0 right-0 origin-right transition-transform duration-300 ease-out bg-gradient-to-l ${highlightDepth} -z-10`}
+					className={`absolute top-0 bottom-0 right-0 origin-right transition-transform duration-300 ease-out bg-linear-to-l ${highlightDepth} -z-10`}
 					style={{ transform: `scaleX(${depthPercent / 100})`, width: '100%' }}
 				/>
 

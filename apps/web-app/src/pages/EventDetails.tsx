@@ -716,7 +716,7 @@ export default function EventDetails() {
 												: 'bg-blue-500'
 									}`}
 								/>
-								
+
 								<div className="flex items-center justify-between pb-4 border-b border-border">
 									<div className="flex items-center gap-2">
 										<span className="relative flex h-2.5 w-2.5">
@@ -762,7 +762,8 @@ export default function EventDetails() {
 										</span>
 									</div>
 									<p className="text-xs text-muted-foreground mt-4 leading-relaxed max-w-xs mx-auto">
-										Trading has concluded for this market. All winning shares have been settled at ₹10.00 each.
+										Trading has concluded for this market. All winning shares have been settled at
+										₹10.00 each.
 									</p>
 								</div>
 
@@ -860,7 +861,9 @@ export default function EventDetails() {
 								(market.result || '').toUpperCase() === 'YES' ? 'bg-emerald-500' : 'bg-red-500'
 							}`}
 						/>
-						<span className="text-xs font-bold uppercase text-muted-foreground">Market Resolved</span>
+						<span className="text-xs font-bold uppercase text-muted-foreground">
+							Market Resolved
+						</span>
 					</div>
 					<div className="flex items-center gap-2">
 						<span className="text-xs font-medium text-muted-foreground">Winner:</span>

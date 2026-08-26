@@ -75,10 +75,7 @@ export default function KycVerificationPage() {
 		);
 	}
 
-	const {
-		kycVerificationStatus,
-		paymentVerificationStatus,
-	} = statusData?.data.data || {};
+	const { kycVerificationStatus, paymentVerificationStatus } = statusData?.data.data || {};
 
 	const isKycComplete = kycVerificationStatus === 'PENDING' || kycVerificationStatus === 'VERIFIED';
 	const isPaymentComplete =

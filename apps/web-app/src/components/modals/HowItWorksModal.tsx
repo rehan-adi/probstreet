@@ -71,7 +71,7 @@ export default function HowItWorksModal({ onClose }: { onClose: () => void }) {
 			};
 
 	return (
-		<div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center sm:p-4">
+		<div className="fixed inset-0 z-60 flex items-end md:items-center justify-center sm:p-4">
 			{/* Backdrop with fade animation */}
 			<motion.div
 				initial={{ opacity: 0 }}
@@ -93,18 +93,18 @@ export default function HowItWorksModal({ onClose }: { onClose: () => void }) {
 				dragElastic={0.2}
 				onDragEnd={handleDragEnd}
 				onClick={(e) => e.stopPropagation()}
-				className="relative w-full max-w-md bg-white dark:bg-[#1C1C1E] md:rounded-[24px] rounded-t-[24px] shadow-2xl overflow-hidden flex flex-col max-h-[95vh] z-10"
+				className="relative w-full max-w-md bg-white dark:bg-[#1C1C1E] md:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh] z-10"
 			>
 				{isMobile && (
 					<div
-						className="w-full flex justify-center py-4 cursor-grab active:cursor-grabbing z-20 touch-none shrink-0 bg-white dark:bg-[#1C1C1E] rounded-t-[24px]"
+						className="w-full flex justify-center py-4 cursor-grab active:cursor-grabbing z-20 touch-none shrink-0 bg-white dark:bg-[#1C1C1E] rounded-t-3xl"
 						onPointerDown={(e) => dragControls.start(e)}
 					>
 						<div className="w-12 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
 					</div>
 				)}
 
-				<div className="relative h-[320px] w-full bg-gray-100 dark:bg-slate-800 overflow-hidden pointer-events-none select-none">
+				<div className="relative h-80 w-full bg-gray-100 dark:bg-slate-800 overflow-hidden pointer-events-none select-none">
 					<AnimatePresence mode="wait">
 						<motion.img
 							key={currentStep}
@@ -118,11 +118,11 @@ export default function HowItWorksModal({ onClose }: { onClose: () => void }) {
 						/>
 					</AnimatePresence>
 
-					<div className="absolute inset-0 bg-gradient-to-t from-white dark:from-slate-900 via-transparent to-transparent" />
+					<div className="absolute inset-0 bg-linear-to-t from-white dark:from-slate-900 via-transparent to-transparent" />
 				</div>
 
 				<div className="p-6 md:p-8 flex flex-col items-start text-left bg-white dark:bg-[#1C1C1E] z-10 relative">
-					<div className="min-h-[110px] w-full relative">
+					<div className="min-h-27.5 w-full relative">
 						<AnimatePresence mode="wait">
 							<motion.div
 								key={currentStep}

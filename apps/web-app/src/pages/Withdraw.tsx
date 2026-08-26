@@ -340,10 +340,11 @@ export default function WithdrawPage() {
 											type="button"
 											disabled={isPending || !isMethodVerified || preset > currentWalletAmount}
 											onClick={() => handlePresetClick(preset)}
-											className={`py-2 text-xs font-semibold rounded-lg border transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${amount === preset
-												? 'bg-black text-white dark:bg-white dark:text-black border-transparent'
-												: 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10'
-												}`}
+											className={`py-2 text-xs font-semibold rounded-lg border transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+												amount === preset
+													? 'bg-black text-white dark:bg-white dark:text-black border-transparent'
+													: 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10'
+											}`}
 										>
 											+ ₹{preset}
 										</button>
@@ -352,10 +353,11 @@ export default function WithdrawPage() {
 										type="button"
 										disabled={isPending || !isMethodVerified || currentWalletAmount <= 0}
 										onClick={handleMaxClick}
-										className={`py-2 text-xs font-semibold rounded-lg border transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${amount === Math.max(0, Math.floor(currentWalletAmount - 5))
-											? 'bg-black text-white dark:bg-white dark:text-black border-transparent'
-											: 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10'
-											}`}
+										className={`py-2 text-xs font-semibold rounded-lg border transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+											amount === Math.max(0, Math.floor(currentWalletAmount - 5))
+												? 'bg-black text-white dark:bg-white dark:text-black border-transparent'
+												: 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10'
+										}`}
 									>
 										Max (All)
 									</button>
@@ -373,15 +375,16 @@ export default function WithdrawPage() {
 									!paymentMethod ||
 									!isMethodVerified
 								}
-								className={`w-full py-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-sm ${!amount ||
+								className={`w-full py-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-sm ${
+									!amount ||
 									amount <= 0 ||
 									isInsufficient ||
 									isPending ||
 									!paymentMethod ||
 									!isMethodVerified
-									? 'bg-gray-300 dark:bg-white/10 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-									: 'bg-black text-white hover:bg-gray-900 dark:bg-white dark:text-black dark:hover:bg-gray-200 cursor-pointer'
-									}`}
+										? 'bg-gray-300 dark:bg-white/10 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+										: 'bg-black text-white hover:bg-gray-900 dark:bg-white dark:text-black dark:hover:bg-gray-200 cursor-pointer'
+								}`}
 							>
 								{isPending ? (
 									<>

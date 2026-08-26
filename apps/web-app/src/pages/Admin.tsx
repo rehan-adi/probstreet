@@ -68,7 +68,9 @@ export default function Admin() {
 		if (active && payload && payload.length) {
 			return (
 				<div className="bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-white/10 p-3 rounded-xl shadow-xl">
-					<p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">{formatDate(label)}</p>
+					<p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">
+						{formatDate(label)}
+					</p>
 					{payload.map((entry: any, index: number) => (
 						<p
 							key={index}
@@ -119,14 +121,20 @@ export default function Admin() {
 
 					<div className="flex items-center gap-3">
 						<Select value={period} onValueChange={setPeriod}>
-							<SelectTrigger className="w-[160px] bg-white dark:bg-[#121214] border-gray-200 dark:border-white/10 rounded-xl text-xs font-semibold shadow-xs">
+							<SelectTrigger className="w-40 bg-white dark:bg-[#121214] border-gray-200 dark:border-white/10 rounded-xl text-xs font-semibold shadow-xs">
 								<Calendar className="w-3.5 h-3.5 mr-2 text-gray-400" />
 								<SelectValue placeholder="Select Period" />
 							</SelectTrigger>
 							<SelectContent className="bg-white dark:bg-[#1C1C1E] border-gray-200 dark:border-white/10 rounded-xl">
-								<SelectItem value="7d" className="text-xs font-medium cursor-pointer">Last 7 Days</SelectItem>
-								<SelectItem value="30d" className="text-xs font-medium cursor-pointer">Last 30 Days</SelectItem>
-								<SelectItem value="90d" className="text-xs font-medium cursor-pointer">Last 90 Days</SelectItem>
+								<SelectItem value="7d" className="text-xs font-medium cursor-pointer">
+									Last 7 Days
+								</SelectItem>
+								<SelectItem value="30d" className="text-xs font-medium cursor-pointer">
+									Last 30 Days
+								</SelectItem>
+								<SelectItem value="90d" className="text-xs font-medium cursor-pointer">
+									Last 90 Days
+								</SelectItem>
 							</SelectContent>
 						</Select>
 					</div>
@@ -145,7 +153,8 @@ export default function Admin() {
 									<span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
 								</h3>
 								<p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-									{metrics.pendingKycCount || 0} PAN Documents • {metrics.pendingPaymentCount || 0} Bank / UPI Accounts waiting for approval.
+									{metrics.pendingKycCount || 0} PAN Documents • {metrics.pendingPaymentCount || 0}{' '}
+									Bank / UPI Accounts waiting for approval.
 								</p>
 							</div>
 						</div>
@@ -173,7 +182,9 @@ export default function Admin() {
 							<p className="text-2xl font-black text-gray-900 dark:text-white">
 								{loading ? '-' : formatINR(metrics?.totalRevenue)}
 							</p>
-							<p className="text-[11px] font-medium text-gray-400 mt-1">Platform commissions & fees</p>
+							<p className="text-[11px] font-medium text-gray-400 mt-1">
+								Platform commissions & fees
+							</p>
 						</div>
 					</div>
 
@@ -224,7 +235,9 @@ export default function Admin() {
 							<p className="text-2xl font-black text-gray-900 dark:text-white">
 								{loading ? '-' : formatNumber(metrics?.totalUsers)}
 							</p>
-							<p className="text-[11px] font-medium text-gray-400 mt-1">Registered trader profiles</p>
+							<p className="text-[11px] font-medium text-gray-400 mt-1">
+								Registered trader profiles
+							</p>
 						</div>
 					</div>
 				</div>
@@ -246,7 +259,7 @@ export default function Admin() {
 							</div>
 						</div>
 
-						<div className="h-[280px] w-full mt-6">
+						<div className="h-70 w-full mt-6">
 							{loading ? (
 								<div className="flex h-full items-center justify-center">
 									<Loader2 className="w-6 h-6 animate-spin text-gray-400" />
@@ -327,7 +340,7 @@ export default function Admin() {
 							</p>
 						</div>
 
-						<div className="h-[280px] w-full flex items-center justify-center mt-2">
+						<div className="h-70 w-full flex items-center justify-center mt-2">
 							{loading ? (
 								<Loader2 className="w-6 h-6 animate-spin text-gray-400" />
 							) : metrics?.marketDistribution &&
@@ -345,10 +358,7 @@ export default function Admin() {
 											stroke="none"
 										>
 											{metrics.marketDistribution.map((_: any, index: number) => (
-												<Cell
-													key={`cell-${index}`}
-													fill={PIE_COLORS[index % PIE_COLORS.length]}
-												/>
+												<Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
 											))}
 										</Pie>
 										<Tooltip

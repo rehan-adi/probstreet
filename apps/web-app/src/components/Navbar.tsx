@@ -297,7 +297,7 @@ export default function Navbar() {
 													initial={{ opacity: 0, y: 10, scale: 0.95 }}
 													animate={{ opacity: 1, y: 0, scale: 1 }}
 													exit={{ opacity: 0, y: 10, scale: 0.95 }}
-													className="absolute right-0 top-12 w-80 md:w-96 max-h-[32rem] overflow-hidden bg-white/90 dark:bg-[#1C1C1E]/90 backdrop-blur-2xl shadow-2xl rounded-2xl border border-gray-200/50 dark:border-white/10 z-50 flex flex-col"
+													className="absolute right-0 top-12 w-80 md:w-96 max-h-128 overflow-hidden bg-white/90 dark:bg-[#1C1C1E]/90 backdrop-blur-2xl shadow-2xl rounded-2xl border border-gray-200/50 dark:border-white/10 z-50 flex flex-col"
 												>
 													<div className="px-5 py-4 border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-black/20 flex items-center justify-between sticky top-0 z-10">
 														<h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
