@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { isAdmin } from '@/middlewares/isAdmin';
 import { authorization } from '@/middlewares/authorization';
 import {
 	createMarket,
@@ -20,10 +21,10 @@ export const marketRoutes = new Hono();
 
 marketRoutes.get('/', getAllMarket);
 marketRoutes.get('/category/:categoryParam', getMarketsByCategory);
-marketRoutes.post('/create', authorization, createMarket);
+marketRoutes.post('/create', authorization, isAdmin, createMarket);
 marketRoutes.post('/liquidity-add', authorization, addLiquidity);
-marketRoutes.post('/resolve', authorization, resolveMarket);
-marketRoutes.post('/generate-url', authorization, generatePresignedUrlRoute);
+marketRoutes.post('/resolve', authorization, isAdmin, resolveMarket);
+marketRoutes.post('/generate-url', authorization, isAdmin, generatePresignedUrlRoute);
 marketRoutes.post('/:symbol/split', authorization, splitShares);
 marketRoutes.post('/:symbol/merge', authorization, mergeShares);
 
