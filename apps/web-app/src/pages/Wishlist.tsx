@@ -38,14 +38,20 @@ export default function WishlistPage() {
 	useEffect(() => {
 		if (events.length === 0) return;
 
-		if (!socket.connected) {
+		const symbols = events.map((event) => event.symbol).filter(Boolean);
+		const onConnect = () => {
+			if (symbols.length > 0) {
+				socket.emit('SUBSCRIBE_TICKERS', symbols);
+			}
+		};
+
+		if (socket.connected) {
+			onConnect();
+		} else {
 			socket.connect();
 		}
 
-		const symbols = events.map((event) => event.symbol).filter(Boolean);
-		if (symbols.length > 0) {
-			socket.emit('SUBSCRIBE_TICKERS', symbols);
-		}
+		socket.on('connect', onConnect);
 
 		const handleTicker = (data: any) => {
 			if (data.type && data.type !== 'TICKER') return;
@@ -74,6 +80,7 @@ export default function WishlistPage() {
 			}
 			socket.off('TICKER', handleTicker);
 			socket.off('MESSAGE', handleTicker);
+			socket.off('connect', onConnect);
 		};
 	}, [events.length]);
 

@@ -78,7 +78,17 @@ export default function Navbar() {
 				}
 			});
 
-			socket.emit('SUBSCRIBE_USER', userId);
+			const onConnect = () => {
+				socket.emit('SUBSCRIBE_USER', userId);
+			};
+
+			if (socket.connected) {
+				onConnect();
+			} else {
+				socket.connect();
+			}
+
+			socket.on('connect', onConnect);
 
 			const playNotificationSound = () => {
 				try {
@@ -107,6 +117,7 @@ export default function Navbar() {
 
 			return () => {
 				socket.off('NOTIFICATION', handleNotification);
+				socket.off('connect', onConnect);
 				socket.emit('UNSUBSCRIBE_USER', userId);
 			};
 		}

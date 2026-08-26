@@ -100,14 +100,17 @@ export default function EventDetails() {
 	useEffect(() => {
 		if (!symbol) return;
 
-		if (socket.connected) {
+		const onConnect = () => {
 			socket.emit('SUBSCRIBE_MARKET', symbol);
+		};
+
+		if (socket.connected) {
+			onConnect();
 		} else {
 			socket.connect();
-			socket.once('connect', () => {
-				socket.emit('SUBSCRIBE_MARKET', symbol);
-			});
 		}
+
+		socket.on('connect', onConnect);
 
 		const handleTicker = (data: any) => {
 			if (!data) return;
@@ -250,7 +253,8 @@ export default function EventDetails() {
 			socket.off('ORDERBOOK', handleOrderbook);
 			socket.off('ACTIVITY', handleActivity);
 			socket.off('MESSAGE', handleGenericMessage);
-			socket.off('connect');
+			socket.off('MESSAGE', handleGenericMessage);
+			socket.off('connect', onConnect);
 		};
 	}, [symbol]);
 

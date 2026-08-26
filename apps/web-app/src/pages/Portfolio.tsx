@@ -113,14 +113,17 @@ export default function Portfolio() {
 		if (isAuthenticated) fetchPortfolio();
 
 		if (isAuthenticated && user?.id) {
-			if (socket.connected) {
+			const onConnect = () => {
 				socket.emit('SUBSCRIBE_USER', user.id);
+			};
+
+			if (socket.connected) {
+				onConnect();
 			} else {
 				socket.connect();
-				socket.once('connect', () => {
-					socket.emit('SUBSCRIBE_USER', user.id);
-				});
 			}
+
+			socket.on('connect', onConnect);
 
 			const handlePortfolioUpdate = () => {
 				fetchPortfolio();
@@ -140,6 +143,7 @@ export default function Portfolio() {
 				socket.emit('UNSUBSCRIBE_USER', user.id);
 				socket.off('PORTFOLIO_UPDATE', handlePortfolioUpdate);
 				socket.off('MESSAGE', handleMessage);
+				socket.off('connect', onConnect);
 			};
 		}
 	}, [isAuthenticated, user?.id, refetchBalance]);

@@ -64,9 +64,19 @@ export default function EventsPage() {
 		}
 
 		const symbols = events.map((event) => event.symbol).filter(Boolean);
-		if (symbols.length > 0) {
-			socket.emit('SUBSCRIBE_TICKERS', symbols);
+		const onConnect = () => {
+			if (symbols.length > 0) {
+				socket.emit('SUBSCRIBE_TICKERS', symbols);
+			}
+		};
+
+		if (socket.connected) {
+			onConnect();
+		} else {
+			socket.connect();
 		}
+
+		socket.on('connect', onConnect);
 
 		const handleTicker = (data: any) => {
 			if (data.type && data.type !== 'TICKER') return;
@@ -95,6 +105,7 @@ export default function EventsPage() {
 			}
 			socket.off('TICKER', handleTicker);
 			socket.off('MESSAGE', handleTicker);
+			socket.off('connect', onConnect);
 		};
 	}, [events.length]);
 
