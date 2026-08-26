@@ -3,7 +3,8 @@ import { handlePriceAlert } from '@/handlers/price-alert';
 import { handleMarketCreated } from '@/handlers/market-created';
 import { handleTradeExecuted } from '@/handlers/trade-executed';
 
-export type NotificationEventTypes = 'market.created' | 'trade.executed' | 'price.alert';
+export type NotificationEventTypes =
+	'market.created' | 'trade.executed' | 'price.alert' | 'market.resolved';
 
 export interface NotificationEvent {
 	type: NotificationEventTypes;
@@ -20,6 +21,10 @@ export async function processEvent(env: ENV_CONFIG, event: NotificationEvent): P
 			break;
 		case 'price.alert':
 			await handlePriceAlert(env, event.data);
+			break;
+		case 'market.resolved':
+			const { handleMarketResolved } = await import('@/handlers/market-resolved');
+			await handleMarketResolved(env, event.data);
 			break;
 		default:
 			console.warn(`[worker] Unknown event type: ${(event as any).type}`);

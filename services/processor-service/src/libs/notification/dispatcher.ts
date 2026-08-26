@@ -9,7 +9,8 @@ import { logger } from '@/libs/logger';
 // failures never crash the Kafka processor.
 // ─────────────────────────────────────────────────────────────────────────────
 
-type NotificationEventType = 'otp.send' | 'market.created' | 'trade.executed' | 'price.alert';
+type NotificationEventType =
+	'otp.send' | 'market.created' | 'trade.executed' | 'price.alert' | 'market.resolved';
 
 interface NotificationEvent {
 	type: NotificationEventType;

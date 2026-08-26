@@ -1,6 +1,5 @@
 import { dbQuery } from '@/db/proxy';
 import { ENV_CONFIG } from '@/config/env';
-import { mailerClient } from '@/libs/nodemailer/client';
 import { sendFirebasePush } from '@/libs/firebase/push';
 import { newMarketEmailHtml } from '@/libs/nodemailer/templates/market-created';
 
@@ -15,7 +14,9 @@ export async function handleMarketCreated(env: ENV_CONFIG, data: any): Promise<v
 	const emailUsers = users.filter((u: any) => u.emailNewMarket && u.email);
 	const inAppUsers = users.filter((u: any) => u.inAppNewMarket);
 
-	console.log(`[market.created] Filtered: ${emailUsers.length} email users, ${inAppUsers.length} in-app users`);
+	console.log(
+		`[market.created] Filtered: ${emailUsers.length} email users, ${inAppUsers.length} in-app users`,
+	);
 
 	if (emailUsers.length > 0) {
 		console.log(`[market.created] Attempting to send emails using nodemailer...`);

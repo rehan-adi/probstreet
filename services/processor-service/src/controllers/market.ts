@@ -1,6 +1,7 @@
 import { logger } from '@/libs/logger';
 import { prisma } from '@probstreet/database';
 import { redisPublisher } from '@/libs/redis/connection';
+import { sendNotification } from '@/libs/notification/dispatcher';
 
 export const updateTradersCount = async (data: any) => {
 	try {
@@ -143,9 +144,10 @@ export const handleMarketResolved = async (data: any) => {
 			}
 
 			// Keep the position history, just don't delete them, maybe just zero out the balances?
-			await tx.position.deleteMany({
-				where: { marketId },
-			});
+			// Removed hard-delete so Portfolio historical P&L works properly
+			// await tx.position.deleteMany({
+			// 	where: { marketId },
+			// });
 		});
 
 		// Push deposits to the engine so memory balances stay in sync
@@ -161,6 +163,22 @@ export const handleMarketResolved = async (data: any) => {
 					},
 				}),
 			);
+		}
+
+		// Dispatch notifications for winners
+		if (payoutsToEngine.length > 0) {
+			const market = await prisma.market.findUnique({ where: { id: marketId } });
+			if (market) {
+				await sendNotification({
+					type: 'market.resolved',
+					data: {
+						marketId,
+						title: market.title,
+						result,
+						winners: payoutsToEngine.map((p) => ({ userId: p.userId, amount: p.amount })),
+					},
+				});
+			}
 		}
 	} catch (error) {
 		logger.error({ error, data }, 'Failed to process market resolution');
