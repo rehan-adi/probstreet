@@ -87,87 +87,11 @@ export const paymentVerify = async (c: Context) => {
 	}
 };
 
-const payoutWebhookInternal = async (body: any, c: Context) => {
-	const event = body.event || body.type;
-	const transferId = body.transferId || body.data?.transferId;
-
-	if (!transferId) {
-		return c.json({ success: false, error: 'Missing transferId' }, 400);
-	}
-
-	const lockKey = `lock:webhook:payout:${transferId}:${event}`;
-	const acquired = await client.set(lockKey, '1', 'EX', 60, 'NX');
-	if (!acquired) {
-		logger.info({ transferId, event }, 'Concurrent payout webhook skipped');
-		return c.json({ success: true, message: 'Already processing' }, 200);
-	}
-
-	let refundEngine = false;
-	let refundUserId = '';
-	let refundAmount = 0;
-
-	await prisma.$transaction(async (tx) => {
-		const transaction = await tx.transaction.findFirst({
-			where: {
-				type: 'WITHDRAWAL',
-				remarks: { contains: transferId },
-			},
-		});
-
-		if (!transaction || transaction.status !== 'PENDING') {
-			logger.info({ transferId }, 'Payout webhook skipped (already processed or not found)');
-			return;
-		}
-
-		if (event === 'TRANSFER_SUCCESS') {
-			await tx.transaction.update({
-				where: { id: transaction.id },
-				data: { status: 'SUCCESS' },
-			});
-			logger.info({ transferId }, 'Payout marked as SUCCESS');
-		} else if (event === 'TRANSFER_FAILED' || event === 'TRANSFER_REVERSED') {
-			await tx.transaction.update({
-				where: { id: transaction.id },
-				data: { status: 'FAILED' },
-			});
-
-			refundEngine = true;
-			refundUserId = transaction.userId;
-			refundAmount = Number(transaction.amount) * 1.0025;
-
-			await tx.wallet.update({
-				where: { userId: refundUserId },
-				data: { balance: { increment: refundAmount } },
-			});
-
-			logger.info({ transferId, userId: refundUserId }, 'Payout failed, balance refunded in DB');
-		}
-	});
-
-	if (refundEngine && refundUserId && refundAmount > 0) {
-		await pushToQueue(EVENTS.DEPOSIT_BALANCE, {
-			userId: refundUserId,
-			amount: refundAmount,
-		});
-		logger.info({ transferId, refundUserId, refundAmount }, 'Refund balance credited in engine');
-	}
-
-	return c.json({ success: true }, 200);
-};
-
 export const paymentWebhook = async (c: Context) => {
 	try {
 		const signature = c.req.header('x-webhook-signature');
 		const timestamp = c.req.header('x-webhook-timestamp');
 		const rawBody = await c.req.text();
-
-		// Handle payout events routed to /webhook
-		try {
-			const parsed = JSON.parse(rawBody);
-			if (parsed.event && (parsed.event.startsWith('TRANSFER_') || parsed.transferId)) {
-				return payoutWebhookInternal(parsed, c);
-			}
-		} catch (e) {}
 
 		try {
 			cashfree.PGVerifyWebhookSignature(signature as string, rawBody, timestamp as string);
@@ -303,11 +227,87 @@ export const paymentWebhook = async (c: Context) => {
 	}
 };
 
-export const payoutWebhook = async (c: Context) => {
+export const payoutWebhook = async (c: Context, bodyOverride?: any) => {
 	try {
-		const rawBody = await c.req.text();
-		const body = JSON.parse(rawBody);
-		return payoutWebhookInternal(body, c);
+		let body = bodyOverride && typeof bodyOverride === 'object' ? bodyOverride : null;
+
+		if (!body) {
+			const rawBody = await c.req.text();
+			logger.info({ rawBody }, 'Received payout webhook raw body');
+			body = JSON.parse(rawBody);
+		}
+
+		const event = body.event || body.type;
+		const transferId =
+			body.transferId || body.data?.transferId || body.data?.transfer_id || body.transfer_id;
+
+		if (!transferId) {
+			logger.info(
+				{ event, body },
+				'Received payout webhook without transferId (e.g. verification or system alert), acknowledging 200',
+			);
+			return c.json({ success: true, message: 'Acknowledged' }, 200);
+		}
+
+		const lockKey = `lock:webhook:payout:${transferId}:${event}`;
+		const acquired = await client.set(lockKey, '1', 'EX', 60, 'NX');
+
+		if (!acquired) {
+			logger.info({ transferId, event }, 'Concurrent payout webhook skipped');
+			return c.json({ success: true, message: 'Already processing' }, 200);
+		}
+
+		let refundEngine = false;
+		let refundUserId = '';
+		let refundAmount = 0;
+
+		await prisma.$transaction(async (tx) => {
+			const transaction = await tx.transaction.findFirst({
+				where: {
+					type: 'WITHDRAWAL',
+					remarks: { contains: transferId },
+				},
+			});
+
+			if (!transaction || transaction.status !== 'PENDING') {
+				logger.info({ transferId }, 'Payout webhook skipped (already processed or not found)');
+				return;
+			}
+
+			if (event === 'TRANSFER_SUCCESS') {
+				await tx.transaction.update({
+					where: { id: transaction.id },
+					data: { status: 'SUCCESS' },
+				});
+				logger.info({ transferId }, 'Payout marked as SUCCESS');
+			} else if (event === 'TRANSFER_FAILED' || event === 'TRANSFER_REVERSED') {
+				await tx.transaction.update({
+					where: { id: transaction.id },
+					data: { status: 'FAILED' },
+				});
+
+				refundEngine = true;
+				refundUserId = transaction.userId;
+				refundAmount = Number(transaction.amount) * 1.0025;
+
+				await tx.wallet.update({
+					where: { userId: refundUserId },
+					data: { balance: { increment: refundAmount } },
+				});
+
+				logger.info({ transferId, userId: refundUserId }, 'Payout failed, balance refunded in DB');
+			}
+		});
+
+		if (refundEngine && refundUserId && refundAmount > 0) {
+			await pushToQueue(EVENTS.DEPOSIT_BALANCE, {
+				userId: refundUserId,
+				amount: refundAmount,
+			});
+			logger.info({ transferId, refundUserId, refundAmount }, 'Refund balance credited in engine');
+		}
+
+		return c.json({ success: true }, 200);
 	} catch (error) {
 		logger.error({ error }, 'Failed to process payout webhook');
 		return c.json({ success: false, error: 'Internal server error' }, 500);

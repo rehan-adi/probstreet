@@ -23,7 +23,6 @@ export type PayoutRequest = {
 export async function triggerCashfreePayout(request: PayoutRequest): Promise<any> {
 	const beneficiaryId = `bene_${request.transferId.slice(0, 20)}`;
 
-	// Build Cashfree v2 Payload
 	const payload: any = {
 		transfer_id: request.transferId,
 		transfer_amount: Number(request.amount.toFixed(2)),
@@ -50,11 +49,31 @@ export async function triggerCashfreePayout(request: PayoutRequest): Promise<any
 	};
 
 	try {
+		const beneResponse = await fetch(`${PAYOUT_V2_BASE_URL}/beneficiary`, {
+			method: 'POST',
+			headers: {
+				'x-client-id': ENV.CASHFREE_PAYOUT_CLIENT_ID,
+				'x-client-secret': ENV.CASHFREE_PAYOUT_CLIENT_SECRET,
+				'x-api-version': '2024-01-01',
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(payload.beneficiary_details),
+		});
+
+		const beneData = await beneResponse.json().catch(() => ({}));
+
+		// @ts-ignore
+		if (!beneResponse.ok && beneData.code !== 'conflict_with_existing_beneficiary') {
+			logger.error({ status: beneResponse.status, data: beneData }, 'Failed to create beneficiary');
+			// @ts-ignore
+			throw new Error(beneData.message || 'Failed to create Cashfree beneficiary');
+		}
+
 		const response = await fetch(`${PAYOUT_V2_BASE_URL}/transfers`, {
 			method: 'POST',
 			headers: {
-				'x-client-id': ENV.CASHFREE_CLIENT_ID,
-				'x-client-secret': ENV.CASHFREE_CLIENT_SECRET,
+				'x-client-id': ENV.CASHFREE_PAYOUT_CLIENT_ID,
+				'x-client-secret': ENV.CASHFREE_PAYOUT_CLIENT_SECRET,
 				'x-api-version': '2024-01-01',
 				'Content-Type': 'application/json',
 			},
@@ -62,7 +81,9 @@ export async function triggerCashfreePayout(request: PayoutRequest): Promise<any
 		});
 
 		const rawText = await response.text();
+
 		let data: any;
+
 		try {
 			data = JSON.parse(rawText);
 		} catch (e) {
@@ -75,60 +96,32 @@ export async function triggerCashfreePayout(request: PayoutRequest): Promise<any
 				'Cashfree Payouts v2 response notice',
 			);
 
-			if (!IS_PROD) {
-				return {
-					status: 'SUCCESS',
-					subCode: '200',
-					message: 'Simulated Sandbox Payout Transfer (Development)',
-					data: {
-						transfer_id: request.transferId,
-						transfer_amount: request.amount,
-						transfer_status: 'RECEIVED',
-						mode: request.paymentMethod.type,
-					},
-				};
-			}
-
 			throw new Error(
 				data.message || `Cashfree Payout v2 API failed with status ${response.status}`,
 			);
 		}
 
 		logger.info(
-			{ transferId: request.transferId, data },
+			{
+				transferId: request.transferId,
+				data,
+			},
 			'Cashfree Payouts v2 Triggered Successfully',
 		);
 		return data;
 	} catch (error) {
 		logger.error({ error, request }, 'Error triggering Cashfree Payouts v2');
-
-		if (!IS_PROD) {
-			return {
-				status: 'SUCCESS',
-				subCode: '200',
-				message: 'Simulated Sandbox Payout Transfer (Dev Fallback)',
-				data: {
-					transfer_id: request.transferId,
-					transfer_amount: request.amount,
-					transfer_status: 'RECEIVED',
-				},
-			};
-		}
-
 		throw error;
 	}
 }
 
-/**
- * Cashfree Payouts v2 Get Transfer Status
- */
 export async function getPayoutStatusV2(transferId: string): Promise<any> {
 	try {
 		const response = await fetch(`${PAYOUT_V2_BASE_URL}/transfers/${transferId}`, {
 			method: 'GET',
 			headers: {
-				'x-client-id': ENV.CASHFREE_CLIENT_ID,
-				'x-client-secret': ENV.CASHFREE_CLIENT_SECRET,
+				'x-client-id': ENV.CASHFREE_PAYOUT_CLIENT_ID,
+				'x-client-secret': ENV.CASHFREE_PAYOUT_CLIENT_SECRET,
 				'x-api-version': '2024-01-01',
 				'Content-Type': 'application/json',
 			},

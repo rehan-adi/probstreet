@@ -1,6 +1,5 @@
 import { Context } from 'hono';
 import { v4 as uuidv4 } from 'uuid';
-import { ENV } from '@/config/env';
 import { logger } from '@/libs/logger';
 import { EVENTS } from '@/config/constants';
 import { prisma } from '@probstreet/database';
@@ -440,11 +439,18 @@ export const withdraw = async (c: Context) => {
 					ifscCode: paymentMethod.ifscCode,
 				},
 			});
-		} catch (error) {
-			logger.warn({ error, transferId }, 'Payout gateway notice in withdrawal');
+		} catch (error: any) {
+			logger.error({ error, transferId }, 'Payout gateway failed in withdrawal');
+			return c.json(
+				{
+					success: false,
+					message:
+						error.message || 'Payment gateway rejected the transfer. Please try again later.',
+				},
+				400,
+			);
 		}
 
-		// Pass totalDeduction to engine so its memory state reflects the full deduction
 		const response = await pushToQueue(EVENTS.WITHDRAW_BALANCE, {
 			userId: userId,
 			amount: totalDeduction,
@@ -469,18 +475,16 @@ export const withdraw = async (c: Context) => {
 						data: { balance: { decrement: totalDeduction } },
 					});
 
-					// Record Withdrawal Transaction
 					await tx.transaction.create({
 						data: {
 							userId,
 							amount,
 							type: 'WITHDRAWAL',
-							status: ENV.NODE_ENV === 'production' ? 'PENDING' : 'SUCCESS',
+							status: 'PENDING',
 							remarks: `Payout transfer initiated [Transfer ID: ${transferId}]`,
 						},
 					});
 
-					// Record Withdrawal Fee
 					await tx.platformRevenue.create({
 						data: {
 							userId,

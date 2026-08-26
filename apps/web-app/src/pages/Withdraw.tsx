@@ -6,27 +6,20 @@ import {
 	Clock,
 	CheckCircle2,
 	XCircle,
-	ArrowLeft,
-	Building2,
-	Smartphone,
 	Eye,
 	EyeOff,
-	ShieldCheck,
 	ArrowRight,
-	HelpCircle,
 	Copy,
 	Check,
-	Zap,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { formatAmount } from '@/lib/format';
-import { Link, useNavigate } from 'react-router-dom';
 import { useBalanceQuery } from '@/hooks/queries/balance';
 import { useWithdrawMutation } from '@/hooks/mutations/balance';
 import { useGetVerificationDetails } from '@/hooks/queries/verification';
 import { useGetTransactionHistoryQuery } from '@/hooks/queries/transaction';
 
 export default function WithdrawPage() {
-	const navigate = useNavigate();
 	const [amount, setAmount] = useState<number | null>(null);
 	const [showSecret, setShowSecret] = useState(false);
 	const [copiedTxId, setCopiedTxId] = useState<string | null>(null);
@@ -37,7 +30,11 @@ export default function WithdrawPage() {
 	const { data: transactionData, refetch: refetchTransactions } = useGetTransactionHistoryQuery();
 
 	const currentWalletAmount = Number(balanceData?.data?.data?.amount || 0);
-	const paymentMethod = verificationData?.data?.data?.paymentMethod;
+	const paymentMethods = verificationData?.data?.data?.paymentMethods || [];
+	const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null);
+
+	const paymentMethod =
+		paymentMethods.find((p: any) => p.id === selectedMethodId) || paymentMethods[0];
 	const isMethodVerified = paymentMethod?.status === 'VERIFIED';
 
 	const withdrawalHistory =
@@ -178,7 +175,6 @@ export default function WithdrawPage() {
 						{/* Unverified Method Notice */}
 						{!isLoadingVerification && (!paymentMethod || !isMethodVerified) && (
 							<div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl p-5 flex items-start gap-3.5 text-amber-900 dark:text-amber-200">
-								<AlertCircle className="w-5 h-5 mt-0.5 text-amber-600 dark:text-amber-400 shrink-0" />
 								<div className="space-y-1">
 									<h3 className="font-bold text-sm">Verified Payment Method Required</h3>
 									<p className="text-xs opacity-90 leading-relaxed">
@@ -194,28 +190,17 @@ export default function WithdrawPage() {
 							</div>
 						)}
 
-						{/* Beneficiary / Destination Account Card (Bank Style) */}
+						{/* Beneficiary / Destination Account Card */}
 						{paymentMethod && (
 							<div className="bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-white/10 rounded-xl p-5 shadow-xs relative overflow-hidden transition-colors">
 								<div className="flex items-center justify-between border-b border-gray-100 dark:border-white/10 pb-3 mb-4">
-									<div className="flex items-center gap-2">
-										<div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400">
-											{paymentMethod.type === 'UPI' ? (
-												<Smartphone className="w-5 h-5" />
-											) : (
-												<Building2 className="w-5 h-5" />
-											)}
-										</div>
-										<div>
-											<span className="text-[11px] font-semibold tracking-wider text-gray-400 uppercase">
-												Destination Account
-											</span>
-											<h3 className="text-sm font-bold text-gray-900 dark:text-white">
-												{paymentMethod.type === 'UPI'
-													? 'Instant UPI Transfer'
-													: 'Direct Bank IMPS Transfer'}
-											</h3>
-										</div>
+									<div>
+										<span className="text-[11px] font-semibold tracking-wider text-gray-400 uppercase">
+											Destination Account
+										</span>
+										<h3 className="text-sm font-bold text-gray-900 dark:text-white mt-0.5">
+											{paymentMethod.type === 'UPI' ? 'UPI Transfer' : 'Bank IMPS Transfer'}
+										</h3>
 									</div>
 
 									<div className="flex items-center gap-2">
@@ -273,16 +258,28 @@ export default function WithdrawPage() {
 									)}
 								</div>
 
-								<div className="mt-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-									<span className="flex items-center gap-1">
-										<Zap className="w-3.5 h-3.5 text-emerald-500" />
-										Settlement Time: Instant (24x7)
-									</span>
+								<div className="mt-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-gray-500 dark:text-gray-400">
+									<span>Settlement Time: Instant (24x7)</span>
+									{paymentMethods.length > 1 && (
+										<select
+											className="bg-transparent border border-gray-200 dark:border-white/10 rounded px-2 py-1 text-xs"
+											value={paymentMethod.id}
+											onChange={(e) => setSelectedMethodId(e.target.value)}
+										>
+											{paymentMethods.map((pm: any) => (
+												<option key={pm.id} value={pm.id}>
+													{pm.type === 'UPI'
+														? maskUpi(pm.upiNumber)
+														: maskAccountNumber(pm.accountNumber)}
+												</option>
+											))}
+										</select>
+									)}
 									<Link
 										to="/verification"
 										className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
 									>
-										Change Account
+										Manage Accounts
 									</Link>
 								</div>
 							</div>
@@ -343,11 +340,10 @@ export default function WithdrawPage() {
 											type="button"
 											disabled={isPending || !isMethodVerified || preset > currentWalletAmount}
 											onClick={() => handlePresetClick(preset)}
-											className={`py-2 text-xs font-semibold rounded-lg border transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
-												amount === preset
-													? 'bg-black text-white dark:bg-white dark:text-black border-transparent'
-													: 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10'
-											}`}
+											className={`py-2 text-xs font-semibold rounded-lg border transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${amount === preset
+												? 'bg-black text-white dark:bg-white dark:text-black border-transparent'
+												: 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10'
+												}`}
 										>
 											+ ₹{preset}
 										</button>
@@ -356,11 +352,10 @@ export default function WithdrawPage() {
 										type="button"
 										disabled={isPending || !isMethodVerified || currentWalletAmount <= 0}
 										onClick={handleMaxClick}
-										className={`py-2 text-xs font-semibold rounded-lg border transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
-											amount === Math.max(0, Math.floor(currentWalletAmount - 5))
-												? 'bg-black text-white dark:bg-white dark:text-black border-transparent'
-												: 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10'
-										}`}
+										className={`py-2 text-xs font-semibold rounded-lg border transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${amount === Math.max(0, Math.floor(currentWalletAmount - 5))
+											? 'bg-black text-white dark:bg-white dark:text-black border-transparent'
+											: 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10'
+											}`}
 									>
 										Max (All)
 									</button>
@@ -378,16 +373,15 @@ export default function WithdrawPage() {
 									!paymentMethod ||
 									!isMethodVerified
 								}
-								className={`w-full py-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-sm ${
-									!amount ||
+								className={`w-full py-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-sm ${!amount ||
 									amount <= 0 ||
 									isInsufficient ||
 									isPending ||
 									!paymentMethod ||
 									!isMethodVerified
-										? 'bg-gray-300 dark:bg-white/10 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-										: 'bg-black text-white hover:bg-gray-900 dark:bg-white dark:text-black dark:hover:bg-gray-200 cursor-pointer'
-								}`}
+									? 'bg-gray-300 dark:bg-white/10 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+									: 'bg-black text-white hover:bg-gray-900 dark:bg-white dark:text-black dark:hover:bg-gray-200 cursor-pointer'
+									}`}
 							>
 								{isPending ? (
 									<>
@@ -421,10 +415,7 @@ export default function WithdrawPage() {
 								</div>
 
 								<div className="flex justify-between text-gray-600 dark:text-gray-400">
-									<span className="flex items-center gap-1">
-										Platform Fee (0.25%)
-										<HelpCircle className="w-3 h-3 opacity-50" title="Min ₹5, Max ₹100" />
-									</span>
+									<span>Platform Fee (0.25%)</span>
 									<span className="font-semibold text-gray-900 dark:text-white font-mono">
 										₹{fee.toFixed(2)}
 									</span>
