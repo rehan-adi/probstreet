@@ -16,8 +16,7 @@ export async function handleTradeExecuted(env: ENV_CONFIG, data: any): Promise<v
 
 	for (const user of users) {
 		if (user.emailTradeExecuted && user.email) {
-			await mailer.sendMail({
-				from: `"Probstreet" <${env.GMAIL_USER}>`,
+			await dbQuery(env, 'notification/send-email', {
 				to: user.email,
 				subject: `Trade Executed on "${marketTitle}"`,
 				html: tradeExecutedEmailHtml(marketTitle, stockType, price, quantity, totalValue),

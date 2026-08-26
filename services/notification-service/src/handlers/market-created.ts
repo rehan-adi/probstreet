@@ -10,23 +10,25 @@ export async function handleMarketCreated(env: ENV_CONFIG, data: any): Promise<v
 	if (!marketId || !title) throw new Error('Missing marketId or title');
 
 	const { users } = await dbQuery(env, 'notification/market-subscribers', { marketId });
+	console.log(`[market.created] Retrieved ${users?.length || 0} subscribed users from DB`);
 
-	const mailer = mailerClient(env);
 	const emailUsers = users.filter((u: any) => u.emailNewMarket && u.email);
 	const inAppUsers = users.filter((u: any) => u.inAppNewMarket);
 
+	console.log(`[market.created] Filtered: ${emailUsers.length} email users, ${inAppUsers.length} in-app users`);
+
 	if (emailUsers.length > 0) {
-		await Promise.allSettled(
+		console.log(`[market.created] Attempting to send emails using nodemailer...`);
+		const results = await Promise.allSettled(
 			emailUsers.map((u: any) =>
-				mailer.sendMail({
-					from: `"Probstreet" <${env.GMAIL_USER}>`,
+				dbQuery(env, 'notification/send-email', {
 					to: u.email,
 					subject: `New Market: ${title}`,
 					html: newMarketEmailHtml(title, marketId),
 				}),
 			),
 		);
-		console.log(`[market.created] Sent emails to ${emailUsers.length} users`);
+		console.log(`[market.created] Sent emails. Results: ${JSON.stringify(results)}`);
 	}
 
 	if (inAppUsers.length > 0) {

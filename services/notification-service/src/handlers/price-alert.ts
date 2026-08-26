@@ -27,9 +27,7 @@ export async function handlePriceAlert(env: ENV_CONFIG, data: any): Promise<void
 	}
 
 	if (email) {
-		const mailer = mailerClient(env);
-		await mailer.sendMail({
-			from: `"Probstreet" <${env.GMAIL_USER}>`,
+		await dbQuery(env, 'notification/send-email', {
 			to: email,
 			subject: `Price Alert: ${marketTitle}`,
 			html: priceAlertEmailHtml(marketTitle, stockType, currentPrice),

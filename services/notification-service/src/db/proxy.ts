@@ -5,7 +5,7 @@ export async function dbQuery(
 	endpoint: string,
 	body: Record<string, any>,
 ): Promise<any> {
-	const res = await fetch(`${env.API_INTERNAL_URL}/internal/${endpoint}`, {
+	const res = await fetch(`${env.API_INTERNAL_URL}/api/v1/iapi/${endpoint}`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
