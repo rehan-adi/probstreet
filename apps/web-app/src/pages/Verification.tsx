@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -21,6 +21,7 @@ export default function KycVerificationPage() {
 	const [upiId, setUpiId] = useState('');
 	const [bankAccountNumber, setBankAccountNumber] = useState('');
 	const [paymentMethod, setPaymentMethod] = useState<'UPI' | 'BANK'>('BANK');
+	const [showPaymentForm, setShowPaymentForm] = useState(false);
 
 	const { data: verificationData, isLoading: isLoadingDetails } = useGetVerificationDetails();
 	const { data: statusData, isLoading: isLoadingStatus } = useGetVerificationStatus();
@@ -54,6 +55,10 @@ export default function KycVerificationPage() {
 				onSuccess: () => {
 					queryClient.invalidateQueries({ queryKey: ['verificationStatus'] });
 					queryClient.invalidateQueries({ queryKey: ['verificationDetails'] });
+					setShowPaymentForm(false);
+					setUpiId('');
+					setBankAccountNumber('');
+					setIfscCode('');
 				},
 			},
 		);
@@ -70,12 +75,21 @@ export default function KycVerificationPage() {
 		);
 	}
 
-	const { kycVerificationStatus, paymentVerificationStatus } = statusData?.data.data || {};
+	const {
+		kycVerificationStatus,
+		paymentVerificationStatus,
+		paymentMethods = [],
+	} = statusData?.data.data || {};
 
 	const isKycComplete = kycVerificationStatus === 'PENDING' || kycVerificationStatus === 'VERIFIED';
 	const isPaymentComplete =
 		paymentVerificationStatus === 'PENDING' || paymentVerificationStatus === 'VERIFIED';
 	const isAllComplete = isKycComplete && isPaymentComplete;
+
+	const hasBank = paymentMethods.some((pm: any) => pm.type === 'BANK');
+	const hasUpi = paymentMethods.some((pm: any) => pm.type === 'UPI');
+
+	// Auto-select logic removed to allow adding multiple accounts
 
 	return (
 		<div className="w-full min-h-screen bg-[#f4f4f5] dark:bg-[#090C1A] flex justify-center items-start text-gray-900 dark:text-white transition-colors pb-12">
@@ -90,7 +104,7 @@ export default function KycVerificationPage() {
 						<h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
 							KYC verification
 						</h2>
-						<p className="text-gray-600 dark:text-gray-400 text-base">It takes just 5 minutes</p>
+						<p className="text-gray-600 dark:text-gray-400 text-base">It takes up to 6 hours</p>
 					</div>
 				</div>
 
@@ -156,7 +170,7 @@ export default function KycVerificationPage() {
 								<button
 									onClick={handleSubmitKyc}
 									disabled={!isFormValid || kycPending}
-									className={`w-full py-3 text-sm font-semibold rounded-lg transition-colors flex items-center justify-center ${
+									className={`w-full py-3.5 text-sm font-semibold rounded-lg transition-colors flex items-center justify-center ${
 										!isFormValid
 											? 'bg-gray-200 dark:bg-white/5 text-gray-400 dark:text-gray-500 cursor-not-allowed'
 											: 'bg-black dark:bg-white text-white dark:text-black cursor-pointer hover:opacity-90'
@@ -168,113 +182,132 @@ export default function KycVerificationPage() {
 						</div>
 					)}
 
-					{/* Step 2: Payment Details Form (if KYC complete, but Payment not complete or rejected) */}
-					{isKycComplete && (!isPaymentComplete || paymentVerificationStatus === 'REJECTED') && (
-						<div className="w-full rounded-xl bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-white/10 min-h-[40vh] py-6 px-6 shadow-sm transition-colors">
-							<div className="text-sm max-w-89.25 rounded-lg mb-6">
-								<h3 className="text-[10px] mb-2 font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">
-									PAYMENT DETAILS
-								</h3>
-								<p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
-									Please provide your payment method. Make sure the details are correct to avoid
-									failed transactions.
-								</p>
-							</div>
-
-							<div className="space-y-6 max-w-87.5">
-								<div>
-									<label className="block text-gray-800 dark:text-gray-200 mb-2 font-medium text-sm">
-										Select Payment Method
-									</label>
-									<div className="flex items-center gap-6">
-										<label className="flex items-center gap-2 cursor-pointer text-gray-800 dark:text-gray-200">
-											<input
-												type="radio"
-												checked={paymentMethod === 'BANK'}
-												onChange={() => setPaymentMethod('BANK')}
-												className="accent-black dark:accent-white"
-											/>
-											Bank Account
-										</label>
-										<label className="flex items-center gap-2 cursor-pointer text-gray-800 dark:text-gray-200">
-											<input
-												type="radio"
-												checked={paymentMethod === 'UPI'}
-												onChange={() => setPaymentMethod('UPI')}
-												className="accent-black dark:accent-white"
-											/>
-											UPI ID
-										</label>
+					{/* Step 2: Payment Details Form */}
+					{isKycComplete &&
+						(!isPaymentComplete || paymentVerificationStatus === 'REJECTED' || showPaymentForm) && (
+							<div className="w-full rounded-xl bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-white/10 min-h-[40vh] py-6 px-6 shadow-sm transition-colors mb-6">
+								<div className="flex items-center justify-between mb-6">
+									<div className="text-sm max-w-89.25 rounded-lg">
+										<h3 className="text-[10px] mb-2 font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">
+											PAYMENT DETAILS
+										</h3>
+										<p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+											Please provide your payment method. Make sure the details are correct to avoid
+											failed transactions.
+										</p>
 									</div>
+									{showPaymentForm && isPaymentComplete && (
+										<button
+											onClick={() => setShowPaymentForm(false)}
+											className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+										>
+											Cancel
+										</button>
+									)}
 								</div>
 
-								{paymentMethod === 'UPI' && (
+								<div className="space-y-6 max-w-87.5">
 									<div>
-										<label className="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1.5">
-											UPI ID
+										<label className="block text-gray-800 dark:text-gray-200 mb-2 font-medium text-sm">
+											Select Payment Method
 										</label>
-										<input
-											type="text"
-											placeholder="example@upi"
-											value={upiId}
-											onChange={(e) => setUpiId(e.target.value)}
-											className="w-full px-3.5 py-2.5 border border-gray-300 dark:border-white/10 bg-white dark:bg-[#090C1A] text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all"
-										/>
+										<div className="flex items-center gap-6">
+											<label className="flex items-center gap-2 cursor-pointer text-gray-800 dark:text-gray-200">
+												<input
+													type="radio"
+													checked={paymentMethod === 'BANK'}
+													onChange={() => setPaymentMethod('BANK')}
+													className="accent-black dark:accent-white"
+												/>
+												Bank Account
+											</label>
+											<label className="flex items-center gap-2 cursor-pointer text-gray-800 dark:text-gray-200">
+												<input
+													type="radio"
+													checked={paymentMethod === 'UPI'}
+													onChange={() => setPaymentMethod('UPI')}
+													className="accent-black dark:accent-white"
+												/>
+												UPI ID
+											</label>
+										</div>
 									</div>
-								)}
 
-								{paymentMethod === 'BANK' && (
-									<>
+									{paymentMethod === 'UPI' && (
 										<div>
 											<label className="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1.5">
-												Bank Account Number
+												UPI ID
 											</label>
 											<input
 												type="text"
-												placeholder="Enter account number"
-												value={bankAccountNumber}
-												onChange={(e) => setBankAccountNumber(e.target.value)}
+												placeholder="example@upi"
+												value={upiId}
+												onChange={(e) => setUpiId(e.target.value)}
 												className="w-full px-3.5 py-2.5 border border-gray-300 dark:border-white/10 bg-white dark:bg-[#090C1A] text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all"
 											/>
 										</div>
-										<div>
-											<label className="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1.5">
-												IFSC Code
-											</label>
-											<input
-												type="text"
-												placeholder="Enter IFSC code"
-												value={ifscCode}
-												onChange={(e) => setIfscCode(e.target.value)}
-												className="w-full px-3.5 py-2.5 border border-gray-300 dark:border-white/10 bg-white dark:bg-[#090C1A] text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all"
-											/>
-										</div>
-									</>
-								)}
+									)}
 
-								<button
-									onClick={handleSubmitPayment}
-									disabled={paymentPending}
-									className={`w-full py-3 text-sm font-semibold rounded-lg transition-colors flex items-center justify-center ${
-										paymentPending
-											? 'bg-gray-200 dark:bg-white/5 text-gray-400 dark:text-gray-500 cursor-not-allowed'
-											: 'bg-black dark:bg-white text-white dark:text-black cursor-pointer hover:opacity-90'
-									}`}
-								>
-									{paymentPending ? <Loader2 className="animate-spin w-4 h-4" /> : 'Submit Payment'}
-								</button>
+									{paymentMethod === 'BANK' && (
+										<>
+											<div>
+												<label className="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1.5">
+													Bank Account Number
+												</label>
+												<input
+													type="text"
+													placeholder="Enter account number"
+													value={bankAccountNumber}
+													onChange={(e) => setBankAccountNumber(e.target.value)}
+													className="w-full px-3.5 py-2.5 border border-gray-300 dark:border-white/10 bg-white dark:bg-[#090C1A] text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all"
+												/>
+											</div>
+											<div>
+												<label className="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-1.5">
+													IFSC Code
+												</label>
+												<input
+													type="text"
+													placeholder="Enter IFSC code"
+													value={ifscCode}
+													onChange={(e) => setIfscCode(e.target.value)}
+													className="w-full px-3.5 py-2.5 border border-gray-300 dark:border-white/10 bg-white dark:bg-[#090C1A] text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white transition-all"
+												/>
+											</div>
+										</>
+									)}
+
+									<button
+										onClick={handleSubmitPayment}
+										disabled={paymentPending}
+										className={`w-full py-3.5 text-sm font-semibold rounded-lg transition-colors flex items-center justify-center ${
+											paymentPending
+												? 'bg-gray-200 dark:bg-white/5 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+												: 'bg-black dark:bg-white text-white dark:text-black cursor-pointer hover:opacity-90'
+										}`}
+									>
+										{paymentPending ? (
+											<Loader2 className="animate-spin w-4 h-4" />
+										) : (
+											'Submit Payment'
+										)}
+									</button>
+								</div>
 							</div>
-						</div>
-					)}
+						)}
 
 					{/* Step 3: All Details Submitted & Under Review or Verified */}
 					{isAllComplete &&
+						!showPaymentForm &&
 						(isLoadingDetails ? (
 							<div className="flex justify-center items-center py-16 bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-white/10 rounded-xl">
 								<Loader2 className="animate-spin w-6 h-6 text-gray-600 dark:text-gray-400" />
 							</div>
 						) : (
-							<VerificationPreview data={verificationData?.data?.data} />
+							<VerificationPreview
+								data={verificationData?.data?.data}
+								onAddPaymentMethod={() => setShowPaymentForm(true)}
+							/>
 						))}
 				</div>
 			</div>

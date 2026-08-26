@@ -40,3 +40,7 @@ export const verify = (
 		paymentRemark,
 	});
 };
+
+export const deletePaymentMethod = (id: string) => {
+	return api.delete(`/verification/payment-method/${id}`);
+};

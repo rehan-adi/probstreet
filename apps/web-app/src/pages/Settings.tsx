@@ -3,7 +3,7 @@ import api from '@/config/axios';
 import { useAuthStore } from '@/store/auth';
 import { useEffect, useState } from 'react';
 import { UsernameModal } from '@/components/modals/UsernameModal';
-import { User, Bell, LogOut, Trash2, Wallet, Edit2 } from 'lucide-react';
+import { User, Bell, LogOut, Trash2, Wallet, Edit2, Mail, Smartphone } from 'lucide-react';
 
 export default function Settings() {
 	const [activeTab, setActiveTab] = useState('profile');
@@ -270,97 +270,140 @@ export default function Settings() {
 								Notifications
 							</h2>
 
-							<div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl overflow-hidden divide-y divide-gray-100 dark:divide-gray-800">
-								<div className="p-6 flex items-center justify-between gap-8">
-									<div>
-										<h3 className="text-sm font-medium text-gray-900 dark:text-white">
-											Email: New Markets
-										</h3>
-										<p className="text-xs text-gray-500 mt-1">
-											Receive an email when new markets are added.
-										</p>
-									</div>
-									<label className="relative inline-flex items-center cursor-pointer">
-										<input
-											type="checkbox"
-											className="sr-only peer"
-											checked={emailNewMarket}
-											onChange={() => {
-												setEmailNewMarket(!emailNewMarket);
-												handleUpdateNotifications('emailNewMarket', !emailNewMarket);
-											}}
-										/>
-										<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black dark:peer-checked:bg-white"></div>
-									</label>
+							{/* Email Notifications */}
+							<div>
+								<div className="flex items-center gap-2 px-2 mb-3">
+									<Mail className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+									<h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+										Email Notifications
+									</h3>
 								</div>
-
-								<div className="p-6 flex items-center justify-between gap-8">
-									<div>
-										<h3 className="text-sm font-medium text-gray-900 dark:text-white">
-											Email: Order Fills
-										</h3>
-										<p className="text-xs text-gray-500 mt-1">
-											Receive an email when your order is filled.
-										</p>
+								<div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl overflow-hidden divide-y divide-gray-100 dark:divide-gray-800">
+									<div className="p-6 flex items-center justify-between gap-8">
+										<div>
+											<h4 className="text-sm font-medium text-gray-900 dark:text-white">
+												New Markets
+											</h4>
+											<p className="text-xs text-gray-500 mt-1">
+												Receive an email when new markets are added.
+											</p>
+										</div>
+										<label className="relative inline-flex items-center cursor-pointer">
+											<input
+												type="checkbox"
+												className="sr-only peer"
+												checked={emailNewMarket}
+												onChange={() => {
+													setEmailNewMarket(!emailNewMarket);
+													handleUpdateNotifications('emailNewMarket', !emailNewMarket);
+												}}
+											/>
+											<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black dark:peer-checked:bg-white"></div>
+										</label>
 									</div>
-									<label className="relative inline-flex items-center cursor-pointer">
-										<input
-											type="checkbox"
-											className="sr-only peer"
-											checked={emailOrderFills}
-											onChange={() => {
-												setEmailOrderFills(!emailOrderFills);
-												handleUpdateNotifications('emailOrderFills', !emailOrderFills);
-											}}
-										/>
-										<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black dark:peer-checked:bg-white"></div>
-									</label>
+
+									<div className="p-6 flex items-center justify-between gap-8">
+										<div>
+											<h4 className="text-sm font-medium text-gray-900 dark:text-white">
+												Trade Executed
+											</h4>
+											<p className="text-xs text-gray-500 mt-1">
+												Receive an email when your trade is executed.
+											</p>
+										</div>
+										<label className="relative inline-flex items-center cursor-pointer">
+											<input
+												type="checkbox"
+												className="sr-only peer"
+												checked={emailOrderFills}
+												onChange={() => {
+													setEmailOrderFills(!emailOrderFills);
+													handleUpdateNotifications('emailOrderFills', !emailOrderFills);
+												}}
+											/>
+											<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black dark:peer-checked:bg-white"></div>
+										</label>
+									</div>
 								</div>
+							</div>
 
-								<div className="p-6 flex items-center justify-between gap-8">
-									<div>
-										<h3 className="text-sm font-medium text-gray-900 dark:text-white">
-											In-App: New Markets
-										</h3>
-										<p className="text-xs text-gray-500 mt-1">
-											Receive in-app alerts when new markets are added.
-										</p>
-									</div>
-									<label className="relative inline-flex items-center cursor-pointer">
-										<input
-											type="checkbox"
-											className="sr-only peer"
-											checked={inAppNewMarket}
-											onChange={() => {
-												setInAppNewMarket(!inAppNewMarket);
-												handleUpdateNotifications('inAppNewMarket', !inAppNewMarket);
-											}}
-										/>
-										<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black dark:peer-checked:bg-white"></div>
-									</label>
+							{/* In-App Notifications */}
+							<div>
+								<div className="flex items-center gap-2 px-2 mb-3">
+									<Smartphone className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+									<h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+										In-App Notifications
+									</h3>
 								</div>
-
-								<div className="p-6 flex items-center justify-between gap-8">
-									<div>
-										<h3 className="text-sm font-medium text-gray-900 dark:text-white">
-											In-App: Trade Executed
-										</h3>
-										<p className="text-xs text-gray-500 mt-1">
-											Receive in-app alerts when trades are executed.
-										</p>
+								<div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl overflow-hidden divide-y divide-gray-100 dark:divide-gray-800">
+									<div className="p-6 flex items-center justify-between gap-8">
+										<div>
+											<h4 className="text-sm font-medium text-gray-900 dark:text-white">
+												New Markets
+											</h4>
+											<p className="text-xs text-gray-500 mt-1">
+												Receive in-app alerts when new markets are added.
+											</p>
+										</div>
+										<label className="relative inline-flex items-center cursor-pointer">
+											<input
+												type="checkbox"
+												className="sr-only peer"
+												checked={inAppNewMarket}
+												onChange={() => {
+													setInAppNewMarket(!inAppNewMarket);
+													handleUpdateNotifications('inAppNewMarket', !inAppNewMarket);
+												}}
+											/>
+											<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black dark:peer-checked:bg-white"></div>
+										</label>
 									</div>
-									<label className="relative inline-flex items-center cursor-pointer">
-										<input
-											type="checkbox"
-											className="sr-only peer"
-											checked={inAppTradeExecuted}
-											onChange={() => {
-												setInAppTradeExecuted(!inAppTradeExecuted);
-												handleUpdateNotifications('inAppTradeExecuted', !inAppTradeExecuted);
-											}}
-										/>
-										<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black dark:peer-checked:bg-white"></div>
-									</label>
+
+									<div className="p-6 flex items-center justify-between gap-8">
+										<div>
+											<h4 className="text-sm font-medium text-gray-900 dark:text-white">
+												Trade Executed
+											</h4>
+											<p className="text-xs text-gray-500 mt-1">
+												Receive in-app alerts when trades are executed.
+											</p>
+										</div>
+										<label className="relative inline-flex items-center cursor-pointer">
+											<input
+												type="checkbox"
+												className="sr-only peer"
+												checked={inAppTradeExecuted}
+												onChange={() => {
+													setInAppTradeExecuted(!inAppTradeExecuted);
+													handleUpdateNotifications('inAppTradeExecuted', !inAppTradeExecuted);
+												}}
+											/>
+											<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black dark:peer-checked:bg-white"></div>
+										</label>
+									</div>
+
+									<div className="p-6 flex items-center justify-between gap-8">
+										<div>
+											<h4 className="text-sm font-medium text-gray-900 dark:text-white">
+												Price Alerts
+											</h4>
+											<p className="text-xs text-gray-500 mt-1">
+												Receive in-app alerts when your price targets are hit.
+											</p>
+										</div>
+										<label className="relative inline-flex items-center cursor-pointer">
+											<input
+												type="checkbox"
+												className="sr-only peer"
+												checked={inAppPriceAlerts}
+												onChange={() => {
+													setInAppPriceAlerts(!inAppPriceAlerts);
+													handleUpdateNotifications('inAppPriceAlerts', !inAppPriceAlerts);
+												}}
+											/>
+											<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black dark:peer-checked:bg-white"></div>
+										</label>
+									</div>
 								</div>
 							</div>
 						</div>

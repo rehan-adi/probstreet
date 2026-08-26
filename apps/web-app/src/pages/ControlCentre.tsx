@@ -66,264 +66,269 @@ export default function ControlCentrePage() {
 	};
 
 	return (
-		<div className="w-full bg-[#f4f4f5] dark:bg-[#090C1A] flex justify-center px-4 md:pt-16 pt-16 pb-16 transition-colors min-h-screen">
-			<div className="w-full max-w-227.5 flex flex-col gap-6">
+		<div className="w-full bg-[#f8f9fa] dark:bg-[#050505] flex justify-center px-4 md:pt-16 pt-16 pb-16 transition-colors min-h-screen">
+			<div className="w-full max-w-5xl flex flex-col gap-8">
 				{/* Top Header */}
-				<div className="flex items-center justify-between gap-4 pb-2 border-b border-gray-400/20 dark:border-white/10">
-					<div className="flex items-center gap-3">
-						<button
-							onClick={() => navigate('/wallet')}
-							className="p-2 -ml-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer"
-							aria-label="Back to Wallet"
-						>
-							<ArrowLeft className="w-5 h-5" />
-						</button>
+				<div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-gray-200 dark:border-white/10">
+					<div className="flex items-start gap-4">
 						<div>
-							<h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+							<h1 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
 								Control Centre
 							</h1>
-							<p className="text-xs text-gray-500 dark:text-gray-400">
-								Manage active price alerts, risk controls, and automated notifications
+							<p className="text-sm text-gray-500 dark:text-gray-400 mt-1.5 max-w-lg leading-relaxed">
+								Manage active price alerts, configure your risk controls, and customize automated
+								system notifications all in one place.
 							</p>
 						</div>
 					</div>
 
 					<Link
 						to="/events"
-						className="hidden sm:flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg bg-black dark:bg-white text-white dark:text-black hover:opacity-90 transition"
+						className="hidden sm:flex items-center justify-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-xl bg-black dark:bg-white text-white dark:text-black hover:scale-[1.02] active:scale-95 transition-all shadow-md"
 					>
-						<Sparkles className="w-3.5 h-3.5" />
 						Explore Markets
 					</Link>
 				</div>
 
 				{/* Quick Stats Grid */}
-				<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-					<div className="bg-white dark:bg-[#1C1C1E] p-4 rounded-xl border border-gray-400/20 dark:border-white/10 flex items-center justify-between">
-						<div>
-							<p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-								Active Price Alerts
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+					<div className="bg-white dark:bg-[#0a0a0a] p-5 rounded-2xl border border-gray-200 dark:border-white/5 shadow-sm flex items-start justify-between group hover:border-gray-300 dark:hover:border-white/10 transition-colors">
+						<div className="space-y-1">
+							<p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">
+								Active Alerts
 							</p>
-							<p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+							<p className="text-3xl font-bold text-gray-900 dark:text-white">
 								{loading ? '-' : alerts.length}
 							</p>
 						</div>
-						<div className="p-3 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400">
+						<div className="p-3.5 rounded-xl bg-black dark:bg-white text-white dark:text-black group-hover:scale-110 transition-transform">
 							<BellRing className="w-5 h-5" />
 						</div>
 					</div>
 
-					<div className="bg-white dark:bg-[#1C1C1E] p-4 rounded-xl border border-gray-400/20 dark:border-white/10 flex items-center justify-between">
-						<div>
-							<p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+					<div className="bg-white dark:bg-[#0a0a0a] p-5 rounded-2xl border border-gray-200 dark:border-white/5 shadow-sm flex items-start justify-between group hover:border-gray-300 dark:hover:border-white/10 transition-colors">
+						<div className="space-y-1">
+							<p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">
 								Monitored Events
 							</p>
-							<p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+							<p className="text-3xl font-bold text-gray-900 dark:text-white">
 								{loading ? '-' : new Set(alerts.map((a) => a.market?.id)).size}
 							</p>
 						</div>
-						<div className="p-3 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+						<div className="p-3.5 rounded-xl bg-black dark:bg-white text-white dark:text-black group-hover:scale-110 transition-transform">
 							<Zap className="w-5 h-5" />
 						</div>
 					</div>
 
-					<div className="bg-white dark:bg-[#1C1C1E] p-4 rounded-xl border border-gray-400/20 dark:border-white/10 flex items-center justify-between">
-						<div>
-							<p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-								Responsible Trading
+					<div className="bg-white dark:bg-[#0a0a0a] p-5 rounded-2xl border border-gray-200 dark:border-white/5 shadow-sm flex items-start justify-between group hover:border-gray-300 dark:hover:border-white/10 transition-colors">
+						<div className="space-y-1">
+							<p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">
+								System Status
 							</p>
-							<p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mt-1.5 flex items-center gap-1">
-								<ShieldCheck className="w-4 h-4" /> Active & Guarded
+							<p className="text-sm font-bold text-gray-900 dark:text-white mt-2 flex items-center gap-1.5">
+								<ShieldCheck className="w-5 h-5" /> Protected
 							</p>
 						</div>
-						<div className="p-3 rounded-full bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400">
+						<div className="p-3.5 rounded-xl bg-black dark:bg-white text-white dark:text-black group-hover:scale-110 transition-transform">
 							<SlidersHorizontal className="w-5 h-5" />
 						</div>
 					</div>
 				</div>
 
-				{/* Tabs Navigation */}
-				<div className="flex gap-2 border-b border-gray-400/20 dark:border-white/10 pb-2">
-					<button
-						onClick={() => setActiveTab('alerts')}
-						className={`px-4 py-2 text-sm font-semibold rounded-lg transition cursor-pointer flex items-center gap-2 ${
-							activeTab === 'alerts'
-								? 'bg-black text-white dark:bg-white dark:text-black'
-								: 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/5'
-						}`}
-					>
-						<BellRing className="w-4 h-4" />
-						Price Alerts ({alerts.length})
-					</button>
-					<button
-						onClick={() => setActiveTab('limits')}
-						className={`px-4 py-2 text-sm font-semibold rounded-lg transition cursor-pointer flex items-center gap-2 ${
-							activeTab === 'limits'
-								? 'bg-black text-white dark:bg-white dark:text-black'
-								: 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/5'
-						}`}
-					>
-						<ShieldCheck className="w-4 h-4" />
-						Trading Controls & Preferences
-					</button>
-				</div>
+				<div className="flex flex-col gap-6">
+					{/* Tabs Navigation */}
+					<div className="flex gap-2 p-1.5 bg-gray-200/50 dark:bg-[#111111] rounded-xl w-fit">
+						<button
+							onClick={() => setActiveTab('alerts')}
+							className={`px-5 py-2.5 text-sm font-semibold rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
+								activeTab === 'alerts'
+									? 'bg-white dark:bg-[#222222] text-gray-900 dark:text-white shadow-sm'
+									: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+							}`}
+						>
+							<BellRing className="w-4 h-4" />
+							Price Alerts ({alerts.length})
+						</button>
+						<button
+							onClick={() => setActiveTab('limits')}
+							className={`px-5 py-2.5 text-sm font-semibold rounded-lg transition-all flex items-center gap-2 cursor-pointer ${
+								activeTab === 'limits'
+									? 'bg-white dark:bg-[#222222] text-gray-900 dark:text-white shadow-sm'
+									: 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+							}`}
+						>
+							<ShieldCheck className="w-4 h-4" />
+							Trading Controls
+						</button>
+					</div>
 
-				{/* Tab Content */}
-				{activeTab === 'alerts' && (
-					<div className="space-y-4">
-						{loading ? (
-							<div className="flex flex-col justify-center items-center h-48 bg-white dark:bg-[#1C1C1E] rounded-xl border border-gray-400/20 dark:border-white/10">
-								<div className="animate-spin rounded-full h-7 w-7 border-2 border-black dark:border-white border-t-transparent mb-2"></div>
-								<p className="text-xs text-gray-500 dark:text-gray-400">Loading your alerts...</p>
-							</div>
-						) : alerts.length === 0 ? (
-							<div className="bg-white dark:bg-[#1C1C1E] rounded-xl p-10 text-center border border-gray-400/20 dark:border-white/10">
-								<div className="w-14 h-14 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto mb-3">
-									<BellRing className="w-7 h-7" />
-								</div>
-								<h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-									No Active Price Alerts
-								</h3>
-								<p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mx-auto mt-1 mb-5">
-									Set target price triggers on any event market. When the price crosses your target,
-									you'll be instantly alerted via In-App notifications!
-								</p>
-								<Link
-									to="/events"
-									className="inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-2.5 rounded-md bg-black dark:bg-white text-white dark:text-black hover:opacity-90 transition"
-								>
-									Explore Events
-								</Link>
-							</div>
-						) : (
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-								{alerts.map((alert) => {
-									const currentPrice =
-										alert.stockType === 'YES' ? alert.market?.yesPrice : alert.market?.noPrice;
-
-									return (
-										<div
-											key={alert.id}
-											className="bg-white dark:bg-[#1C1C1E] border border-gray-400/20 dark:border-white/10 rounded-xl p-5 shadow-xs hover:border-blue-500/50 transition-all flex flex-col justify-between gap-4"
+					{/* Tab Content */}
+					<div className="min-h-[400px]">
+						{activeTab === 'alerts' && (
+							<div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+								{loading ? (
+									<div className="flex flex-col justify-center items-center h-64 bg-white dark:bg-[#0a0a0a] rounded-2xl border border-gray-200 dark:border-white/5 shadow-sm">
+										<div className="animate-spin rounded-full h-8 w-8 border-2 border-black dark:border-white border-t-transparent mb-4"></div>
+										<p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+											Syncing alerts...
+										</p>
+									</div>
+								) : alerts.length === 0 ? (
+									<div className="bg-white dark:bg-[#0a0a0a] rounded-2xl p-12 text-center border border-gray-200 dark:border-white/5 shadow-sm flex flex-col items-center justify-center min-h-[400px]">
+										<div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-6 shadow-inner">
+											<BellRing className="w-8 h-8" />
+										</div>
+										<h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+											No Active Price Alerts
+										</h3>
+										<p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto mb-8 leading-relaxed">
+											Never miss a trading opportunity. Set target price triggers on any market and
+											get instantly notified when the price hits your mark.
+										</p>
+										<Link
+											to="/events"
+											className="inline-flex items-center gap-2 text-sm font-semibold px-6 py-3 rounded-xl bg-black dark:bg-white text-white dark:text-black hover:scale-[1.02] active:scale-95 transition-all shadow-md"
 										>
-											<div className="flex justify-between items-start gap-2">
-												<div className="space-y-1">
-													<Link
-														to={`/events/${alert.market?.id}`}
-														className="text-sm font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition line-clamp-2 flex items-center gap-1 group"
-													>
-														<span>{alert.market?.title || 'Unknown Market'}</span>
-														<ExternalLink className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-													</Link>
-													<div className="flex items-center gap-2 text-xs text-gray-400">
-														<Clock className="w-3 h-3" />
-														<span>Set {new Date(alert.createdAt).toLocaleDateString()}</span>
-													</div>
-												</div>
+											Explore Events to Setup Alerts
+										</Link>
+									</div>
+								) : (
+									<div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+										{alerts.map((alert) => {
+											const currentPrice =
+												alert.stockType === 'YES' ? alert.market?.yesPrice : alert.market?.noPrice;
 
-												<button
-													onClick={() => handleDelete(alert.id)}
-													className="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 cursor-pointer shrink-0"
-													title="Delete Alert"
+											return (
+												<div
+													key={alert.id}
+													className="bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-gray-300 dark:hover:border-white/10 transition-all flex flex-col justify-between gap-6 group"
 												>
-													<Trash2 className="w-4 h-4" />
-												</button>
+													<div className="flex justify-between items-start gap-4">
+														<div className="space-y-1.5 flex-1">
+															<Link
+																to={`/events/${alert.market?.id}`}
+																className="text-base font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors line-clamp-2 pr-2"
+															>
+																{alert.market?.title || 'Unknown Market'}
+															</Link>
+															<div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-400 uppercase tracking-wider">
+																<Clock className="w-3 h-3" />
+																<span>Added {new Date(alert.createdAt).toLocaleDateString()}</span>
+															</div>
+														</div>
+
+														<button
+															onClick={() => handleDelete(alert.id)}
+															className="text-gray-400 hover:text-red-500 p-2.5 rounded-full hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors cursor-pointer shrink-0"
+															title="Remove Alert"
+														>
+															<Trash2 className="w-4 h-4" />
+														</button>
+													</div>
+
+													<div className="grid grid-cols-2 gap-3 bg-gray-50/80 dark:bg-[#111111] p-4 rounded-xl border border-gray-100 dark:border-white/5">
+														<div className="flex flex-col gap-1">
+															<span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+																Target {alert.stockType}
+															</span>
+															<div
+																className={`text-xl font-bold flex items-center gap-1.5 ${
+																	alert.stockType === 'YES'
+																		? 'text-green-600 dark:text-green-400'
+																		: 'text-red-600 dark:text-red-400'
+																}`}
+															>
+																{alert.stockType === 'YES' ? (
+																	<TrendingUp className="w-5 h-5" />
+																) : (
+																	<TrendingDown className="w-5 h-5" />
+																)}
+																₹{alert.targetPrice.toFixed(1)}
+															</div>
+														</div>
+
+														<div className="flex flex-col gap-1 border-l border-gray-200 dark:border-white/5 pl-4">
+															<span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+																Current
+															</span>
+															<div className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
+																₹{currentPrice != null ? currentPrice.toFixed(1) : '-'}
+															</div>
+														</div>
+													</div>
+												</div>
+											);
+										})}
+									</div>
+								)}
+							</div>
+						)}
+
+						{activeTab === 'limits' && (
+							<div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-5">
+								<div className="bg-white dark:bg-[#0a0a0a] rounded-2xl border border-gray-200 dark:border-white/5 shadow-sm overflow-hidden">
+									<div className="p-8 border-b border-gray-100 dark:border-white/5">
+										<div className="flex items-start gap-4">
+											<div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0 shadow-inner">
+												<ShieldCheck className="w-6 h-6" />
 											</div>
-
-											{/* Price Information */}
-											<div className="grid grid-cols-2 gap-2 bg-[#f4f4f5] dark:bg-[#121422] p-3 rounded-lg border border-gray-200 dark:border-white/5">
-												<div>
-													<span className="text-[11px] text-gray-500 dark:text-gray-400 block mb-0.5">
-														Target {alert.stockType}
-													</span>
-													<div
-														className={`text-base font-bold flex items-center gap-1 ${
-															alert.stockType === 'YES'
-																? 'text-green-600 dark:text-green-400'
-																: 'text-red-600 dark:text-red-400'
-														}`}
-													>
-														{alert.stockType === 'YES' ? (
-															<TrendingUp className="w-4 h-4" />
-														) : (
-															<TrendingDown className="w-4 h-4" />
-														)}
-														₹{alert.targetPrice.toFixed(1)}
-													</div>
-												</div>
-
-												<div className="border-l border-gray-300 dark:border-white/10 pl-3">
-													<span className="text-[11px] text-gray-500 dark:text-gray-400 block mb-0.5">
-														Current Price
-													</span>
-													<div className="text-base font-bold text-gray-900 dark:text-white">
-														₹{currentPrice != null ? currentPrice.toFixed(1) : '-'}
-													</div>
-												</div>
+											<div>
+												<h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1.5">
+													Protection Mechanisms
+												</h3>
+												<p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed max-w-2xl">
+													ProbStreet actively monitors your account to enforce safety limits,
+													execute automated price triggers, and secure your withdrawals.
+												</p>
 											</div>
 										</div>
-									);
-								})}
+									</div>
+
+									<div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-100 dark:divide-white/5 bg-gray-50/50 dark:bg-[#0c0c0c]">
+										<div className="p-8 space-y-3">
+											<h4 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+												<Zap className="w-4 h-4 text-amber-500" />
+												Price Alert Execution
+											</h4>
+											<p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+												Our matching engine evaluates your triggers in real-time. When conditions
+												are met, notifications are instantly broadcast to your configured devices.
+											</p>
+										</div>
+
+										<div className="p-8 space-y-3">
+											<h4 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+												<ShieldCheck className="w-4 h-4 text-emerald-500" />
+												Secure Withdrawals
+											</h4>
+											<p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+												Withdrawals are strictly locked to your verified PAN and verified payment
+												methods, protecting your funds even if your account is compromised.
+											</p>
+										</div>
+									</div>
+								</div>
+
+								<div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+									<div>
+										<h4 className="text-sm font-bold text-blue-900 dark:text-blue-300">
+											Customize Notification Preferences
+										</h4>
+										<p className="text-xs text-blue-700/80 dark:text-blue-400/80 mt-1">
+											Configure exactly which alerts reach your email or device.
+										</p>
+									</div>
+									<Link
+										to="/settings"
+										className="shrink-0 px-5 py-2.5 bg-white dark:bg-[#111111] text-blue-700 dark:text-blue-400 text-sm font-semibold rounded-xl border border-blue-200 dark:border-blue-800/50 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors shadow-sm"
+									>
+										Manage Settings
+									</Link>
+								</div>
 							</div>
 						)}
 					</div>
-				)}
-
-				{/* Tab: Limits & Preferences */}
-				{activeTab === 'limits' && (
-					<div className="space-y-4">
-						<div className="bg-white dark:bg-[#1C1C1E] p-6 rounded-xl border border-gray-400/20 dark:border-white/10 space-y-4">
-							<div className="flex items-center gap-3">
-								<div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-									<ShieldCheck className="w-5 h-5" />
-								</div>
-								<div>
-									<h3 className="text-base font-semibold text-gray-900 dark:text-white">
-										Responsible Trading & Protection
-									</h3>
-									<p className="text-xs text-gray-500 dark:text-gray-400">
-										ProbStreet enforces safety limits and alert triggers to promote responsible
-										opinion trading.
-									</p>
-								</div>
-							</div>
-
-							<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-								<div className="border border-gray-200 dark:border-white/10 rounded-lg p-4 bg-[#f4f4f5]/60 dark:bg-[#121422]">
-									<p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-										Automatic Price Alert Triggers
-									</p>
-									<p className="text-xs text-gray-800 dark:text-gray-200 mt-1">
-										Triggers are evaluated continuously as orders match. Once hit, notifications are
-										broadcasted to your device.
-									</p>
-								</div>
-
-								<div className="border border-gray-200 dark:border-white/10 rounded-lg p-4 bg-[#f4f4f5]/60 dark:bg-[#121422]">
-									<p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-										Withdrawal & Balance Protection
-									</p>
-									<p className="text-xs text-gray-800 dark:text-gray-200 mt-1">
-										All withdrawals are verified against your approved payment methods with
-										real-time transfer tracking.
-									</p>
-								</div>
-							</div>
-
-							<div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-white/10">
-								<span className="text-xs text-gray-500 dark:text-gray-400">
-									Need to adjust your email & in-app notification toggles?
-								</span>
-								<Link
-									to="/settings"
-									className="text-xs font-semibold underline text-black dark:text-white hover:opacity-80 transition"
-								>
-									Open Settings
-								</Link>
-							</div>
-						</div>
-					</div>
-				)}
+				</div>
 			</div>
 		</div>
 	);

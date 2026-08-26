@@ -1,4 +1,7 @@
-import { CheckCircle2, Clock, XCircle, ShieldCheck, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Clock, XCircle, ShieldCheck, Trash2, Plus } from 'lucide-react';
+import { useDeletePaymentMutation } from '@/hooks/mutations/verification';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 interface VerificationData {
 	kyc?: {
@@ -7,22 +10,50 @@ interface VerificationData {
 		dob?: string;
 		status?: 'NOT_VERIFIED' | 'PENDING' | 'VERIFIED' | 'REJECTED';
 	} | null;
-	paymentMethod?: {
-		type?: 'UPI' | 'BANK';
-		upiNumber?: string;
-		accountNumber?: string;
-		ifscCode?: string;
-		status?: 'NOT_VERIFIED' | 'PENDING' | 'VERIFIED' | 'REJECTED';
-	} | null;
+	paymentMethods?:
+		| {
+				id: string;
+				type?: 'UPI' | 'BANK';
+				upiNumber?: string;
+				accountNumber?: string;
+				ifscCode?: string;
+				status?: 'NOT_VERIFIED' | 'PENDING' | 'VERIFIED' | 'REJECTED';
+		  }[]
+		| null;
 }
 
-export function VerificationPreview({ data }: { data?: VerificationData }) {
+export function VerificationPreview({
+	data,
+	onAddPaymentMethod,
+}: {
+	data?: VerificationData;
+	onAddPaymentMethod?: () => void;
+}) {
 	const kyc = data?.kyc;
-	const payment = data?.paymentMethod;
+	const paymentMethods = data?.paymentMethods || [];
 
 	const isKycVerified = kyc?.status === 'VERIFIED';
-	const isPaymentVerified = payment?.status === 'VERIFIED';
-	const isAllVerified = isKycVerified && isPaymentVerified;
+	const hasVerifiedPayment = paymentMethods.some((pm) => pm.status === 'VERIFIED');
+	const hasPendingPayment = paymentMethods.some((pm) => pm.status === 'PENDING');
+	const isAllVerified = isKycVerified && hasVerifiedPayment;
+
+	const { mutate: deletePaymentMethod, isPending: deleting } = useDeletePaymentMutation();
+	const queryClient = useQueryClient();
+
+	const handleDelete = (id: string) => {
+		if (window.confirm('Are you sure you want to delete this payment method?')) {
+			deletePaymentMethod(id, {
+				onSuccess: () => {
+					toast.success('Payment method deleted successfully');
+					queryClient.invalidateQueries({ queryKey: ['verificationStatus'] });
+					queryClient.invalidateQueries({ queryKey: ['verificationDetails'] });
+				},
+				onError: () => {
+					toast.error('Failed to delete payment method');
+				},
+			});
+		}
+	};
 
 	const getStatusBadge = (status?: string) => {
 		switch (status) {
@@ -77,7 +108,7 @@ export function VerificationPreview({ data }: { data?: VerificationData }) {
 						<p className="text-sm mt-1 opacity-90 leading-relaxed">
 							{isAllVerified
 								? 'Your KYC and Payment details are verified. You can deposit, trade, and withdraw funds seamlessly.'
-								: 'Your PAN and Payment details have been successfully submitted. Our team is verifying your information. This usually takes just a few minutes.'}
+								: 'Your details have been successfully submitted. Our team is verifying your information. This usually takes just a few minutes.'}
 						</p>
 					</div>
 				</div>
@@ -85,7 +116,7 @@ export function VerificationPreview({ data }: { data?: VerificationData }) {
 
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 				{/* KYC Details Card */}
-				<div className="w-full bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-white/10 rounded-xl p-6 shadow-sm transition-colors space-y-5">
+				<div className="w-full bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-white/10 rounded-xl p-6 shadow-sm transition-colors space-y-5 h-fit">
 					<div className="flex items-center justify-between border-b border-gray-100 dark:border-white/10 pb-3">
 						<h3 className="font-semibold text-base text-gray-900 dark:text-white">PAN Details</h3>
 						{getStatusBadge(kyc?.status)}
@@ -130,54 +161,92 @@ export function VerificationPreview({ data }: { data?: VerificationData }) {
 					</div>
 				</div>
 
-				{/* Payment Details Card */}
-				<div className="w-full bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-white/10 rounded-xl p-6 shadow-sm transition-colors space-y-5">
-					<div className="flex items-center justify-between border-b border-gray-100 dark:border-white/10 pb-3">
+				{/* Payment Details Cards */}
+				<div className="space-y-6">
+					<div className="flex items-center justify-between">
 						<h3 className="font-semibold text-base text-gray-900 dark:text-white">
-							Payment Method ({payment?.type || 'BANK'})
+							Payment Methods
 						</h3>
-						{getStatusBadge(payment?.status)}
-					</div>
-
-					<div className="space-y-4 text-sm">
-						{payment?.type === 'UPI' ? (
-							<div>
-								<span className="text-xs text-gray-500 dark:text-gray-400 block mb-1">UPI ID</span>
-								<input
-									type="text"
-									disabled
-									value={payment?.upiNumber || '-'}
-									className="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg bg-gray-50 dark:bg-[#090C1A] text-gray-900 dark:text-white cursor-not-allowed"
-								/>
-							</div>
-						) : (
-							<>
-								<div>
-									<span className="text-xs text-gray-500 dark:text-gray-400 block mb-1">
-										Bank Account Number
-									</span>
-									<input
-										type="text"
-										disabled
-										value={payment?.accountNumber || '-'}
-										className="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg bg-gray-50 dark:bg-[#090C1A] text-gray-900 dark:text-white cursor-not-allowed font-mono"
-									/>
-								</div>
-
-								<div>
-									<span className="text-xs text-gray-500 dark:text-gray-400 block mb-1">
-										IFSC Code
-									</span>
-									<input
-										type="text"
-										disabled
-										value={payment?.ifscCode || '-'}
-										className="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg bg-gray-50 dark:bg-[#090C1A] text-gray-900 dark:text-white cursor-not-allowed uppercase font-mono"
-									/>
-								</div>
-							</>
+						{onAddPaymentMethod && !hasPendingPayment && (
+							<button
+								onClick={onAddPaymentMethod}
+								className="flex items-center gap-1.5 text-xs font-medium bg-black dark:bg-white text-white dark:text-black px-4 py-2 rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+							>
+								<Plus className="w-3.5 h-3.5" />
+								Add New
+							</button>
 						)}
 					</div>
+
+					{paymentMethods.length === 0 ? (
+						<div className="w-full bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-white/10 rounded-xl p-6 text-center shadow-sm">
+							<p className="text-sm text-gray-500 dark:text-gray-400">No payment methods added.</p>
+						</div>
+					) : (
+						paymentMethods.map((payment) => (
+							<div
+								key={payment.id}
+								className="w-full bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-white/10 rounded-xl p-6 shadow-sm transition-colors space-y-5 relative group"
+							>
+								<button
+									onClick={() => handleDelete(payment.id)}
+									disabled={deleting}
+									className="absolute top-4 right-4 p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50 cursor-pointer"
+									title="Delete Payment Method"
+								>
+									<Trash2 className="w-4 h-4" />
+								</button>
+								<div className="flex items-center justify-between border-b border-gray-100 dark:border-white/10 pb-3 pr-10">
+									<h3 className="font-semibold text-base text-gray-900 dark:text-white">
+										{payment.type === 'UPI' ? 'UPI ID' : 'Bank Account'}
+									</h3>
+									{getStatusBadge(payment.status)}
+								</div>
+
+								<div className="space-y-4 text-sm">
+									{payment.type === 'UPI' ? (
+										<div>
+											<span className="text-xs text-gray-500 dark:text-gray-400 block mb-1">
+												UPI ID
+											</span>
+											<input
+												type="text"
+												disabled
+												value={payment.upiNumber || '-'}
+												className="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg bg-gray-50 dark:bg-[#090C1A] text-gray-900 dark:text-white cursor-not-allowed"
+											/>
+										</div>
+									) : (
+										<>
+											<div>
+												<span className="text-xs text-gray-500 dark:text-gray-400 block mb-1">
+													Bank Account Number
+												</span>
+												<input
+													type="text"
+													disabled
+													value={payment.accountNumber || '-'}
+													className="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg bg-gray-50 dark:bg-[#090C1A] text-gray-900 dark:text-white cursor-not-allowed font-mono"
+												/>
+											</div>
+
+											<div>
+												<span className="text-xs text-gray-500 dark:text-gray-400 block mb-1">
+													IFSC Code
+												</span>
+												<input
+													type="text"
+													disabled
+													value={payment.ifscCode || '-'}
+													className="w-full px-3 py-2 border border-gray-200 dark:border-white/10 rounded-lg bg-gray-50 dark:bg-[#090C1A] text-gray-900 dark:text-white cursor-not-allowed uppercase font-mono"
+												/>
+											</div>
+										</>
+									)}
+								</div>
+							</div>
+						))
+					)}
 				</div>
 			</div>
 		</div>

@@ -6,6 +6,7 @@ import {
 	getVerificationStatus,
 	submitKyc,
 	submitPaymentMethods,
+	deletePaymentMethod,
 } from '@/controllers/verification';
 
 export const verificationRoutes = new Hono();
@@ -13,7 +14,7 @@ export const verificationRoutes = new Hono();
 verificationRoutes.get(
 	'/',
 	authorization,
-	rateLimiter({ points: 20, duration: 300 }),
+	rateLimiter({ points: 50, duration: 300 }),
 	getVerificationDetails,
 );
 verificationRoutes.get(
@@ -26,13 +27,19 @@ verificationRoutes.get(
 // kyc and payment method submit routes
 verificationRoutes.post(
 	'/kyc/submit',
-	rateLimiter({ points: 5, duration: 300 }),
+	rateLimiter({ points: 50, duration: 300 }),
 	authorization,
 	submitKyc,
 );
 verificationRoutes.post(
 	'/payment-method/submit',
 	authorization,
-	rateLimiter({ points: 5, duration: 300 }),
+	rateLimiter({ points: 50, duration: 300 }),
 	submitPaymentMethods,
+);
+verificationRoutes.delete(
+	'/payment-method/:id',
+	authorization,
+	rateLimiter({ points: 50, duration: 300 }),
+	deletePaymentMethod,
 );

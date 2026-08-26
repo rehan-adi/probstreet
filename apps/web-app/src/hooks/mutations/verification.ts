@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { submitKyc, submitPaymentMethod, verify } from '@/api/verification';
+import { submitKyc, submitPaymentMethod, verify, deletePaymentMethod } from '@/api/verification';
 
 export const useSubmitKycMutation = () => {
 	return useMutation({
@@ -47,5 +47,12 @@ export const useVerifyVerificationMutation = () => {
 			kycRemark: string;
 			paymentRemark: string;
 		}) => verify(id, kycStatus, paymentStatus, kycRemark, paymentRemark),
+	});
+};
+
+export const useDeletePaymentMutation = () => {
+	return useMutation({
+		mutationKey: ['deletePaymentMethod'],
+		mutationFn: (id: string) => deletePaymentMethod(id),
 	});
 };

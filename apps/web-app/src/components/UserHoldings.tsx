@@ -4,6 +4,7 @@ import { TrendingUp, TrendingDown, Package, Loader2, X } from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
 import { cancelOrder } from '@/api/order';
 import { toast } from 'sonner';
+import { socket } from '@/socket';
 
 interface Position {
 	yesQuantity: number;
@@ -57,8 +58,16 @@ export default function UserHoldings({ marketId, yesPrice, noPrice }: UserHoldin
 	useEffect(() => {
 		if (!isAuthenticated || !marketId) return;
 		fetchPosition();
-		const interval = setInterval(fetchPosition, 8000);
-		return () => clearInterval(interval);
+
+		const handlePortfolioUpdate = () => {
+			fetchPosition();
+		};
+
+		socket.on('PORTFOLIO_UPDATE', handlePortfolioUpdate);
+
+		return () => {
+			socket.off('PORTFOLIO_UPDATE', handlePortfolioUpdate);
+		};
 	}, [isAuthenticated, marketId]);
 
 	if (!isAuthenticated) return null;

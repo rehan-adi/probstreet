@@ -232,6 +232,7 @@ export const submitPaymentMethods = async (c: Context) => {
 				where: {
 					userId,
 					type: 'UPI',
+					upiNumber: upiId,
 					status: {
 						not: 'REJECTED',
 					},
@@ -297,6 +298,7 @@ export const submitPaymentMethods = async (c: Context) => {
 				where: {
 					userId,
 					type: 'BANK',
+					accountNumber: bankAccountNumber,
 					status: {
 						not: 'REJECTED',
 					},
@@ -388,6 +390,37 @@ export const submitPaymentMethods = async (c: Context) => {
 			},
 			500,
 		);
+	}
+};
+
+export const deletePaymentMethod = async (c: Context) => {
+	try {
+		const userId = c.get('user').id;
+		if (!userId) {
+			return c.json({ success: false, error: 'Unauthorized' }, 401);
+		}
+
+		const paymentMethodId = c.req.param('id');
+		if (!paymentMethodId) {
+			return c.json({ success: false, error: 'Payment method ID is required' }, 400);
+		}
+
+		const paymentMethod = await prisma.paymentMethod.findUnique({
+			where: { id: paymentMethodId },
+		});
+
+		if (!paymentMethod || paymentMethod.userId !== userId) {
+			return c.json({ success: false, error: 'Payment method not found' }, 404);
+		}
+
+		await prisma.paymentMethod.delete({
+			where: { id: paymentMethodId },
+		});
+
+		return c.json({ success: true, message: 'Payment method deleted successfully' });
+	} catch (error) {
+		logger.error({ error }, 'Failed to delete payment method');
+		return c.json({ success: false, error: 'Internal server error' }, 500);
 	}
 };
 
@@ -520,7 +553,7 @@ export const getVerificationDetails = async (c: Context) => {
 			);
 		}
 
-		const [kyc, payment] = await Promise.all([
+		const [kyc, paymentMethodsData] = await Promise.all([
 			prisma.kyc.findFirst({
 				where: { userId },
 				select: {
@@ -530,7 +563,7 @@ export const getVerificationDetails = async (c: Context) => {
 					status: true,
 				},
 			}),
-			prisma.paymentMethod.findFirst({
+			prisma.paymentMethod.findMany({
 				where: { userId },
 				select: {
 					id: true,
@@ -540,11 +573,12 @@ export const getVerificationDetails = async (c: Context) => {
 					accountNumber: true,
 					ifscCode: true,
 				},
+				orderBy: { submittedAt: 'desc' },
 			}),
 		]);
 
-		const paymentMethod = payment
-			? payment.type === 'UPI'
+		const paymentMethods = paymentMethodsData.map((payment) =>
+			payment.type === 'UPI'
 				? {
 						id: payment.id,
 						type: 'UPI',
@@ -557,8 +591,8 @@ export const getVerificationDetails = async (c: Context) => {
 						accountNumber: payment.accountNumber,
 						ifscCode: payment.ifscCode,
 						status: payment.status,
-					}
-			: null;
+					},
+		);
 
 		logger.info(
 			{
@@ -573,7 +607,7 @@ export const getVerificationDetails = async (c: Context) => {
 			message: 'Verification details fetched successfully',
 			data: {
 				kyc,
-				paymentMethod,
+				paymentMethods,
 				fetchedAt: new Date().toISOString(),
 			},
 		});
@@ -756,6 +790,7 @@ export const getPendingVerifications = async (c: Context) => {
 				OR: [
 					{ kycVerificationStatus: { in: ['PENDING', 'REJECTED'] } },
 					{ paymentVerificationStatus: { in: ['PENDING', 'REJECTED'] } },
+					{ paymentMethods: { some: { status: 'PENDING' } } },
 				],
 			},
 			select: {
