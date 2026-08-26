@@ -12,8 +12,14 @@ export const initPayment = async (c: Context) => {
 		const userId = c.get('user').id;
 		const { amount } = await c.req.json<{ amount: number }>();
 
-		if (!amount || amount <= 0) {
-			return c.json({ success: false, error: 'Invalid amount' }, 400);
+		if (!amount || amount < 1 || amount > 500000) {
+			return c.json(
+				{
+					success: false,
+					error: 'Amount must be greater than ₹0 and less than ₹500,000',
+				},
+				400,
+			);
 		}
 
 		const user = await prisma.user.findUnique({
