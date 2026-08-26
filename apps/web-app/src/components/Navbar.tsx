@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useState, useRef, useEffect } from 'react';
+import { socket } from '@/socket';
 import { getNotifications, markNotificationsAsRead } from '@/api/notifications';
 import {
 	Menu,
@@ -31,6 +32,8 @@ import darkLogo from '@/assets/images/dark-logo.avif';
 import HowItWorksModal from './modals/HowItWorksModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBalanceQuery } from '@/hooks/queries/balance';
+
+import notificationSound from '@/assets/audio/notification.wav';
 
 export default function Navbar() {
 	const { user } = useAuthStore();
@@ -75,26 +78,37 @@ export default function Navbar() {
 				}
 			});
 
-			const streamBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1/capi';
-			const eventSource = new EventSource(`${streamBase}/notifications/stream`, {
-				withCredentials: true,
-			});
+			socket.emit('SUBSCRIBE_USER', userId);
 
-			eventSource.addEventListener('notification', (e) => {
+			const playNotificationSound = () => {
 				try {
-					const newNotification = JSON.parse(e.data);
-					setNotifications((prev) => [newNotification, ...prev]);
-					setUnreadCount((prev) => prev + 1);
-				} catch (err) {
-					console.error('Failed to parse incoming notification:', err);
+					const audioEl = document.getElementById('notification-audio') as HTMLAudioElement;
+					if (audioEl) {
+						audioEl.currentTime = 0;
+						const playPromise = audioEl.play();
+						if (playPromise !== undefined) {
+							playPromise.catch((error) => {
+								console.error('Audio playback failed:', error);
+							});
+						}
+					}
+				} catch (e) {
+					console.error('Failed to play sound:', e);
 				}
-			});
-
-			eventSource.onerror = () => {
-				// Prevent aggressive spam if disconnected
 			};
 
-			return () => eventSource.close();
+			const handleNotification = (newNotification: any) => {
+				setNotifications((prev) => [newNotification, ...prev]);
+				setUnreadCount((prev) => prev + 1);
+				playNotificationSound();
+			};
+
+			socket.on('NOTIFICATION', handleNotification);
+
+			return () => {
+				socket.off('NOTIFICATION', handleNotification);
+				socket.emit('UNSUBSCRIBE_USER', userId);
+			};
 		}
 	}, [userId]);
 
@@ -118,6 +132,9 @@ export default function Navbar() {
 	return (
 		<>
 			<nav className="w-full bg-white dark:bg-[#090C1A] fixed top-0 z-50 transition-colors flex flex-col">
+				{/* Audio Element for Notifications */}
+				<audio id="notification-audio" src={notificationSound} preload="auto" className="hidden" />
+
 				<div className={`w-full px-6`}>
 					<div className="max-w-7xl mx-auto h-16 flex items-center justify-between gap-4">
 						<div className="flex items-center gap-6 flex-1">
@@ -280,50 +297,123 @@ export default function Navbar() {
 													initial={{ opacity: 0, y: 10, scale: 0.95 }}
 													animate={{ opacity: 1, y: 0, scale: 1 }}
 													exit={{ opacity: 0, y: 10, scale: 0.95 }}
-													className="absolute right-0 top-12 w-80 max-h-100 overflow-y-auto bg-white dark:bg-[#1C1C1E] shadow-xl rounded-xl border border-gray-100 dark:border-white/10 p-2 z-50 flex flex-col gap-1"
+													className="absolute right-0 top-12 w-80 md:w-96 max-h-[32rem] overflow-hidden bg-white/90 dark:bg-[#1C1C1E]/90 backdrop-blur-2xl shadow-2xl rounded-2xl border border-gray-200/50 dark:border-white/10 z-50 flex flex-col"
 												>
-													<div className="px-3 py-2 border-b border-gray-100 dark:border-zinc-800 mb-1">
-														<h3 className="font-semibold text-gray-900 dark:text-white">
+													<div className="px-5 py-4 border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-black/20 flex items-center justify-between sticky top-0 z-10">
+														<h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
 															Notifications
+															{unreadCount > 0 && (
+																<span className="bg-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+																	{unreadCount} NEW
+																</span>
+															)}
 														</h3>
 													</div>
-													{notifications.length === 0 ? (
-														<div className="p-4 text-center">
-															<Bell
-																size={32}
-																className="mx-auto text-gray-300 dark:text-gray-600 mb-2"
-															/>
-															<p className="text-sm font-medium text-gray-800 dark:text-gray-200">
-																No new notifications
-															</p>
-															<p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-																You're all caught up!
-															</p>
-														</div>
-													) : (
-														notifications.map((n) => (
-															<Link
-																key={n.id}
-																to={n.link || '#'}
-																className="flex flex-col p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition text-left relative overflow-hidden group"
-															>
-																{!n.isRead && (
-																	<div className="absolute top-1/2 -translate-y-1/2 left-1.5 w-1.5 h-1.5 bg-blue-500 rounded-full" />
-																)}
-																<div className={`${!n.isRead ? 'pl-4' : ''}`}>
-																	<p className="text-sm font-semibold text-gray-900 dark:text-white mb-0.5">
-																		{n.title}
-																	</p>
-																	<p className="text-xs text-gray-500 dark:text-zinc-400 line-clamp-2">
-																		{n.message}
-																	</p>
-																	<p className="text-[10px] text-gray-400 dark:text-zinc-500 mt-1">
-																		{new Date(n.createdAt).toLocaleDateString()}
-																	</p>
+
+													<div className="flex-1 overflow-y-auto p-2 space-y-1">
+														{notifications.length === 0 ? (
+															<div className="py-12 px-4 flex flex-col items-center justify-center text-center">
+																<div className="w-16 h-16 bg-gray-50 dark:bg-gray-800/50 rounded-full flex items-center justify-center mb-4">
+																	<Bell size={28} className="text-gray-300 dark:text-gray-500" />
 																</div>
-															</Link>
-														))
-													)}
+																<p className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+																	All caught up!
+																</p>
+																<p className="text-xs text-gray-500 dark:text-gray-400">
+																	You have no new notifications right now.
+																</p>
+															</div>
+														) : (
+															notifications.map((n) => (
+																<Link
+																	key={n.id}
+																	to={n.link || '#'}
+																	className={`flex items-start gap-4 p-3 rounded-xl transition-all duration-200 text-left relative group ${
+																		!n.isRead
+																			? 'bg-blue-50/50 dark:bg-blue-500/10 hover:bg-blue-50 dark:hover:bg-blue-500/20'
+																			: 'hover:bg-gray-50 dark:hover:bg-white/5'
+																	}`}
+																>
+																	<div className="shrink-0 mt-0.5">
+																		<div
+																			className={`w-10 h-10 rounded-full flex items-center justify-center ${
+																				!n.isRead
+																					? 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400'
+																					: 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+																			}`}
+																		>
+																			{n.type === 'TRADE_EXECUTED' ? (
+																				<svg
+																					xmlns="http://www.w3.org/2000/svg"
+																					width="18"
+																					height="18"
+																					viewBox="0 0 24 24"
+																					fill="none"
+																					stroke="currentColor"
+																					strokeWidth="2"
+																					strokeLinecap="round"
+																					strokeLinejoin="round"
+																				>
+																					<path d="M2 12h4l3-9 5 18 3-9h5" />
+																				</svg>
+																			) : n.type === 'PRICE_ALERT' ? (
+																				<svg
+																					xmlns="http://www.w3.org/2000/svg"
+																					width="18"
+																					height="18"
+																					viewBox="0 0 24 24"
+																					fill="none"
+																					stroke="currentColor"
+																					strokeWidth="2"
+																					strokeLinecap="round"
+																					strokeLinejoin="round"
+																				>
+																					<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+																					<path d="M12 9v4" />
+																					<path d="M12 17h.01" />
+																				</svg>
+																			) : (
+																				<Bell size={18} />
+																			)}
+																		</div>
+																	</div>
+
+																	<div className="flex-1 min-w-0 pr-2">
+																		<p
+																			className={`text-sm mb-0.5 truncate ${
+																				!n.isRead
+																					? 'font-semibold text-gray-900 dark:text-white'
+																					: 'font-medium text-gray-800 dark:text-gray-200'
+																			}`}
+																		>
+																			{n.title}
+																		</p>
+																		<p
+																			className={`text-xs line-clamp-2 ${
+																				!n.isRead
+																					? 'text-gray-700 dark:text-gray-300'
+																					: 'text-gray-500 dark:text-gray-400'
+																			}`}
+																		>
+																			{n.message}
+																		</p>
+																		<p className="text-[10px] text-gray-400 dark:text-gray-500 mt-2 font-medium">
+																			{new Date(n.createdAt).toLocaleDateString(undefined, {
+																				month: 'short',
+																				day: 'numeric',
+																				hour: '2-digit',
+																				minute: '2-digit',
+																			})}
+																		</p>
+																	</div>
+
+																	{!n.isRead && (
+																		<div className="absolute top-1/2 -translate-y-1/2 right-4 w-2 h-2 bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+																	)}
+																</Link>
+															))
+														)}
+													</div>
 												</motion.div>
 											)}
 										</AnimatePresence>
