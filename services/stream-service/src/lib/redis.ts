@@ -55,6 +55,9 @@ export const startStreamSubscriber = async () => {
 				io.to(`user:${symbol}`).emit('PORTFOLIO_UPDATE', data);
 				io.to(symbol).emit('PORTFOLIO_UPDATE', data);
 				io.to(symbol).emit('MESSAGE', data);
+			} else if (type === 'NOTIFICATION') {
+				// Notifications go to user private room
+				io.to(`user:${symbol}`).emit('NOTIFICATION', data);
 			} else {
 				// Fallback for untyped messages
 				io.to(`ticker:${symbol}`).emit('MESSAGE', data);
