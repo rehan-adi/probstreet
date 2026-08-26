@@ -160,24 +160,33 @@ export const getDashboardMetrics = async (c: Context) => {
 
 export const getUsers = async (c: Context) => {
 	try {
-		const users = await prisma.user.findMany({
-			orderBy: { createdAt: 'desc' },
-			take: 100,
-			select: {
-				id: true,
-				email: true,
-				phone: true,
-				username: true,
-				role: true,
-				kycVerificationStatus: true,
-				paymentVerificationStatus: true,
-				createdAt: true,
-			},
-		});
+		const page = Math.max(1, parseInt(c.req.query('page') || '1'));
+		const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') || '20')));
+		const skip = (page - 1) * limit;
+
+		const [users, total] = await Promise.all([
+			prisma.user.findMany({
+				orderBy: { createdAt: 'desc' },
+				skip,
+				take: limit,
+				select: {
+					id: true,
+					email: true,
+					phone: true,
+					username: true,
+					role: true,
+					kycVerificationStatus: true,
+					paymentVerificationStatus: true,
+					createdAt: true,
+				},
+			}),
+			prisma.user.count(),
+		]);
 
 		return c.json({
 			success: true,
 			data: users,
+			meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
 		});
 	} catch (error) {
 		logger.error({ error }, 'Error in getUsers');
@@ -187,19 +196,28 @@ export const getUsers = async (c: Context) => {
 
 export const getTransactions = async (c: Context) => {
 	try {
-		const transactions = await prisma.transaction.findMany({
-			orderBy: { createdAt: 'desc' },
-			take: 100,
-			include: {
-				user: {
-					select: { username: true, email: true },
+		const page = Math.max(1, parseInt(c.req.query('page') || '1'));
+		const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') || '20')));
+		const skip = (page - 1) * limit;
+
+		const [transactions, total] = await Promise.all([
+			prisma.transaction.findMany({
+				orderBy: { createdAt: 'desc' },
+				skip,
+				take: limit,
+				include: {
+					user: {
+						select: { username: true, email: true },
+					},
 				},
-			},
-		});
+			}),
+			prisma.transaction.count(),
+		]);
 
 		return c.json({
 			success: true,
 			data: transactions,
+			meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
 		});
 	} catch (error) {
 		logger.error({ error }, 'Error in getTransactions');
@@ -209,28 +227,37 @@ export const getTransactions = async (c: Context) => {
 
 export const getMarkets = async (c: Context) => {
 	try {
-		const markets = await prisma.market.findMany({
-			orderBy: { createdAt: 'desc' },
-			take: 200,
-			select: {
-				id: true,
-				title: true,
-				symbol: true,
-				yesPrice: true,
-				noPrice: true,
-				status: true,
-				volume: true,
-				thumbnail: true,
-				categoryId: true,
-				createdAt: true,
-				numberOfTraders: true,
-				endTime: true,
-			},
-		});
+		const page = Math.max(1, parseInt(c.req.query('page') || '1'));
+		const limit = Math.min(100, Math.max(1, parseInt(c.req.query('limit') || '20')));
+		const skip = (page - 1) * limit;
+
+		const [markets, total] = await Promise.all([
+			prisma.market.findMany({
+				orderBy: { createdAt: 'desc' },
+				skip,
+				take: limit,
+				select: {
+					id: true,
+					title: true,
+					symbol: true,
+					yesPrice: true,
+					noPrice: true,
+					status: true,
+					volume: true,
+					thumbnail: true,
+					categoryId: true,
+					createdAt: true,
+					numberOfTraders: true,
+					endTime: true,
+				},
+			}),
+			prisma.market.count(),
+		]);
 
 		return c.json({
 			success: true,
 			data: markets,
+			meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
 		});
 	} catch (error) {
 		logger.error({ error }, 'Error in getMarkets');

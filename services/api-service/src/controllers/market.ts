@@ -837,7 +837,7 @@ export const getMarketKlines = async (c: Context) => {
 			data: klines,
 		});
 	} catch (error) {
-		console.error(error);
+		logger.error({ error }, 'Error in getMarketTrades');
 		return c.json({ success: false, message: 'Failed to fetch klines' }, 500);
 	}
 };
@@ -888,7 +888,7 @@ export const getMarketTrades = async (c: Context) => {
 			data: formattedTrades,
 		});
 	} catch (error) {
-		console.error(error);
+		logger.error({ error }, 'Error in getMarketKlines');
 		return c.json({ success: false, message: 'Failed to fetch trades' }, 500);
 	}
 };
@@ -934,7 +934,7 @@ export const getMarketStats = async (c: Context) => {
 			},
 		});
 	} catch (error) {
-		console.error(error);
+		logger.error({ error }, 'Error in searchMarkets');
 		return c.json({ success: false, message: 'Failed to fetch market stats' }, 500);
 	}
 };
