@@ -12,11 +12,11 @@ import MarketNews from '@/components/MarketNews';
 import TimelineSection from '@/components/Timeline';
 import UserHoldings from '@/components/UserHoldings';
 import ShareModal from '@/components/modals/ShareModal';
+import PriceAlertModal from '@/components/modals/PriceAlertModal';
 import downloadIcon from '@/assets/images/download.avif';
 import defaultThumbnail from '@/assets/images/logo.avif';
+import { Bookmark, Share2, RefreshCcw, BellRing } from 'lucide-react';
 import OrderbookLadder from '@/components/OrderbookLadder';
-import { Bookmark, Share2, RefreshCcw } from 'lucide-react';
-
 interface TradeExecutedEvent {
 	marketId: string;
 	makerId: string;
@@ -95,6 +95,7 @@ export default function EventDetails() {
 	const [isMobileOrderOpen, setIsMobileOrderOpen] = useState(false);
 	const [isOrderbookLocked, setIsOrderbookLocked] = useState(false);
 	const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+	const [isPriceAlertModalOpen, setIsPriceAlertModalOpen] = useState(false);
 	const [resetScrollToken, setResetScrollToken] = useState(0);
 
 	useEffect(() => {
@@ -379,6 +380,12 @@ export default function EventDetails() {
 								className="p-2 border cursor-pointer border-border rounded-lg bg-card text-foreground hover:bg-muted transition shadow-sm"
 							>
 								<Share2 size={18} />
+							</button>
+							<button
+								onClick={() => setIsPriceAlertModalOpen(true)}
+								className="p-2 border cursor-pointer border-border rounded-lg bg-card text-foreground hover:bg-muted transition shadow-sm hover:text-blue-600"
+							>
+								<BellRing size={18} />
 							</button>
 						</div>
 					</div>
@@ -708,37 +715,11 @@ export default function EventDetails() {
 				</div>
 
 				<div className="w-[30%] max-[1160px]:w-[35%] max-[970px]:hidden lg:sticky lg:top-32 self-start max-h-[calc(100vh-130px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] scrollbar-none pb-10">
-					{market.status === 'CLOSED' ? (
+					{['CLOSED', 'CLOSE'].includes((market.status || '').toUpperCase()) ? (
 						<div className="space-y-6">
 							<div className="bg-card border border-border rounded-2xl p-6 shadow-sm overflow-hidden relative">
-								<div
-									className={`absolute top-0 left-0 right-0 h-1.5 ${
-										(market.result || '').toUpperCase() === 'YES'
-											? 'bg-emerald-500'
-											: (market.result || '').toUpperCase() === 'NO'
-												? 'bg-red-500'
-												: 'bg-blue-500'
-									}`}
-								/>
-
 								<div className="flex items-center justify-between pb-4 border-b border-border">
 									<div className="flex items-center gap-2">
-										<span className="relative flex h-2.5 w-2.5">
-											<span
-												className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-													(market.result || '').toUpperCase() === 'YES'
-														? 'bg-emerald-400'
-														: 'bg-red-400'
-												}`}
-											/>
-											<span
-												className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
-													(market.result || '').toUpperCase() === 'YES'
-														? 'bg-emerald-500'
-														: 'bg-red-500'
-												}`}
-											/>
-										</span>
 										<span className="text-xs font-black uppercase tracking-wider text-muted-foreground">
 											Market Concluded
 										</span>
@@ -770,23 +751,7 @@ export default function EventDetails() {
 										₹10.00 each.
 									</p>
 								</div>
-
-								<div className="bg-muted/40 rounded-xl p-4 border border-border/60 space-y-3">
-									<div className="flex justify-between text-xs">
-										<span className="text-muted-foreground font-medium">Final Yes Payout:</span>
-										<span className="font-bold text-foreground">
-											{(market.result || '').toUpperCase() === 'YES' ? '₹10.00' : '₹0.00'}
-										</span>
-									</div>
-									<div className="flex justify-between text-xs">
-										<span className="text-muted-foreground font-medium">Final No Payout:</span>
-										<span className="font-bold text-foreground">
-											{(market.result || '').toUpperCase() === 'NO' ? '₹10.00' : '₹0.00'}
-										</span>
-									</div>
-								</div>
 							</div>
-							<MarketNews />
 						</div>
 					) : isAuthenticated ? (
 						<>
@@ -857,7 +822,7 @@ export default function EventDetails() {
 			</div>
 
 			{/* Mobile Bottom Order Bar (Opens PlaceOrder or Signin) */}
-			{market.status === 'CLOSED' ? (
+			{['CLOSED', 'CLOSE'].includes((market.status || '').toUpperCase()) ? (
 				<div className="hidden max-[970px]:flex items-center justify-between px-6 py-4 bg-card border-t border-border bottom-0 fixed w-full z-50">
 					<div className="flex items-center gap-2">
 						<span
@@ -967,6 +932,17 @@ export default function EventDetails() {
 				title={market.title}
 				url={window.location.href}
 			/>
+
+			{market && (
+				<PriceAlertModal
+					isOpen={isPriceAlertModalOpen}
+					onClose={() => setIsPriceAlertModalOpen(false)}
+					marketId={market.marketId}
+					title={market.title}
+					yesPrice={market.yesPrice}
+					noPrice={market.noPrice}
+				/>
+			)}
 		</div>
 	);
 }

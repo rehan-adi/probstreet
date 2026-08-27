@@ -3,7 +3,7 @@ import api from '@/config/axios';
 import { useAuthStore } from '@/store/auth';
 import { useEffect, useState } from 'react';
 import { UsernameModal } from '@/components/modals/UsernameModal';
-import { User, Bell, LogOut, Trash2, Wallet, Edit2, Mail, Smartphone } from 'lucide-react';
+import { User, Bell, LogOut, Trash2, Wallet, Edit2 } from 'lucide-react';
 
 export default function Settings() {
 	const [activeTab, setActiveTab] = useState('profile');
@@ -19,9 +19,11 @@ export default function Settings() {
 	const [emailNewMarket, setEmailNewMarket] = useState(false);
 	const [emailTradeExecuted, setEmailTradeExecuted] = useState(false);
 	const [emailPriceAlerts, setEmailPriceAlerts] = useState(false);
+	const [emailMarketResolved, setEmailMarketResolved] = useState(true);
 	const [inAppNewMarket, setInAppNewMarket] = useState(true);
 	const [inAppTradeExecuted, setInAppTradeExecuted] = useState(true);
 	const [inAppPriceAlerts, setInAppPriceAlerts] = useState(false);
+	const [inAppMarketResolved, setInAppMarketResolved] = useState(true);
 
 	useEffect(() => {
 		setUsername(user?.username || '');
@@ -36,9 +38,11 @@ export default function Settings() {
 					setEmailNewMarket(prefs.emailNewMarket);
 					setEmailTradeExecuted(prefs.emailTradeExecuted);
 					setEmailPriceAlerts(prefs.emailPriceAlerts || false);
+					setEmailMarketResolved(prefs.emailMarketResolved ?? true);
 					setInAppNewMarket(prefs.inAppNewMarket);
 					setInAppTradeExecuted(prefs.inAppTradeExecuted);
 					setInAppPriceAlerts(prefs.inAppPriceAlerts);
+					setInAppMarketResolved(prefs.inAppMarketResolved ?? true);
 				}
 			} catch (err) {
 				console.error('Failed to fetch settings', err);
@@ -67,9 +71,11 @@ export default function Settings() {
 			emailNewMarket,
 			emailTradeExecuted,
 			emailPriceAlerts,
+			emailMarketResolved,
 			inAppNewMarket,
 			inAppTradeExecuted,
 			inAppPriceAlerts,
+			inAppMarketResolved,
 			[key]: value,
 		};
 		try {
@@ -279,7 +285,6 @@ export default function Settings() {
 							{/* Email Notifications */}
 							<div>
 								<div className="flex items-center gap-2 px-2 mb-3">
-									<Mail className="w-4 h-4 text-gray-500 dark:text-gray-400" />
 									<h3 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
 										Email Notifications
 									</h3>
@@ -311,7 +316,7 @@ export default function Settings() {
 									<div className="p-6 flex items-center justify-between gap-8">
 										<div>
 											<h4 className="text-sm font-bold text-gray-900 dark:text-white">
-												Order Fills
+												Trade Execution
 											</h4>
 											<p className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
 												Receive an email when your order is filled.
@@ -334,20 +339,20 @@ export default function Settings() {
 									<div className="p-6 flex items-center justify-between gap-8">
 										<div>
 											<h4 className="text-sm font-bold text-gray-900 dark:text-white">
-												Price Alerts
+												Market Resolved
 											</h4>
 											<p className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
-												Receive an email when your price targets are hit.
+												Receive an email when a market you hold positions in is resolved.
 											</p>
 										</div>
 										<label className="relative inline-flex items-center cursor-pointer">
 											<input
 												type="checkbox"
 												className="sr-only peer"
-												checked={emailPriceAlerts}
+												checked={emailMarketResolved}
 												onChange={() => {
-													setEmailPriceAlerts(!emailPriceAlerts);
-													handleUpdateNotifications('emailPriceAlerts', !emailPriceAlerts);
+													setEmailMarketResolved(!emailMarketResolved);
+													handleUpdateNotifications('emailMarketResolved', !emailMarketResolved);
 												}}
 											/>
 											<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-[#222] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black dark:peer-checked:bg-white transition-colors"></div>
@@ -359,7 +364,6 @@ export default function Settings() {
 							{/* In-App Notifications */}
 							<div>
 								<div className="flex items-center gap-2 px-2 mb-3">
-									<Smartphone className="w-4 h-4 text-gray-500 dark:text-gray-400" />
 									<h3 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
 										In-App Notifications
 									</h3>
@@ -391,7 +395,7 @@ export default function Settings() {
 									<div className="p-6 flex items-center justify-between gap-8">
 										<div>
 											<h4 className="text-sm font-bold text-gray-900 dark:text-white">
-												Order Fills
+												Trade Execution
 											</h4>
 											<p className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
 												Receive in-app alerts when your order is filled.
@@ -428,6 +432,29 @@ export default function Settings() {
 												onChange={() => {
 													setInAppPriceAlerts(!inAppPriceAlerts);
 													handleUpdateNotifications('inAppPriceAlerts', !inAppPriceAlerts);
+												}}
+											/>
+											<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-[#222] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black dark:peer-checked:bg-white transition-colors"></div>
+										</label>
+									</div>
+
+									<div className="p-6 flex items-center justify-between gap-8">
+										<div>
+											<h4 className="text-sm font-bold text-gray-900 dark:text-white">
+												Market Resolved
+											</h4>
+											<p className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
+												Receive in-app alerts when a market you hold positions in is resolved.
+											</p>
+										</div>
+										<label className="relative inline-flex items-center cursor-pointer">
+											<input
+												type="checkbox"
+												className="sr-only peer"
+												checked={inAppMarketResolved}
+												onChange={() => {
+													setInAppMarketResolved(!inAppMarketResolved);
+													handleUpdateNotifications('inAppMarketResolved', !inAppMarketResolved);
 												}}
 											/>
 											<div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-[#222] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-black dark:peer-checked:bg-white transition-colors"></div>

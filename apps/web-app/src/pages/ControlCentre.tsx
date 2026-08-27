@@ -239,7 +239,7 @@ export default function ControlCentrePage() {
 																) : (
 																	<TrendingDown className="w-5 h-5" />
 																)}
-																₹{alert.targetPrice.toFixed(1)}
+																₹{Number(alert.targetPrice).toFixed(1)}
 															</div>
 														</div>
 
@@ -248,7 +248,7 @@ export default function ControlCentrePage() {
 																Current
 															</span>
 															<div className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
-																₹{currentPrice != null ? currentPrice.toFixed(1) : '-'}
+																₹{currentPrice != null ? Number(currentPrice).toFixed(1) : '-'}
 															</div>
 														</div>
 													</div>

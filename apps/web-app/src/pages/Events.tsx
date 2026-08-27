@@ -1,6 +1,6 @@
 import { api } from '@/lib/axios';
 import { socket } from '@/socket';
-import { Bookmark } from 'lucide-react';
+import { Bookmark, CheckCircle2 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
 import { useEffect, useState } from 'react';
 import { useModalStore } from '@/store/modal';
@@ -174,51 +174,10 @@ export default function EventsPage() {
 										</div>
 
 										<div className="flex flex-col gap-3">
-											{event.status === 'CLOSED' ? (
-												<div
-													className={`flex items-center justify-between px-3.5 py-2.5 rounded-lg border font-semibold text-xs transition-all ${
-														(event.result || '').toUpperCase() === 'YES'
-															? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
-															: (event.result || '').toUpperCase() === 'NO'
-																? 'bg-red-500/10 border-red-500/30 text-red-700 dark:text-red-400'
-																: 'bg-muted/80 border-border text-muted-foreground'
-													}`}
-												>
-													<div className="flex items-center gap-2">
-														<span className="relative flex h-2 w-2">
-															<span
-																className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-																	(event.result || '').toUpperCase() === 'YES'
-																		? 'bg-emerald-400'
-																		: 'bg-red-400'
-																}`}
-															/>
-															<span
-																className={`relative inline-flex rounded-full h-2 w-2 ${
-																	(event.result || '').toUpperCase() === 'YES'
-																		? 'bg-emerald-500'
-																		: 'bg-red-500'
-																}`}
-															/>
-														</span>
-														<span className="font-bold uppercase tracking-wider text-[11px]">
-															Resolved
-														</span>
-													</div>
-													<div className="flex items-center gap-1.5 font-bold">
-														<span>Won:</span>
-														<span
-															className={`px-2 py-0.5 rounded text-[11px] font-black uppercase ${
-																(event.result || '').toUpperCase() === 'YES'
-																	? 'bg-emerald-600 text-white dark:bg-emerald-500 dark:text-gray-950'
-																	: (event.result || '').toUpperCase() === 'NO'
-																		? 'bg-red-600 text-white dark:bg-red-500 dark:text-gray-950'
-																		: 'bg-gray-600 text-white'
-															}`}
-														>
-															{event.result || 'Settled'}
-														</span>
-													</div>
+											{['CLOSED', 'CLOSE'].includes((event.status || '').toUpperCase()) ? (
+												<div className="flex items-center justify-start py-2.5 text-sm font-medium text-foreground gap-2">
+													<CheckCircle2 size={16} />
+													Market is resolved and the outcome is {event.result || 'Settled'}
 												</div>
 											) : (
 												<div className="flex gap-4 w-full">

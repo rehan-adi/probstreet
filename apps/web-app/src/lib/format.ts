@@ -5,32 +5,36 @@ export const formatAmount = (value: number | string | undefined | null): string 
 	return num.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 };
 
-export const formatINR = (value: number | undefined | null): string => {
+export const formatINR = (value: number | string | undefined | null): string => {
 	if (value === undefined || value === null) return '₹0.00';
+	const num = Number(value);
+	if (isNaN(num)) return '₹0.00';
 
-	if (value >= 10000000) {
-		return `₹${(value / 10000000).toFixed(2)}Cr`;
-	} else if (value >= 100000) {
-		return `₹${(value / 100000).toFixed(2)}L`;
-	} else if (value >= 1000) {
-		return `₹${(value / 1000).toFixed(2)}K`;
+	if (num >= 10000000) {
+		return `₹${(num / 10000000).toFixed(2)}Cr`;
+	} else if (num >= 100000) {
+		return `₹${(num / 100000).toFixed(2)}L`;
+	} else if (num >= 1000) {
+		return `₹${(num / 1000).toFixed(2)}K`;
 	}
 
-	return `₹${value.toFixed(2)}`;
+	return `₹${num.toFixed(2)}`;
 };
 
-export const formatNumber = (value: number | undefined | null): string => {
+export const formatNumber = (value: number | string | undefined | null): string => {
 	if (value === undefined || value === null) return '0';
+	const num = Number(value);
+	if (isNaN(num)) return '0';
 
-	if (value >= 10000000) {
-		return `${(value / 10000000).toFixed(2)}Cr`;
-	} else if (value >= 100000) {
-		return `${(value / 100000).toFixed(2)}L`;
-	} else if (value >= 1000) {
-		return `${(value / 1000).toFixed(2)}K`;
+	if (num >= 10000000) {
+		return `${(num / 10000000).toFixed(2)}Cr`;
+	} else if (num >= 100000) {
+		return `${(num / 100000).toFixed(2)}L`;
+	} else if (num >= 1000) {
+		return `${(num / 1000).toFixed(2)}K`;
 	}
 
-	return value.toString();
+	return num.toString();
 };
 
 export const formatDate = (dateString: string | Date | undefined | null): string => {
