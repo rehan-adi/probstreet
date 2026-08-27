@@ -1,36 +1,56 @@
-import { dbQuery } from '@/db/proxy';
+import { logger } from '@/libs/logger/logger';
 import { ENV_CONFIG } from '@/config/env';
-import { mailerClient } from '@/libs/nodemailer/client';
+import { notifyWebSockets } from '@/libs/ws';
+import { sendBrevoEmail } from '@/libs/brevo/client';
 import { sendFirebasePush } from '@/libs/firebase/push';
-import { tradeExecutedEmailHtml } from '@/libs/nodemailer/templates/trade-executed';
+import { tradeExecutedEmailHtml } from '@/libs/brevo/templates/trade-executed';
 
-export async function handleTradeExecuted(env: ENV_CONFIG, data: any): Promise<void> {
+export async function handleTradeExecuted(env: ENV_CONFIG, prisma: any, data: any): Promise<void> {
 	const { makerId, takerId, marketId, marketTitle, stockType, price, quantity } = data;
 
-	const totalValue = price * quantity;
-	const mailer = mailerClient(env);
+	if (!makerId || !takerId) return;
 
-	const { users } = await dbQuery(env, 'notification/users-by-ids', {
-		userIds: [makerId, takerId],
+	const totalValue = price * quantity;
+
+	const users = await prisma.user.findMany({
+		where: { id: { in: [makerId, takerId] } },
+		include: { notificationPrefs: true },
 	});
 
 	for (const user of users) {
-		if (user.emailTradeExecuted && user.email) {
-			await dbQuery(env, 'notification/send-email', {
-				to: user.email,
-				subject: `Trade Executed on "${marketTitle}"`,
-				html: tradeExecutedEmailHtml(marketTitle, stockType, price, quantity, totalValue),
-			});
+		const emailTradeExecuted = user.notificationPrefs?.emailTradeExecuted ?? false;
+		const inAppTradeExecuted = user.notificationPrefs?.inAppTradeExecuted ?? true;
+
+		if (emailTradeExecuted && user.email) {
+			await sendBrevoEmail(
+				env,
+				user.email,
+				`Trade Executed on "${marketTitle}"`,
+				tradeExecutedEmailHtml(marketTitle, stockType, price, quantity, totalValue),
+			).catch((err) => logger.error(`Failed to send email to ${user.email}:`, err));
 		}
 
-		if (user.inAppTradeExecuted) {
-			await dbQuery(env, 'notification/save', {
-				userId: user.userId,
+		if (inAppTradeExecuted) {
+			const notificationData = {
 				type: 'TRADE_EXECUTED',
 				title: 'Trade Executed',
 				message: `${quantity} ${stockType} shares at ₹${price} on "${marketTitle}"`,
 				link: `/market/${marketId}`,
 				metadata: { marketId, stockType, price, quantity },
+			};
+
+			await prisma.notification.create({
+				data: {
+					userId: user.id,
+					...notificationData,
+				},
+			});
+
+			await notifyWebSockets(env, user.id, {
+				...notificationData,
+				userId: user.id,
+				createdAt: new Date(),
+				isRead: false,
 			});
 
 			if (user.fcmToken) {
@@ -40,10 +60,10 @@ export async function handleTradeExecuted(env: ENV_CONFIG, data: any): Promise<v
 					'Trade Executed',
 					`${quantity} ${stockType} @ ₹${price}`,
 					{ marketId, type: 'TRADE_EXECUTED' },
-				);
+				).catch((err) => logger.error(`Failed to send push to ${user.fcmToken}:`, err));
 			}
 		}
 	}
 
-	console.log(`[trade.executed] Notifications sent for trade on market ${marketId}`);
+	logger.info(`[trade.executed] Notifications sent for trade on market ${marketId}`);
 }

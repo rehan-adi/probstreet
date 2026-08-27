@@ -9,7 +9,7 @@ export async function sendFirebasePush(
 ): Promise<void> {
 	if (!env.FIREBASE_SERVER_KEY || !fcmToken) return;
 
-	await fetch('https://fcm.googleapis.com/fcm/send', {
+	const response = await fetch('https://fcm.googleapis.com/fcm/send', {
 		method: 'POST',
 		headers: {
 			Authorization: `key=${env.FIREBASE_SERVER_KEY}`,
@@ -21,4 +21,5 @@ export async function sendFirebasePush(
 			data: data ?? {},
 		}),
 	});
+	await response.text(); // Consume body to prevent worker hang
 }

@@ -1,20 +1,16 @@
 {
 	"name": "@probstreet/notification-service",
 	"version": "1.0.0",
-	"description": "Serverless worker for handling notifications (Email & Push notifications)",
 	"main": "src/index.ts",
+	"devDependencies": {
+		"@cloudflare/workers-types": "^4.20240815.0",
+		"typescript": "^5.5.4",
+		"wrangler": "^3.72.0"
+	},
+	"description": "Serverless worker for handling notifications (Email & Push notifications)",
 	"private": true,
 	"scripts": {
 		"dev": "wrangler dev",
 		"deploy": "wrangler deploy"
-	},
-	"dependencies": {
-		"nodemailer": "^9.0.5"
-	},
-	"devDependencies": {
-		"@cloudflare/workers-types": "^4.20240815.0",
-		"@types/nodemailer": "^8.0.1",
-		"typescript": "^5.5.4",
-		"wrangler": "^3.72.0"
 	}
 }

@@ -1,56 +1,80 @@
-import { dbQuery } from '@/db/proxy';
 import { ENV_CONFIG } from '@/config/env';
+import { notifyWebSockets } from '@/libs/ws';
+import { logger } from '@/libs/logger/logger';
+import { sendBrevoEmail } from '@/libs/brevo/client';
 import { sendFirebasePush } from '@/libs/firebase/push';
-import { newMarketEmailHtml } from '@/libs/nodemailer/templates/market-created';
+import { newMarketEmailHtml } from '@/libs/brevo/templates/market-created';
 
-export async function handleMarketCreated(env: ENV_CONFIG, data: any): Promise<void> {
-	const { marketId, title } = data;
+export async function handleMarketCreated(env: ENV_CONFIG, prisma: any, data: any): Promise<void> {
+	const { marketId, title, slug } = data;
 
 	if (!marketId || !title) throw new Error('Missing marketId or title');
 
-	const { users } = await dbQuery(env, 'notification/market-subscribers', { marketId });
-	console.log(`[market.created] Retrieved ${users?.length || 0} subscribed users from DB`);
+	const settings = await prisma.notificationSettings.findMany({
+		where: {
+			OR: [{ emailNewMarket: true }, { inAppNewMarket: true }],
+		},
+		include: { user: true },
+	});
 
-	const emailUsers = users.filter((u: any) => u.emailNewMarket && u.email);
-	const inAppUsers = users.filter((u: any) => u.inAppNewMarket);
-
-	console.log(
-		`[market.created] Filtered: ${emailUsers.length} email users, ${inAppUsers.length} in-app users`,
-	);
+	const emailUsers = settings.filter((s: any) => s.emailNewMarket && s.user.email);
+	const inAppUsers = settings.filter((s: any) => s.inAppNewMarket);
 
 	if (emailUsers.length > 0) {
-		console.log(`[market.created] Attempting to send emails using nodemailer...`);
 		const results = await Promise.allSettled(
-			emailUsers.map((u: any) =>
-				dbQuery(env, 'notification/send-email', {
-					to: u.email,
-					subject: `New Market: ${title}`,
-					html: newMarketEmailHtml(title, marketId),
-				}),
+			emailUsers.map((s: any) =>
+				sendBrevoEmail(
+					env,
+					s.user.email,
+					`New Market: ${title}`,
+					newMarketEmailHtml(title, slug || marketId),
+				),
 			),
 		);
-		console.log(`[market.created] Sent emails. Results: ${JSON.stringify(results)}`);
+		logger.info(
+			`[market.created] Sent emails. Results:`,
+			results.map((r) => (r.status === 'rejected' ? r.reason?.message || r.reason : 'fulfilled')),
+		);
 	}
 
 	if (inAppUsers.length > 0) {
-		await dbQuery(env, 'notification/save-bulk', {
-			userIds: inAppUsers.map((u: any) => u.userId),
+		const notificationData = {
 			type: 'NEW_MARKET',
-			title: 'New Market Available',
-			message: `A new market is live: "${title}"`,
-			link: `/market/${marketId}`,
+			title: 'New brand new market is live',
+			message: `"${title}" is now live`,
+			link: `/events/${slug || marketId}`,
 			metadata: { marketId },
+		};
+
+		await prisma.notification.createMany({
+			data: inAppUsers.map((s: any) => ({
+				userId: s.userId,
+				...notificationData,
+			})),
 		});
 
-		const pushUsers = inAppUsers.filter((u: any) => u.fcmToken);
+		const pushUsers = inAppUsers.filter((s: any) => s.user.fcmToken);
+
 		await Promise.allSettled(
-			pushUsers.map((u: any) =>
-				sendFirebasePush(env, u.fcmToken, 'New Market Available', `"${title}" is now live!`, {
+			pushUsers.map((s: any) =>
+				sendFirebasePush(env, s.user.fcmToken, 'New Market Available', `"${title}" is now live!`, {
 					marketId,
 					type: 'NEW_MARKET',
 				}),
 			),
 		);
-		console.log(`[market.created] In-app notifications saved for ${inAppUsers.length} users`);
+
+		await Promise.allSettled(
+			inAppUsers.map((s: any) =>
+				notifyWebSockets(env, s.userId, {
+					...notificationData,
+					userId: s.userId,
+					createdAt: new Date(),
+					isRead: false,
+				}),
+			),
+		);
+
+		logger.info(`[market.created] In-app notifications saved for ${inAppUsers.length} users`);
 	}
 }

@@ -1,4 +1,5 @@
 import { ENV_CONFIG } from '@/config/env';
+import { logger } from '@/libs/logger/logger';
 import { handlePriceAlert } from '@/handlers/price-alert';
 import { handleMarketCreated } from '@/handlers/market-created';
 import { handleTradeExecuted } from '@/handlers/trade-executed';
@@ -12,21 +13,28 @@ export interface NotificationEvent {
 }
 
 export async function processEvent(env: ENV_CONFIG, event: NotificationEvent): Promise<void> {
-	switch (event.type) {
-		case 'market.created':
-			await handleMarketCreated(env, event.data);
-			break;
-		case 'trade.executed':
-			await handleTradeExecuted(env, event.data);
-			break;
-		case 'price.alert':
-			await handlePriceAlert(env, event.data);
-			break;
-		case 'market.resolved':
-			const { handleMarketResolved } = await import('@/handlers/market-resolved');
-			await handleMarketResolved(env, event.data);
-			break;
-		default:
-			console.warn(`[worker] Unknown event type: ${(event as any).type}`);
+	const { createEdgePrisma } = await import('@probstreet/database');
+	const prisma = createEdgePrisma(env.DATABASE_URL);
+
+	try {
+		switch (event.type) {
+			case 'market.created':
+				await handleMarketCreated(env, prisma, event.data);
+				break;
+			case 'trade.executed':
+				await handleTradeExecuted(env, prisma, event.data);
+				break;
+			case 'price.alert':
+				await handlePriceAlert(env, prisma, event.data);
+				break;
+			case 'market.resolved':
+				const { handleMarketResolved } = await import('@/handlers/market-resolved');
+				await handleMarketResolved(env, prisma, event.data);
+				break;
+			default:
+				logger.warn(`[worker] Unknown event type: ${(event as any).type}`);
+		}
+	} finally {
+		await prisma.$disconnect();
 	}
 }
