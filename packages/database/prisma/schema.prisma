@@ -228,16 +228,17 @@ model Session {
 }
 
 model NotificationSettings {
-  id                 String   @id @default(uuid())
-  userId             String   @unique @map("user_id")
-  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  emailNewMarket     Boolean  @default(false) @map("email_new_market")
-  emailTradeExecuted Boolean  @default(false) @map("email_trade_executed")
-  emailPriceAlerts   Boolean  @default(false) @map("email_price_alerts")
-  inAppNewMarket     Boolean  @default(true) @map("in_app_new_market")
-  inAppTradeExecuted Boolean  @default(true) @map("in_app_trade_executed")
-  inAppPriceAlerts   Boolean  @default(false) @map("in_app_price_alerts")
-  updatedAt          DateTime @updatedAt @map("updated_at")
+  id                  String   @id @default(uuid())
+  userId              String   @unique @map("user_id")
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailNewMarket      Boolean  @default(false) @map("email_new_market")
+  emailTradeExecuted  Boolean  @default(false) @map("email_trade_executed")
+  inAppNewMarket      Boolean  @default(true) @map("in_app_new_market")
+  inAppTradeExecuted  Boolean  @default(true) @map("in_app_trade_executed")
+  inAppPriceAlerts    Boolean  @default(false) @map("in_app_price_alerts")
+  emailMarketResolved Boolean  @default(true) @map("email_market_resolved")
+  inAppMarketResolved Boolean  @default(true) @map("in_app_market_resolved")
+  updatedAt           DateTime @updatedAt @map("updated_at")
 
   @@map("notification_preferences")
 }
@@ -500,13 +501,13 @@ model Watchlist {
 }
 
 model PriceAlert {
-  id           String    @id @default(uuid())
-  userId       String    @map("user_id")
-  marketId     String    @map("market_id")
-  stockType    StockType @map("stock_type")
-  targetPrice  Decimal   @map("target_price") @db.Decimal(14, 2)
-  isActive     Boolean   @default(true) @map("is_active")
-  createdAt    DateTime  @default(now()) @map("created_at")
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  marketId    String    @map("market_id")
+  stockType   StockType @map("stock_type")
+  targetPrice Decimal   @map("target_price") @db.Decimal(14, 2)
+  isActive    Boolean   @default(true) @map("is_active")
+  createdAt   DateTime  @default(now()) @map("created_at")
 
   user   User   @relation(fields: [userId], references: [id])
   market Market @relation(fields: [marketId], references: [id])
@@ -515,4 +516,3 @@ model PriceAlert {
   @@index([userId])
   @@map("price_alerts")
 }
-

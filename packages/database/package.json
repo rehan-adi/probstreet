@@ -21,13 +21,16 @@
 	},
 	"devDependencies": {
 		"@types/bun": "latest",
+		"@types/pg": "^8.23.1",
 		"prisma": "^6.12.0"
 	},
 	"peerDependencies": {
 		"typescript": "^5"
 	},
 	"dependencies": {
-		"@prisma/client": "^6.12.0"
+		"@prisma/adapter-pg": "^7.10.0",
+		"@prisma/client": "^6.12.0",
+		"pg": "^8.23.0"
 	},
 	"keywords": [
 		"orm",
