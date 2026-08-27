@@ -103,9 +103,11 @@ export async function updateNotifications(c: Context) {
 		emailNewMarket,
 		emailTradeExecuted,
 		emailPriceAlerts,
+		emailMarketResolved,
 		inAppNewMarket,
 		inAppTradeExecuted,
 		inAppPriceAlerts,
+		inAppMarketResolved,
 	} = body;
 
 	try {
@@ -115,18 +117,22 @@ export async function updateNotifications(c: Context) {
 				emailNewMarket,
 				emailTradeExecuted,
 				emailPriceAlerts,
+				emailMarketResolved,
 				inAppNewMarket,
 				inAppTradeExecuted,
 				inAppPriceAlerts,
+				inAppMarketResolved,
 			},
 			create: {
 				userId: user.id,
 				emailNewMarket,
 				emailTradeExecuted,
 				emailPriceAlerts,
+				emailMarketResolved,
 				inAppNewMarket,
 				inAppTradeExecuted,
 				inAppPriceAlerts,
+				inAppMarketResolved,
 			},
 		});
 

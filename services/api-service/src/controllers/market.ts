@@ -192,6 +192,7 @@ export const createMarket = async (c: Context) => {
 				data: {
 					marketId: newMarket.id,
 					title: newMarket.title,
+					slug: symbol,
 				},
 			});
 		}
@@ -332,6 +333,7 @@ export const getAllMarket = async (c: Context) => {
 				status: true,
 				symbol: true,
 				result: true,
+				volume: true,
 				category: {
 					select: { categoryName: true },
 				},
@@ -340,6 +342,7 @@ export const getAllMarket = async (c: Context) => {
 
 		const markets = rawMarkets.map((m) => ({
 			...m,
+			volume: Number(m.volume || 0),
 			category: m.category?.categoryName || 'Unknown',
 		}));
 
@@ -419,7 +422,7 @@ export const getMarketsByCategory = async (c: Context) => {
 			);
 		}
 
-		const markets = await prisma.market.findMany({
+		const rawMarkets = await prisma.market.findMany({
 			where: {
 				categoryId: category.id,
 				status: { in: ['OPEN', 'CLOSED'] },
@@ -439,8 +442,14 @@ export const getMarketsByCategory = async (c: Context) => {
 				status: true,
 				symbol: true,
 				result: true,
+				volume: true,
 			},
 		});
+
+		const markets = rawMarkets.map((m) => ({
+			...m,
+			volume: Number(m.volume || 0),
+		}));
 
 		return c.json(
 			{
@@ -638,28 +647,20 @@ export const getMarketDetails = async (c: Context) => {
 			tradersCount = uniqueTraders.size;
 
 			let categoryName = 'Unknown';
-			const categoryId = response.data?.categoryId;
+			const m = await prisma.market.findUnique({
+				where: { id: marketId },
+				select: {
+					status: true,
+					result: true,
+					category: { select: { categoryName: true } },
+				},
+			});
 
-			if (categoryId) {
-				const cat = await prisma.category.findUnique({
-					where: { id: categoryId },
-					select: { categoryName: true },
-				});
-				if (cat) categoryName = cat.categoryName;
-			} else if (marketId) {
-				const m = await prisma.market.findUnique({
-					where: { id: marketId },
-					select: {
-						status: true,
-						result: true,
-						category: { select: { categoryName: true } },
-					},
-				});
-				if (m?.category?.categoryName) categoryName = m.category.categoryName;
-				if (response.data) {
-					response.data.status = m?.status || response.data.status || 'OPEN';
-					response.data.result = m?.result || response.data.result || null;
-				}
+			if (m?.category?.categoryName) categoryName = m.category.categoryName;
+
+			if (response.data) {
+				response.data.status = m?.status || response.data.status || 'OPEN';
+				response.data.result = m?.result || response.data.result || null;
 			}
 
 			// If engine data exists, attach it
@@ -728,6 +729,7 @@ export const searchMarkets = async (c: Context) => {
 					noPrice: true,
 					thumbnail: true,
 					status: true,
+					volume: true,
 				},
 				skip,
 				take: limit,
@@ -744,10 +746,15 @@ export const searchMarkets = async (c: Context) => {
 			}),
 		]);
 
+		const formattedMarkets = markets.map((m) => ({
+			...m,
+			volume: Number(m.volume || 0),
+		}));
+
 		return c.json(
 			{
 				success: true,
-				data: markets,
+				data: formattedMarkets,
 				total,
 				page,
 				limit,
