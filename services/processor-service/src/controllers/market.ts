@@ -165,8 +165,14 @@ export const handleMarketResolved = async (data: any) => {
 			);
 		}
 
-		// Dispatch notifications for winners
-		if (payoutsToEngine.length > 0) {
+		const activeHolders = await prisma.position.findMany({
+			where: {
+				marketId,
+				OR: [{ yesQuantity: { gt: 0 } }, { noQuantity: { gt: 0 } }],
+			},
+		});
+
+		if (activeHolders.length > 0) {
 			const market = await prisma.market.findUnique({ where: { id: marketId } });
 			if (market) {
 				await sendNotification({
@@ -176,6 +182,11 @@ export const handleMarketResolved = async (data: any) => {
 						title: market.title,
 						result,
 						winners: payoutsToEngine.map((p) => ({ userId: p.userId, amount: p.amount })),
+						holders: activeHolders.map((h) => ({
+							userId: h.userId,
+							yesQuantity: Number(h.yesQuantity),
+							noQuantity: Number(h.noQuantity),
+						})),
 					},
 				});
 			}
