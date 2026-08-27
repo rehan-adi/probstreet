@@ -22,6 +22,7 @@
 		"typescript": "^5"
 	},
 	"dependencies": {
+		"@hono/node-server": "^2.1.1",
 		"@probstreet/logger": "workspace:*",
 		"hono": "^4.9.1",
 		"ioredis": "^5.7.0",

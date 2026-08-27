@@ -1,7 +1,7 @@
 import { ENV } from '@/config/env';
 import { httpServer } from './app';
-import { logger } from './utils/logger';
-import { startStreamSubscriber } from './lib/redis';
+import { logger } from '@/libs/logger/logger';
+import { startStreamSubscriber } from '@/libs/redis/subscriber';
 
 async function startStreamService() {
 	try {

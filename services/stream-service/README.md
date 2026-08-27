@@ -1,8 +1,9 @@
 # Stream Service
 
-The real-time streaming service for Probstreet.
+The real-time streaming service for Probstreet. This service manages live connections with frontend clients using WebSockets (Socket.io). It receives data from two main sources:
 
-This service connects to Redis via Pub/Sub to listen for market events (e.g., price changes, executed trades) and broadcasts those updates directly to connected frontend clients using WebSockets.
+1. **Market Data Stream (Redis Pub/Sub):** Listens to the `stream:data` channel for events from the matching engine (e.g., price changes, executed trades) and routes them to the appropriate market Socket.io rooms.
+2. **Internal Worker API (HTTP):** Exposes an internal, secured endpoint (`/api/v1/internal/notify`) that notification worker (like the notification-service) use to push direct, real-time alerts to a specific user's private WebSocket connection.
 
 ## Setup
 
