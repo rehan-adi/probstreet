@@ -35,6 +35,46 @@ import { useBalanceQuery } from '@/hooks/queries/balance';
 
 import notificationSound from '@/assets/audio/notification.wav';
 
+function timeAgo(dateInput: string | Date) {
+	const date = new Date(dateInput);
+	const now = new Date();
+	const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+	if (diffInSeconds < 60) return 'Just now';
+	if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} min ago`;
+	const diffInHours = Math.floor(diffInSeconds / 3600);
+	if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+	const diffInDays = Math.floor(diffInSeconds / 86400);
+	return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+}
+
+const formatNotificationMessage = (msg: string, type: string) => {
+	if (type === 'PRICE_ALERT') {
+		const parts = msg.split(': ');
+		if (parts.length >= 2) {
+			const action = parts.pop();
+			const marketTitle = parts.join(': ');
+			return (
+				<>
+					<span className="font-semibold text-gray-900 dark:text-white">{action}</span>
+					<span className="opacity-75"> on {marketTitle}</span>
+				</>
+			);
+		}
+	} else if (type === 'TRADE_EXECUTED' || type === 'MARKET_RESOLVED' || type === 'NEW_MARKET') {
+		const parts = msg.split('"');
+		if (parts.length >= 3) {
+			return (
+				<>
+					<span className="font-semibold text-gray-900 dark:text-white">{parts[0]}</span>
+					<span className="opacity-75">"{parts[1]}"</span>
+					<span className="font-semibold text-gray-900 dark:text-white">{parts[2]}</span>
+				</>
+			);
+		}
+	}
+	return msg;
+};
+
 export default function Navbar() {
 	const { user } = useAuthStore();
 	const { t } = useTranslation();
@@ -308,9 +348,9 @@ export default function Navbar() {
 													initial={{ opacity: 0, y: 10, scale: 0.95 }}
 													animate={{ opacity: 1, y: 0, scale: 1 }}
 													exit={{ opacity: 0, y: 10, scale: 0.95 }}
-													className="absolute right-0 top-12 w-80 md:w-96 max-h-128 overflow-hidden bg-white/90 dark:bg-[#1C1C1E]/90 backdrop-blur-2xl shadow-2xl rounded-2xl border border-gray-200/50 dark:border-white/10 z-50 flex flex-col"
+													className="fixed inset-x-4 top-16 md:absolute md:inset-auto md:right-0 md:top-12 md:w-80 max-h-[54vh] overflow-hidden bg-white/95 dark:bg-[#090C1A]/95 backdrop-blur-2xl shadow-2xl rounded-2xl border border-gray-200/50 dark:border-white/10 z-100 flex flex-col"
 												>
-													<div className="px-5 py-4 border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-black/20 flex items-center justify-between sticky top-0 z-10">
+													<div className="px-5  py-4 border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-black/20 flex items-center justify-between sticky top-0 z-10">
 														<h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
 															Notifications
 															{unreadCount > 0 && (
@@ -406,15 +446,10 @@ export default function Navbar() {
 																					: 'text-gray-500 dark:text-gray-400'
 																			}`}
 																		>
-																			{n.message}
+																			{formatNotificationMessage(n.message, n.type)}
 																		</p>
 																		<p className="text-[10px] text-gray-400 dark:text-gray-500 mt-2 font-medium">
-																			{new Date(n.createdAt).toLocaleDateString(undefined, {
-																				month: 'short',
-																				day: 'numeric',
-																				hour: '2-digit',
-																				minute: '2-digit',
-																			})}
+																			{timeAgo(n.createdAt)}
 																		</p>
 																	</div>
 

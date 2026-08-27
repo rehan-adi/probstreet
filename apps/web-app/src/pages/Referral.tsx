@@ -87,32 +87,32 @@ export default function ReferralPage() {
 				</div>
 
 				<div className="grid grid-cols-3 gap-3">
-					<div className="bg-white dark:bg-[#1C1C1E] p-4 rounded-xl border border-gray-400/20 dark:border-white/10 flex flex-col gap-1">
+					<div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl p-4 rounded-xl border border-gray-200 dark:border-white/10 flex flex-col gap-1 shadow-sm">
 						<span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">Earned</span>
-						<span className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">
+						<span className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">
 							₹{formatAmount(info?.totalEarnings || 0)}
 						</span>
 					</div>
-					<div className="bg-white dark:bg-[#1C1C1E] p-4 rounded-xl border border-gray-400/20 dark:border-white/10 flex flex-col gap-1">
+					<div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl p-4 rounded-xl border border-gray-200 dark:border-white/10 flex flex-col gap-1 shadow-sm">
 						<span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">
 							Invited
 						</span>
-						<span className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">
+						<span className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">
 							{info?.totalInvited || 0}
 						</span>
 					</div>
-					<div className="bg-white dark:bg-[#1C1C1E] p-4 rounded-xl border border-gray-400/20 dark:border-white/10 flex flex-col gap-1">
+					<div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl p-4 rounded-xl border border-gray-200 dark:border-white/10 flex flex-col gap-1 shadow-sm">
 						<span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">
 							Claimed
 						</span>
-						<span className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">
+						<span className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">
 							{info?.completedCount || 0}
 						</span>
 					</div>
 				</div>
 
 				{/* Referral Code + Share Card */}
-				<div className="bg-white dark:bg-[#1C1C1E] rounded-xl border border-gray-400/20 dark:border-white/10 overflow-hidden">
+				<div className="bg-white dark:bg-[#090C1A] rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden">
 					<div className="p-5 md:p-6 flex flex-col gap-4">
 						<div className="flex items-center justify-between">
 							<div>
@@ -128,7 +128,7 @@ export default function ReferralPage() {
 						{/* Code Display */}
 						<div className="flex items-center gap-3">
 							<div className="flex-1 flex items-center justify-between bg-[#f4f4f5] dark:bg-[#090C1A] px-4 py-3 rounded-lg border border-gray-200 dark:border-white/10">
-								<span className="font-mono text-base md:text-lg font-bold text-gray-900 dark:text-white tracking-wider">
+								<span className="font-mono text-base md:text-lg font-semibold text-gray-900 dark:text-white tracking-wider">
 									{code}
 								</span>
 								<button
@@ -179,7 +179,7 @@ export default function ReferralPage() {
 				</div>
 
 				{/* Have a Referral Code? */}
-				<div className="bg-white dark:bg-[#1C1C1E] rounded-xl border border-gray-400/20 dark:border-white/10 p-5 md:p-6">
+				<div className="bg-white dark:bg-[#090C1A] rounded-xl border border-gray-200 dark:border-white/10 p-5 md:p-6">
 					<div className="flex items-center gap-2 mb-1">
 						<Gift size={16} className="text-gray-900 dark:text-white" />
 						<h3 className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -210,7 +210,7 @@ export default function ReferralPage() {
 							<button
 								type="submit"
 								disabled={submitReferralMutation.isPending}
-								className="px-5 py-2.5 rounded-lg bg-black dark:bg-white text-white dark:text-black font-semibold text-xs hover:opacity-90 transition-opacity shrink-0 flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+								className="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shrink-0 flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-sm shadow-blue-500/20"
 							>
 								{submitReferralMutation.isPending ? (
 									<Loader2 size={14} className="animate-spin" />
@@ -226,7 +226,7 @@ export default function ReferralPage() {
 
 				{/* Rewards Section */}
 				<div className="flex flex-col gap-4">
-					<h2 className="text-base md:text-lg font-bold text-gray-900 dark:text-white tracking-tight">
+					<h2 className="text-base md:text-lg font-semibold text-gray-900 dark:text-white tracking-tight">
 						Rewards & Milestones
 					</h2>
 
@@ -234,7 +234,7 @@ export default function ReferralPage() {
 					{promoTasks.map((task: any) => (
 						<div
 							key={task.id}
-							className="bg-white dark:bg-[#1C1C1E] rounded-xl border border-gray-400/20 dark:border-white/10 p-4 flex items-center gap-4"
+							className="bg-white dark:bg-[#090C1A] rounded-xl border border-gray-200 dark:border-white/10 p-4 flex items-center gap-4"
 						>
 							<div className="w-10 h-10 rounded-full bg-[#f4f4f5] dark:bg-[#090C1A] border border-gray-200 dark:border-white/10 flex items-center justify-center text-gray-900 dark:text-white shrink-0">
 								<Gift size={18} />
@@ -252,7 +252,7 @@ export default function ReferralPage() {
 									{task.description}
 								</p>
 							</div>
-							<div className="text-sm font-bold text-gray-900 dark:text-white shrink-0">
+							<div className="text-sm font-semibold text-gray-900 dark:text-white shrink-0">
 								+₹{task.reward}
 							</div>
 						</div>
@@ -260,7 +260,7 @@ export default function ReferralPage() {
 
 					{/* Deposit Tiers */}
 					{depositTasks.length > 0 && (
-						<div className="bg-white dark:bg-[#1C1C1E] rounded-xl border border-gray-400/20 dark:border-white/10 overflow-hidden">
+						<div className="bg-white dark:bg-[#090C1A] rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden">
 							<div className="px-4 py-3 border-b border-gray-100 dark:border-white/5 flex items-center gap-2">
 								<Wallet size={15} className="text-gray-900 dark:text-white" />
 								<h3 className="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
@@ -295,7 +295,7 @@ export default function ReferralPage() {
 												/>
 											</div>
 										</div>
-										<div className="text-xs font-bold text-gray-900 dark:text-white shrink-0">
+										<div className="text-xs font-semibold text-gray-900 dark:text-white shrink-0">
 											+₹{task.reward}
 										</div>
 									</div>
@@ -306,7 +306,7 @@ export default function ReferralPage() {
 
 					{/* Trading Milestones */}
 					{milestoneTasks.length > 0 && (
-						<div className="bg-white dark:bg-[#1C1C1E] rounded-xl border border-gray-400/20 dark:border-white/10 overflow-hidden">
+						<div className="bg-white dark:bg-[#090C1A] rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden">
 							<div className="px-4 py-3 border-b border-gray-100 dark:border-white/5 flex items-center gap-2">
 								<Target size={15} className="text-gray-900 dark:text-white" />
 								<h3 className="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
@@ -342,7 +342,7 @@ export default function ReferralPage() {
 													/>
 												</svg>
 												<div className="absolute inset-0 flex items-center justify-center">
-													<span className="text-[8px] font-bold text-gray-900 dark:text-white">
+													<span className="text-[8px] font-semibold text-gray-900 dark:text-white">
 														{task.progress || 0}%
 													</span>
 												</div>
@@ -368,7 +368,7 @@ export default function ReferralPage() {
 												</p>
 											)}
 										</div>
-										<div className="text-xs font-bold text-gray-900 dark:text-white shrink-0">
+										<div className="text-xs font-semibold text-gray-900 dark:text-white shrink-0">
 											+₹{task.reward}
 										</div>
 									</div>
@@ -379,12 +379,12 @@ export default function ReferralPage() {
 				</div>
 
 				{/* How It Works */}
-				<div className="bg-white dark:bg-[#1C1C1E] rounded-xl border border-gray-400/20 dark:border-white/10 p-5 md:p-6">
+				<div className="bg-white dark:bg-[#090C1A] rounded-xl border border-gray-200 dark:border-white/10 p-5 md:p-6">
 					<h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">How It Works</h3>
 					<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 						<div className="flex items-start gap-3">
 							<div className="w-7 h-7 rounded-full bg-[#f4f4f5] dark:bg-[#090C1A] border border-gray-200 dark:border-white/10 flex items-center justify-center shrink-0">
-								<span className="text-xs font-bold text-gray-900 dark:text-white">1</span>
+								<span className="text-xs font-semibold text-gray-900 dark:text-white">1</span>
 							</div>
 							<div>
 								<h4 className="text-xs font-semibold text-gray-900 dark:text-white">
@@ -397,7 +397,7 @@ export default function ReferralPage() {
 						</div>
 						<div className="flex items-start gap-3">
 							<div className="w-7 h-7 rounded-full bg-[#f4f4f5] dark:bg-[#090C1A] border border-gray-200 dark:border-white/10 flex items-center justify-center shrink-0">
-								<span className="text-xs font-bold text-gray-900 dark:text-white">2</span>
+								<span className="text-xs font-semibold text-gray-900 dark:text-white">2</span>
 							</div>
 							<div>
 								<h4 className="text-xs font-semibold text-gray-900 dark:text-white">
@@ -410,7 +410,7 @@ export default function ReferralPage() {
 						</div>
 						<div className="flex items-start gap-3">
 							<div className="w-7 h-7 rounded-full bg-[#f4f4f5] dark:bg-[#090C1A] border border-gray-200 dark:border-white/10 flex items-center justify-center shrink-0">
-								<span className="text-xs font-bold text-gray-900 dark:text-white">3</span>
+								<span className="text-xs font-semibold text-gray-900 dark:text-white">3</span>
 							</div>
 							<div>
 								<h4 className="text-xs font-semibold text-gray-900 dark:text-white">
@@ -425,7 +425,7 @@ export default function ReferralPage() {
 				</div>
 
 				{/* Reward Tiers Table */}
-				<div className="bg-white dark:bg-[#1C1C1E] rounded-xl border border-gray-400/20 dark:border-white/10 overflow-hidden">
+				<div className="bg-white dark:bg-[#090C1A] rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden">
 					<div className="px-4 py-3 border-b border-gray-100 dark:border-white/5">
 						<h3 className="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
 							Reward Tiers
@@ -485,7 +485,7 @@ export default function ReferralPage() {
 
 				<div className="flex flex-col gap-3">
 					<div className="flex items-center justify-between">
-						<h2 className="text-base md:text-lg font-bold text-gray-900 dark:text-white tracking-tight">
+						<h2 className="text-base md:text-lg font-semibold text-gray-900 dark:text-white tracking-tight">
 							Invited Friends
 						</h2>
 						{info?.invitedFriends && info.invitedFriends.length > 0 && (
@@ -496,7 +496,7 @@ export default function ReferralPage() {
 						)}
 					</div>
 
-					<div className="bg-white dark:bg-[#1C1C1E] rounded-xl border border-gray-400/20 dark:border-white/10 overflow-hidden">
+					<div className="bg-white dark:bg-[#090C1A] rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden">
 						{isLoading ? (
 							<div className="py-16 flex justify-center">
 								<Loader2 className="w-5 h-5 animate-spin text-gray-400" />
@@ -516,7 +516,7 @@ export default function ReferralPage() {
 								{info.invitedFriends.map((friend: any) => (
 									<div key={friend.id} className="px-4 py-3.5 flex items-center gap-3">
 										<div className="w-8 h-8 rounded-full bg-[#f4f4f5] dark:bg-[#090C1A] border border-gray-200 dark:border-white/10 flex items-center justify-center shrink-0">
-											<span className="text-[10px] font-bold text-gray-700 dark:text-gray-300 uppercase">
+											<span className="text-[10px] font-semibold text-gray-700 dark:text-gray-300 uppercase">
 												{friend.username?.charAt(0) || '?'}
 											</span>
 										</div>
