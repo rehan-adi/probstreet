@@ -11,10 +11,12 @@ export default function PrivacyPage() {
 			content: (
 				<p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
 					Probstreet operates the prediction-markets platform accessible at{' '}
-					<span className="font-semibold text-gray-800 dark:text-gray-100 hover:underline cursor-pointer">probstreet.com</span>{' '}
-					(the "Platform"). This Privacy Policy describes how we collect, use, disclose, and safeguard
-					your personal data. By creating an account or using the Platform you consent to the
-					practices described in this Policy.
+					<span className="font-semibold text-gray-800 dark:text-gray-100 hover:underline cursor-pointer">
+						probstreet.com
+					</span>{' '}
+					(the "Platform"). This Privacy Policy describes how we collect, use, disclose, and
+					safeguard your personal data. By creating an account or using the Platform you consent to
+					the practices described in this Policy.
 				</p>
 			),
 		},
@@ -23,10 +25,22 @@ export default function PrivacyPage() {
 			content: (
 				<ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
 					{[
-						['Account data', 'Name, email, phone number, username, and profile photo provided at registration or via OAuth (Google, Discord, Telegram).'],
-						['Identity & KYC', 'Government-issued ID, PAN card details collected during the KYC process as required by Indian regulations.'],
-						['Financial data', 'Deposit/withdrawal amounts, payment order IDs, and bank details needed to process payouts. We do not store full card numbers — payments are handled by Cashfree Payments.'],
-						['AI Usage data', 'Pages visited, events viewed, orders placed, IP address, browser type, device identifiers, and timestamps.'],
+						[
+							'Account data',
+							'Name, email, phone number, username, and profile photo provided at registration or via OAuth (Google, Discord, Telegram).',
+						],
+						[
+							'Identity & KYC',
+							'Government-issued ID, PAN card details collected during the KYC process as required by Indian regulations.',
+						],
+						[
+							'Financial data',
+							'Deposit/withdrawal amounts, payment order IDs, and bank details needed to process payouts. We do not store full card numbers — payments are handled by Cashfree Payments.',
+						],
+						[
+							'AI Usage data',
+							'Pages visited, events viewed, orders placed, IP address, browser type, device identifiers, and timestamps.',
+						],
 						['Comunication', 'Messages sent to our support team, feedback, and survey responses.'],
 					].map(([label, desc]) => (
 						<li key={label} className="flex gap-2">
@@ -65,11 +79,26 @@ export default function PrivacyPage() {
 					</p>
 					<ul className="space-y-1.5 text-sm text-gray-600 dark:text-gray-300 list-disc pl-5">
 						{[
-							['Payment processors', 'Cashfree Payments India Pvt. Ltd. for processing transactions.'],
-							['Cloud providers', 'Amazon Web Services and cloudflare as infrastructure partners necessary to operate the Platform.'],
-							['Communication providers', 'Nodemailer for email and in-app notifications using sockets.'],
-							['Legal authorities', 'When required by court order, regulatory mandate, or applicable law.'],
-							['Business transfers', 'In the event of a merger, acquisition, or sale of assets, your data may transfer to the successor entity.'],
+							[
+								'Payment processors',
+								'Cashfree Payments India Pvt. Ltd. for processing transactions.',
+							],
+							[
+								'Cloud providers',
+								'Amazon Web Services and cloudflare as infrastructure partners necessary to operate the Platform.',
+							],
+							[
+								'Communication providers',
+								'Nodemailer for email and in-app notifications using sockets.',
+							],
+							[
+								'Legal authorities',
+								'When required by court order, regulatory mandate, or applicable law.',
+							],
+							[
+								'Business transfers',
+								'In the event of a merger, acquisition, or sale of assets, your data may transfer to the successor entity.',
+							],
 						].map(([label, desc]) => (
 							<li key={label}>
 								<span className="font-medium text-gray-700 dark:text-gray-300">{label}:</span>{' '}
@@ -84,9 +113,10 @@ export default function PrivacyPage() {
 			title: '5. Data Retention',
 			content: (
 				<p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-					We retain your data for as long as your account is active or as needed to provide services.
-					KYC records and financial transaction logs are retained for a minimum of 5 years as required
-					by Indian AML regulations. You may request deletion of non-regulatory data — see Section 7.
+					We retain your data for as long as your account is active or as needed to provide
+					services. KYC records and financial transaction logs are retained for a minimum of 5 years
+					as required by Indian AML regulations. You may request deletion of non-regulatory data —
+					see Section 7.
 				</p>
 			),
 		},
@@ -96,8 +126,8 @@ export default function PrivacyPage() {
 				<p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
 					We implement industry-standard measures including HTTPS encryption in transit, hashed
 					credential storage, webhook signature verification, and Redis-based idempotency locks. No
-					system is 100% secure; we will notify affected users in accordance with applicable law if a
-					breach occurs.
+					system is 100% secure; we will notify affected users in accordance with applicable law if
+					a breach occurs.
 				</p>
 			),
 		},
@@ -118,7 +148,10 @@ export default function PrivacyPage() {
 					</ul>
 					<p className="text-sm text-gray-600 dark:text-gray-300">
 						To exercise these rights, email{' '}
-						<a href="mailto:privacy@probstreet.com" className="text-gray-900 dark:text-white underline underline-offset-2">
+						<a
+							href="mailto:privacy@probstreet.com"
+							className="text-gray-900 dark:text-white underline underline-offset-2"
+						>
 							privacy@probstreet.com
 						</a>
 						.
@@ -130,8 +163,8 @@ export default function PrivacyPage() {
 			title: '8. Cookies & Tracking',
 			content: (
 				<p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-					We use browser localStorage and sessionStorage to maintain your authenticated session. We do
-					not use third-party advertising cookies. Analytics may use first-party cookies to count
+					We use browser localStorage and sessionStorage to maintain your authenticated session. We
+					do not use third-party advertising cookies. Analytics may use first-party cookies to count
 					visits and measure feature engagement.
 				</p>
 			),
@@ -140,8 +173,8 @@ export default function PrivacyPage() {
 			title: '9. Children',
 			content: (
 				<p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-					The Platform is intended only for users aged 18 and above. We do not knowingly collect data
-					from minors. If you believe a minor has registered, contact us immediately.
+					The Platform is intended only for users aged 18 and above. We do not knowingly collect
+					data from minors. If you believe a minor has registered, contact us immediately.
 				</p>
 			),
 		},
@@ -149,9 +182,9 @@ export default function PrivacyPage() {
 			title: '10. Changes to This Policy',
 			content: (
 				<p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-					We may update this Policy from time to time. Material changes will be communicated via email
-					or an in-app banner at least 14 days before taking effect. Continued use after the effective
-					date constitutes acceptance.
+					We may update this Policy from time to time. Material changes will be communicated via
+					email or an in-app banner at least 14 days before taking effect. Continued use after the
+					effective date constitutes acceptance.
 				</p>
 			),
 		},
@@ -162,7 +195,10 @@ export default function PrivacyPage() {
 					Probstreet · India
 					<br />
 					Email:{' '}
-					<a href="mailto:privacy@probstreet.com" className="text-gray-900 dark:text-white underline underline-offset-2">
+					<a
+						href="mailto:privacy@probstreet.com"
+						className="text-gray-900 dark:text-white underline underline-offset-2"
+					>
 						privacy@probstreet.com
 					</a>
 				</p>

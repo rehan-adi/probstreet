@@ -78,7 +78,9 @@ export default function MarketNews({ symbol }: MarketNewsProps) {
 					>
 						{news.thumbnail && (
 							<img
-								src={typeof news.thumbnail === 'string' ? news.thumbnail : (news.thumbnail as any)?.url}
+								src={
+									typeof news.thumbnail === 'string' ? news.thumbnail : (news.thumbnail as any)?.url
+								}
 								alt={news.title}
 								className="w-14 h-14 object-cover rounded-lg shrink-0"
 								loading="lazy"

@@ -39,7 +39,8 @@ export default function TermsPage() {
 					You must complete the KYC (Know Your Customer) process before making deposits or
 					withdrawals. You agree to provide accurate, current, and complete information during
 					registration and KYC, and to update it if it changes. You are responsible for maintaining
-					the confidentiality of your credentials and for all activity that occurs under your account.
+					the confidentiality of your credentials and for all activity that occurs under your
+					account.
 				</p>
 			),
 		},
@@ -48,11 +49,23 @@ export default function TermsPage() {
 			content: (
 				<ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
 					{[
-						['Deposits', 'Funds are credited to your Probstreet wallet after successful payment confirmation via Cashfree Payments.'],
-						['Withdrawals', 'Processed to your verified bank account within 3–5 business days, subject to KYC completion. A processing fee of up to 0.25% may apply.'],
+						[
+							'Deposits',
+							'Funds are credited to your Probstreet wallet after successful payment confirmation via Cashfree Payments.',
+						],
+						[
+							'Withdrawals',
+							'Processed to your verified bank account within 3–5 business days, subject to KYC completion. A processing fee of up to 0.25% may apply.',
+						],
 						['Minimum', 'Minimum deposit: ₹50. Minimum withdrawal: ₹100.'],
-						['Referral rewards', "Credited upon your referred user's first qualifying deposit of ₹50 or more. Rewards are non-withdrawable for 30 days after crediting."],
-						['Taxes', 'You are solely responsible for reporting and paying any taxes applicable to your winnings or income under Indian law (including TDS where applicable).'],
+						[
+							'Referral rewards',
+							"Credited upon your referred user's first qualifying deposit of ₹50 or more. Rewards are non-withdrawable for 30 days after crediting.",
+						],
+						[
+							'Taxes',
+							'You are solely responsible for reporting and paying any taxes applicable to your winnings or income under Indian law (including TDS where applicable).',
+						],
 					].map(([label, desc]) => (
 						<li key={label} className="flex gap-2">
 							<span className="shrink-0 text-gray-900 dark:text-white font-medium">{label}:</span>
@@ -67,9 +80,9 @@ export default function TermsPage() {
 			content: (
 				<p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
 					All markets on Probstreet are opinion-based prediction events. Outcomes are determined by
-					publicly verifiable real-world events. We reserve the right to void, suspend, or settle any
-					market at our sole discretion in cases of market manipulation, data errors, or changes to
-					the underlying event. Market settlement decisions by Probstreet are final.
+					publicly verifiable real-world events. We reserve the right to void, suspend, or settle
+					any market at our sole discretion in cases of market manipulation, data errors, or changes
+					to the underlying event. Market settlement decisions by Probstreet are final.
 				</p>
 			),
 		},
@@ -111,8 +124,8 @@ export default function TermsPage() {
 			title: '8. Disclaimers',
 			content: (
 				<p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-					The Platform is provided "as is" and "as available" without warranties of any kind, express
-					or implied. We do not guarantee uninterrupted service or that predictions will be
+					The Platform is provided "as is" and "as available" without warranties of any kind,
+					express or implied. We do not guarantee uninterrupted service or that predictions will be
 					profitable. Prediction markets involve financial risk; only participate with funds you can
 					afford to lose.
 				</p>
@@ -133,8 +146,8 @@ export default function TermsPage() {
 			content: (
 				<p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
 					We may terminate or suspend your account at any time, with or without cause. Upon
-					termination, any available balance (after deducting pending withdrawals and applicable fees)
-					will be returned to your registered bank account within 14 business days.
+					termination, any available balance (after deducting pending withdrawals and applicable
+					fees) will be returned to your registered bank account within 14 business days.
 				</p>
 			),
 		},
@@ -166,7 +179,10 @@ export default function TermsPage() {
 					Probstreet · India
 					<br />
 					Email:{' '}
-					<a href="mailto:legal@probstreet.com" className="text-gray-900 dark:text-white underline underline-offset-2">
+					<a
+						href="mailto:legal@probstreet.com"
+						className="text-gray-900 dark:text-white underline underline-offset-2"
+					>
 						legal@probstreet.com
 					</a>
 				</p>

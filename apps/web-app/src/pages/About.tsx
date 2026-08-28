@@ -7,11 +7,17 @@ export default function AboutPage() {
 	}, []);
 
 	const features = [
-		['Real Order Book', 'All trades on a central limit order book — no house edge, no spread manipulation.'],
+		[
+			'Real Order Book',
+			'All trades on a central limit order book — no house edge, no spread manipulation.',
+		],
 		['Instant Matching', 'Our high-performance matching engine settles orders in milliseconds.'],
 		['Secure Payments', 'Deposits and withdrawals powered by Cashfree with full KYC compliance.'],
 		['Transparent Settlement', 'Market outcomes resolved using publicly verifiable sources.'],
-		['Referral Rewards', 'Earn real money when friends you refer make their first qualifying deposit.'],
+		[
+			'Referral Rewards',
+			'Earn real money when friends you refer make their first qualifying deposit.',
+		],
 	];
 
 	return (
@@ -55,16 +61,30 @@ export default function AboutPage() {
 						</h2>
 						<div className="grid gap-4 sm:grid-cols-3">
 							{[
-								[<ShieldCheck size={24} />, 'Pick an Event', 'Browse live markets across sports, politics, finance, and more. Each is a Yes/No question on a real outcome.'],
-								[<IndianRupee size={20} />, 'Place Your Order', 'Buy YES or NO shares between ₹0.5 and ₹9.5. Your price is your probability estimate.'],
-								[<Trophy size={20} />, 'Collect Returns', 'Winning shares pay ₹10 each at settlement. Withdraw profits directly to your bank account.'],
+								[
+									<ShieldCheck size={24} />,
+									'Pick an Event',
+									'Browse live markets across sports, politics, finance, and more. Each is a Yes/No question on a real outcome.',
+								],
+								[
+									<IndianRupee size={20} />,
+									'Place Your Order',
+									'Buy YES or NO shares between ₹0.5 and ₹9.5. Your price is your probability estimate.',
+								],
+								[
+									<Trophy size={20} />,
+									'Collect Returns',
+									'Winning shares pay ₹10 each at settlement. Withdraw profits directly to your bank account.',
+								],
 							].map(([icon, title, desc]) => (
 								<div
 									key={title as string}
 									className="bg-gray-50 dark:bg-white/3 border border-gray-100 dark:border-white/4 rounded-lg p-4"
 								>
 									<div className="text-xl mb-2.5">{icon}</div>
-									<p className="text-sm font-medium text-gray-900 dark:text-white mb-1.5">{title}</p>
+									<p className="text-sm font-medium text-gray-900 dark:text-white mb-1.5">
+										{title}
+									</p>
 									<p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">{desc}</p>
 								</div>
 							))}

@@ -79,7 +79,13 @@ export default function Portfolio() {
 	const totalInvested =
 		data?.positions?.reduce((acc, pos) => {
 			if (pos.market?.status === 'CLOSED') return acc;
-			return acc + Number(pos.yesInvested || 0) + Number(pos.noInvested || 0) - Number(pos.yesSellValue || 0) - Number(pos.noSellValue || 0);
+			return (
+				acc +
+				Number(pos.yesInvested || 0) +
+				Number(pos.noInvested || 0) -
+				Number(pos.yesSellValue || 0) -
+				Number(pos.noSellValue || 0)
+			);
 		}, 0) || 0;
 
 	const totalCurrentValue =
@@ -404,14 +410,18 @@ export default function Portfolio() {
 									{data.positions
 										.flatMap((pos) => {
 											const rows = [];
-											if ((pos.yesQuantity || 0) > 0 || (pos.yesLocked || 0) > 0 || (pos.yesInvested || 0) > 0) {
+											if (
+												(pos.yesQuantity || 0) > 0 ||
+												(pos.yesLocked || 0) > 0 ||
+												(pos.yesInvested || 0) > 0
+											) {
 												const qty = Number(pos.yesQuantity || 0) + Number(pos.yesLocked || 0);
 												const invested = Number(pos.yesInvested || 0);
 												const sellValue = Number(pos.yesSellValue || 0);
 												const avg = qty > 0 ? (invested / qty).toFixed(2) : '0.00';
 												const currentPrice = Number(pos.market?.yesPrice || 0);
 												const currentValue = qty * currentPrice;
-												const pnl = (currentValue + sellValue) - invested;
+												const pnl = currentValue + sellValue - invested;
 												rows.push({
 													...pos,
 													uniqueId: `${pos.id}-yes`,
@@ -424,14 +434,18 @@ export default function Portfolio() {
 													pnl,
 												});
 											}
-											if ((pos.noQuantity || 0) > 0 || (pos.noLocked || 0) > 0 || (pos.noInvested || 0) > 0) {
+											if (
+												(pos.noQuantity || 0) > 0 ||
+												(pos.noLocked || 0) > 0 ||
+												(pos.noInvested || 0) > 0
+											) {
 												const qty = Number(pos.noQuantity || 0) + Number(pos.noLocked || 0);
 												const invested = Number(pos.noInvested || 0);
 												const sellValue = Number(pos.noSellValue || 0);
 												const avg = qty > 0 ? (invested / qty).toFixed(2) : '0.00';
 												const currentPrice = Number(pos.market?.noPrice || 0);
 												const currentValue = qty * currentPrice;
-												const pnl = (currentValue + sellValue) - invested;
+												const pnl = currentValue + sellValue - invested;
 												rows.push({
 													...pos,
 													uniqueId: `${pos.id}-no`,
