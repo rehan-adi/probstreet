@@ -37,7 +37,7 @@ function ResolveModal({
 			}}
 			className="fixed inset-0 z-99999 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
 		>
-			<div className="bg-white dark:bg-[#121214] border border-gray-200 dark:border-white/10 rounded-2xl w-full max-w-90 shadow-2xl dark:shadow-black/50 overflow-hidden">
+			<div className="bg-white dark:bg-[#090C1A] border border-gray-200 dark:border-white/10 rounded-2xl w-full max-w-90 shadow-2xl dark:shadow-black/50 overflow-hidden">
 				{/* Header */}
 				<div className="flex items-start justify-between p-5 border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/5">
 					<div className="flex-1 min-w-0 pr-3">
@@ -149,19 +149,22 @@ export default function AdminMarkets() {
 	const [search, setSearch] = useState('');
 	const [statusFilter, setStatusFilter] = useState('ALL');
 	const [resolveTarget, setResolveTarget] = useState<any>(null);
-	const [page, setPage] = useState(0);
-	const PAGE_SIZE = 10;
+	const [page, setPage] = useState(1);
+	const [totalPages, setTotalPages] = useState(1);
 
 	const fetchMarkets = useCallback(async () => {
 		try {
-			const res = await adminApi.get('/markets');
-			if (res.data.success) setMarkets(res.data.data);
+			const res = await adminApi.get(`/markets?page=${page}&limit=10`);
+			if (res.data.success) {
+				setMarkets(res.data.data);
+				setTotalPages(res.data.meta?.totalPages || 1);
+			}
 		} catch {
 			toast.error('Failed to fetch markets');
 		} finally {
 			setLoading(false);
 		}
-	}, []);
+	}, [page]);
 
 	useEffect(() => {
 		fetchMarkets();
@@ -202,12 +205,9 @@ export default function AdminMarkets() {
 		return matchStatus && matchSearch;
 	});
 
-	const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-	const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-
-	// Reset to page 0 when filter/search changes
+	// Reset to page 1 when filter/search changes
 	useEffect(() => {
-		setPage(0);
+		setPage(1);
 	}, [search, statusFilter]);
 
 	return (
@@ -227,7 +227,7 @@ export default function AdminMarkets() {
 					{/* Filters */}
 					<div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
 						{/* Status tabs */}
-						<div className="flex p-1 bg-gray-100 dark:bg-white/5 rounded-lg border border-gray-200 dark:border-white/5 w-full sm:w-auto overflow-x-auto custom-scrollbar">
+						<div className="flex p-1 bg-gray-100 dark:bg-[#090C1A]/50 rounded-lg border border-gray-200 dark:border-white/5 w-full sm:w-auto overflow-x-auto custom-scrollbar">
 							{['ALL', 'OPEN', 'CLOSED'].map((s) => (
 								<button
 									key={s}
@@ -252,14 +252,14 @@ export default function AdminMarkets() {
 								placeholder="Search markets..."
 								value={search}
 								onChange={(e) => setSearch(e.target.value)}
-								className="w-full pl-9 pr-4 py-2 text-sm bg-white dark:bg-[#121214] border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition shadow-sm"
+								className="w-full pl-9 pr-4 py-2 text-sm bg-white dark:bg-[#090C1A] border border-gray-300 dark:border-white/10 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white transition shadow-sm"
 							/>
 						</div>
 					</div>
 				</div>
 
 				{/* Table */}
-				<div className="bg-white dark:bg-[#121214] border border-gray-200 dark:border-white/5 rounded-xl shadow-xs overflow-hidden relative">
+				<div className="bg-white dark:bg-[#090C1A] border border-gray-200 dark:border-white/5 rounded-xl shadow-xs overflow-hidden relative">
 					{loading ? (
 						<div className="flex flex-col items-center justify-center h-48 gap-3">
 							<Loader2 className="w-6 h-6 animate-spin text-gray-500" />
@@ -268,7 +268,7 @@ export default function AdminMarkets() {
 					) : (
 						<div className="overflow-x-auto">
 							<table className="w-full text-left text-sm whitespace-nowrap">
-								<thead className="bg-gray-50 dark:bg-white/5 border-b border-gray-200 dark:border-white/5 text-gray-500 dark:text-gray-400 font-semibold text-xs tracking-wide">
+								<thead className="bg-gray-50 dark:bg-[#090C1A]/50 border-b border-gray-200 dark:border-white/5 text-gray-500 dark:text-gray-400 font-semibold text-xs tracking-wide">
 									<tr>
 										<th className="px-4 py-3.5 uppercase">Market</th>
 										<th className="px-4 py-3.5 uppercase">Status</th>
@@ -279,7 +279,7 @@ export default function AdminMarkets() {
 									</tr>
 								</thead>
 								<tbody className="divide-y divide-gray-100 dark:divide-white/5">
-									{paged.length === 0 ? (
+									{filtered.length === 0 ? (
 										<tr>
 											<td
 												colSpan={6}
@@ -290,7 +290,7 @@ export default function AdminMarkets() {
 											</td>
 										</tr>
 									) : (
-										paged.map((market) => (
+										filtered.map((market) => (
 											<tr
 												key={market.id}
 												className="hover:bg-gray-50/80 dark:hover:bg-white/5 transition-colors group"
@@ -369,20 +369,16 @@ export default function AdminMarkets() {
 					)}
 
 					{/* Pagination */}
-					{!loading && totalPages > 1 && (
+					{!loading && (
 						<div className="flex items-center justify-between py-3 px-4 border-t border-gray-200 dark:border-white/5 bg-gray-50/50 dark:bg-transparent">
 							<span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-								Showing{' '}
-								<span className="text-gray-900 dark:text-white">{page * PAGE_SIZE + 1}</span>–
-								<span className="text-gray-900 dark:text-white">
-									{Math.min((page + 1) * PAGE_SIZE, filtered.length)}
-								</span>{' '}
-								of <span className="text-gray-900 dark:text-white">{filtered.length}</span> markets
+								Showing Page <span className="text-gray-900 dark:text-white">{page}</span> of{' '}
+								<span className="text-gray-900 dark:text-white">{totalPages}</span>
 							</span>
 							<div className="flex items-center gap-2">
 								<button
 									type="button"
-									disabled={page === 0}
+									disabled={page <= 1}
 									onClick={() => setPage((p) => p - 1)}
 									className="px-3 py-1.5 text-xs font-semibold rounded-md border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 disabled:opacity-50 transition cursor-pointer"
 								>
@@ -390,7 +386,7 @@ export default function AdminMarkets() {
 								</button>
 								<button
 									type="button"
-									disabled={page >= totalPages - 1}
+									disabled={page >= totalPages}
 									onClick={() => setPage((p) => p + 1)}
 									className="px-3 py-1.5 text-xs font-semibold rounded-md border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 disabled:opacity-50 transition cursor-pointer"
 								>

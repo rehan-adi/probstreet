@@ -768,7 +768,7 @@ export default function EventDetails() {
 									console.log('Order placed, refresh data if needed');
 								}}
 							/>
-							<MarketNews />
+							<MarketNews symbol={symbol} />
 						</>
 					) : (
 						<>
