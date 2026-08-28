@@ -40,7 +40,6 @@ func (e *Engine) handleOrder(msg types.MarketMessage, market *types.Market) {
 			order.Price = 10.0
 		}
 		totalCost := order.Price * float64(order.Quantity)
-		totalCostWithFee := totalCost * 1.0025 // Include 0.25% trading fee
 		if !isAdmin {
 			// Check Position Limit (Max 5000 shares = ₹50k exposure)
 			stock := user.Balance.StockBalance[order.Symbol]
@@ -54,13 +53,13 @@ func (e *Engine) handleOrder(msg types.MarketMessage, market *types.Market) {
 				return
 			}
 
-			if user.Balance.WalletBalance.Amount < totalCostWithFee {
+			if user.Balance.WalletBalance.Amount < totalCost {
 				e.UM.Unlock()
-				msg.ReplyChan <- types.OrderResponse{Success: false, Message: "insufficient balance (includes 0.25% fee)", Data: user.Balance.WalletBalance.Amount}
+				msg.ReplyChan <- types.OrderResponse{Success: false, Message: "insufficient balance", Data: user.Balance.WalletBalance.Amount}
 				return
 			}
-			user.Balance.WalletBalance.Amount -= totalCostWithFee
-			user.Balance.WalletBalance.Locked += totalCostWithFee
+			user.Balance.WalletBalance.Amount -= totalCost
+			user.Balance.WalletBalance.Locked += totalCost
 		}
 	} else { // SELL
 		if isMarketOrder {
@@ -145,14 +144,18 @@ func (e *Engine) handleOrder(msg types.MarketMessage, market *types.Market) {
 		e.BroadcastMessage("stream:data", string(tickerData))
 	}
 
-	// Broadcast ORDERBOOK update
-	orderbookPayload := map[string]interface{}{
-		"type":      "ORDERBOOK",
-		"symbol":    order.Symbol,
-		"orderbook": aggOrderBook,
-	}
-	if obData, err := json.Marshal(orderbookPayload); err == nil {
-		e.BroadcastMessage("stream:data", string(obData))
+	// Broadcast ORDERBOOK diff update
+	diffOrderBook := utils.CalculateOrderBookDiff(market.PreviousOrderBook, aggOrderBook)
+	market.PreviousOrderBook = aggOrderBook
+	if len(diffOrderBook.Yes) > 0 || len(diffOrderBook.No) > 0 {
+		orderbookPayload := map[string]interface{}{
+			"type":      "ORDERBOOK",
+			"symbol":    order.Symbol,
+			"orderbook": diffOrderBook,
+		}
+		if obData, err := json.Marshal(orderbookPayload); err == nil {
+			e.BroadcastMessage("stream:data", string(obData))
+		}
 	}
 
 	// Broadcast ACTIVITY (Trades) update if any trades occurred
@@ -258,6 +261,9 @@ func (e *Engine) handleResolveMarket(msg types.MarketMessage, market *types.Mark
 
 	log.Info().Str("marketId", market.MarketId).Str("result", result).Msg("Market resolved and closed")
 	msg.ReplyChan <- true
+	
+	// Kick off background archival
+	e.ArchiveClosedMarket(market)
 }
 
 func (e *Engine) handleCancelOrder(msg types.MarketMessage, market *types.Market) {

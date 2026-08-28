@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"matching-engine/internals/engine"
 	"matching-engine/internals/types"
@@ -101,6 +102,19 @@ func CreateMarket(payload types.QueuePayload) types.QueueResponse {
 
 	engine.EngineInstance.AddMarket(market)
 
+	// Broadcast initial TICKER so clients see the default 5.0/5.0 price immediately
+	tickerPayload := map[string]interface{}{
+		"type":            "TICKER",
+		"symbol":          market.Symbol,
+		"yesPrice":        market.YesPrice,
+		"noPrice":         market.NoPrice,
+		"volume":          market.Volume,
+		"numberOfTraders": market.NumberOfTraders,
+	}
+	if tickerData, err := json.Marshal(tickerPayload); err == nil {
+		engine.EngineInstance.BroadcastMessage("stream:data", string(tickerData))
+	}
+
 	log.Info().
 		Str("marketId", data.ID).
 		Msg("Market created and added to engine")
@@ -139,7 +153,10 @@ func GetMarketDetails(payload types.QueuePayload) types.QueueResponse {
 	orderBook, ok := engine.EngineInstance.GetOrderBook(market.Symbol)
 
 	if !ok {
-		orderBook = types.AggregatedOrderBook{}
+		orderBook = types.AggregatedOrderBook{
+			Yes: make([]types.PriceQuantity, 0),
+			No:  make([]types.PriceQuantity, 0),
+		}
 		fmt.Println("Order book is empty")
 	}
 

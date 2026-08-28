@@ -15,6 +15,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"matching-engine/internals/types"
+	"matching-engine/internals/services/kafka"
 )
 
 type SnapshotData struct {
@@ -39,8 +40,8 @@ func (e *Engine) PerformSnapshot() {
 
 	e.UM.Lock()
 
-	// 1. Evict inactive users (> 7 days)
-	evictionThreshold := time.Now().Add(-7 * 24 * time.Hour)
+	// 1. Evict inactive users (> 3 days)
+	evictionThreshold := time.Now().Add(-3 * 24 * time.Hour)
 	evictedCount := 0
 
 	for userId, user := range e.User {
@@ -53,15 +54,28 @@ func (e *Engine) PerformSnapshot() {
 
 	log.Info().Int("evicted_users", evictedCount).Msg("Purged inactive users from engine RAM")
 
-	e.MM.RLock()
+	e.MM.Lock() // Changed to Lock because we might evict markets
+	evictedMarkets := 0
 	marketsRaw := make(map[string]json.RawMessage)
 	for k, m := range e.Market {
+		// Evict closed markets that failed to upload after 10 days
+		marketEvictionThreshold := time.Now().Add(-10 * 24 * time.Hour)
+		if m.Status == types.Close && m.Overview.EndDate.Before(marketEvictionThreshold) {
+			delete(e.Market, k)
+			evictedMarkets++
+			continue
+		}
+
 		m.Mu.RLock()
 		mBytes, _ := json.Marshal(m)
 		m.Mu.RUnlock()
 		marketsRaw[k] = mBytes
 	}
-	e.MM.RUnlock()
+	
+	if evictedMarkets > 0 {
+		log.Info().Int("evicted_markets", evictedMarkets).Msg("Purged old closed markets from engine RAM")
+	}
+	e.MM.Unlock()
 
 	// 2. Serialize State
 	data := struct {
@@ -125,6 +139,7 @@ func (e *Engine) PerformSnapshot() {
 	}
 
 	cfg, err := config.LoadDefaultConfig(context.TODO())
+		
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to load AWS config")
 		return
@@ -204,4 +219,81 @@ func (e *Engine) LoadLatestSnapshot() {
 	}
 
 	log.Info().Msg("Snapshot restoration logic initialized (ready for S3 sync)")
+}
+
+func (e *Engine) ArchiveClosedMarket(market *types.Market) {
+	// Goroutine for uploading and retry
+	go func() {
+		nodeEnv := os.Getenv("NODE_ENV")
+		if nodeEnv == "development" {
+			log.Info().Str("marketId", market.MarketId).Msg("Development environment detected, skipping S3 archival. Will evict from RAM in 10 days.")
+			time.Sleep(10 * 24 * time.Hour)
+			e.MM.Lock()
+			delete(e.Market, market.Symbol)
+			e.MM.Unlock()
+			return
+		}
+
+		market.Mu.RLock()
+		marketBytes, err := json.Marshal(market)
+		market.Mu.RUnlock()
+		if err != nil {
+			log.Error().Err(err).Str("marketId", market.MarketId).Msg("Failed to serialize closed market for archival")
+			return
+		}
+
+		var b bytes.Buffer
+		gz := gzip.NewWriter(&b)
+		if _, err := gz.Write(marketBytes); err != nil {
+			log.Error().Err(err).Msg("Failed to compress market state")
+			return
+		}
+		gz.Close()
+		compressedData := b.Bytes()
+
+		bucketName := os.Getenv("S3_SNAPSHOT_BUCKET")
+		if bucketName == "" {
+			log.Warn().Msg("S3_SNAPSHOT_BUCKET not set, skipping market archival")
+			return
+		}
+
+		cfg, err := config.LoadDefaultConfig(context.TODO())
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to load AWS config for market archival")
+			return
+		}
+
+		client := s3.NewFromConfig(cfg)
+		filename := fmt.Sprintf("closed_markets/%s.json.gz", market.Symbol)
+
+		success := false
+		for attempt := 1; attempt <= 3; attempt++ {
+			_, err = client.PutObject(context.TODO(), &s3.PutObjectInput{
+				Bucket: aws.String(bucketName),
+				Key:    aws.String(filename),
+				Body:   bytes.NewReader(compressedData),
+			})
+
+			if err == nil {
+				success = true
+				break
+			}
+			log.Warn().Err(err).Int("attempt", attempt).Str("marketId", market.MarketId).Msg("Failed to upload market archive to S3, retrying...")
+			time.Sleep(time.Duration(attempt*2) * time.Second)
+		}
+
+		if success {
+			log.Info().Str("filename", filename).Msg("Market safely archived to S3, evicting from engine RAM")
+			e.MM.Lock()
+			delete(e.Market, market.Symbol)
+			e.MM.Unlock()
+		} else {
+			log.Error().Str("marketId", market.MarketId).Msg("Failed to archive market to S3 after 3 attempts, keeping in RAM and sending alert")
+			kafka.ProduceEventToDBProcessor("process_db", "ARCHIVE_FAILED", map[string]interface{}{
+				"marketId": market.MarketId,
+				"symbol":   market.Symbol,
+				"error":    "Failed to upload market to S3 after 3 attempts",
+			})
+		}
+	}()
 }

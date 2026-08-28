@@ -2,6 +2,7 @@ package engine
 
 import (
 	"container/heap"
+	"matching-engine/internals/services/kafka"
 	"matching-engine/internals/types"
 	"time"
 )
@@ -191,6 +192,10 @@ func (e *Engine) ProcessLimitOrder(market *types.Market, order *types.Order, isM
 		u.Balance.WalletBalance.Locked -= refund
 		u.Balance.WalletBalance.Amount += refund
 		e.UM.Unlock()
+		// Send ORDER_CANCELLED so DB unlocks the refunded portion
+		kafka.ProduceEventToDBProcessor("process_db", "ORDER_CANCELLED", map[string]interface{}{
+			"userId": order.UserId, "orderId": order.OrderId, "refund": refund, "type": "INR", "marketId": market.MarketId,
+		})
 	}
 
 	return trades

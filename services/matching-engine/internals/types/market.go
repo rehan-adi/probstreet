@@ -39,6 +39,7 @@ type Market struct {
 	Trades   []TradeExecutedEvent
 	Inbox    chan MarketMessage
 	Mu       sync.RWMutex
+	PreviousOrderBook AggregatedOrderBook
 }
 
 type MarketStatus string
