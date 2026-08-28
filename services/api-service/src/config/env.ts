@@ -39,6 +39,8 @@ const envSchema = z.object({
 	AWS_ACCESS_KEY_ID: z.string().min(1),
 	AWS_SECRET_ACCESS_KEY: z.string().min(1),
 
+	S3_SNAPSHOT_BUCKET: z.string().min(1),
+
 	CASHFREE_CLIENT_ID: z.string().min(1),
 	CASHFREE_CLIENT_SECRET: z.string().min(1),
 	CASHFREE_PAYOUT_CLIENT_ID: z.string().min(1),
@@ -49,6 +51,8 @@ const envSchema = z.object({
 
 	GMAIL_USER: z.string().email(),
 	GMAIL_APP_PASSWORD: z.string().min(1),
+
+	TAVILY_API_KEY: z.string().min(1),
 });
 
 const parsed = envSchema.safeParse(Bun.env);

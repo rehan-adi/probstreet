@@ -1,14 +1,22 @@
+import * as zlib from 'zlib';
 import slugify from 'slugify';
 import { Context } from 'hono';
-import { customAlphabet } from 'nanoid';
+import { promisify } from 'util';
+import { ENV } from '@/config/env';
 import { logger } from '@/libs/logger';
-import { prisma } from '@probstreet/database';
+import { customAlphabet } from 'nanoid';
 import { EVENTS } from '@/config/constants';
+import { s3Client } from '@/libs/aws/client';
+import { prisma } from '@probstreet/database';
 import { pushToQueue } from '@/libs/redis/queue';
+import { client } from '@/libs/redis/connection';
+import { tavilyClient } from '@/libs/tavily/client';
+import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { createMarketSchema } from '@/validations/market';
 import { generatePresignedUrl } from '@/libs/aws/presign';
 import { sendNotification } from '@/libs/notification/dispatcher';
 
+const gunzip = promisify(zlib.gunzip);
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 6);
 
 /**
@@ -167,26 +175,6 @@ export const createMarket = async (c: Context) => {
 				'Market created and enqueued successfully',
 			);
 
-			// Automated Liquidity Provision (AMM Bot)
-			// Seed the market with multi-level BUY orders on both YES and NO sides
-			// This creates proper orderbook depth via MINT matching
-			await pushToQueue(EVENTS.ADD_LIQUIDITY, {
-				userId: user?.id,
-				phone: user?.phone,
-				role: 'ADMIN',
-				marketId: newMarket.id,
-				symbol: newMarket.symbol,
-				levels: [
-					{ price: 3.0, quantity: 10 },
-					{ price: 4.0, quantity: 25 },
-					{ price: 5.0, quantity: 50 },
-					{ price: 6.0, quantity: 25 },
-					{ price: 7.0, quantity: 10 },
-				],
-			});
-
-			// Fire-and-forget: notify all subscribed users about the new market
-			// This is non-blocking — it does NOT slow down the admin's response
 			sendNotification({
 				type: 'market.created',
 				data: {
@@ -582,7 +570,56 @@ export const getMarketDetails = async (c: Context) => {
 				},
 			});
 
-			// Calculate dynamic volume and traders for DB fallback
+			if (marketDetails?.status === 'CLOSED') {
+				try {
+					const cacheKey = `cache:closed_market:${symbol}`;
+					let archivedDataStr = await client.get(cacheKey);
+
+					if (!archivedDataStr) {
+						const bucketName = ENV.S3_SNAPSHOT_BUCKET || 'probstreet-closed-markets';
+
+						if (bucketName && process.env.NODE_ENV !== 'development') {
+							logger.info({ symbol }, 'Fetching closed market archive from S3');
+							const command = new GetObjectCommand({
+								Bucket: bucketName,
+								Key: `closed_markets/${symbol}.json.gz`,
+							});
+							const s3Response = await s3Client.send(command);
+
+							if (s3Response.Body) {
+								const byteArray = await s3Response.Body.transformToByteArray();
+								const unzipped = await gunzip(Buffer.from(byteArray));
+								archivedDataStr = unzipped.toString('utf-8');
+
+								await client.set(cacheKey, archivedDataStr, 'EX', 30 * 24 * 60 * 60);
+							}
+						}
+					}
+
+					if (archivedDataStr) {
+						const archivedData = JSON.parse(archivedDataStr);
+						return c.json(
+							{
+								success: true,
+								message: 'Market details retrieved successfully from archive',
+								data: {
+									...marketDetails,
+									category: marketDetails?.category?.categoryName || 'Unknown',
+									volume: archivedData.Volume || 0,
+									traders: archivedData.NumberOfTraders || marketDetails?.numberOfTraders || 0,
+									orderbook: archivedData.OrderBook || { yes: [], no: [] },
+									trades: archivedData.Trades || [],
+								},
+								source: 's3_archive',
+							},
+							200,
+						);
+					}
+				} catch (archiveErr) {
+					logger.error({ err: archiveErr, symbol }, 'Failed to fetch market archive from R2');
+				}
+			}
+
 			let volume = 0;
 			let tradersCount = marketDetails?.numberOfTraders || 0;
 
@@ -1043,5 +1080,104 @@ export const mergeShares = async (c: Context) => {
 	} catch (error: any) {
 		logger.error({ context: 'MERGE_SHARES', error: error.message });
 		return c.json({ success: false, message: 'Internal server error' }, 500);
+	}
+};
+
+export const getMarketNews = async (c: Context) => {
+	try {
+		const symbol = c.req.param('symbol');
+
+		if (!symbol) {
+			return c.json(
+				{
+					success: false,
+					message: 'Symbol is required',
+				},
+				400,
+			);
+		}
+
+		if (!ENV.TAVILY_API_KEY) {
+			return c.json(
+				{
+					success: false,
+					message: 'Search API is not configured',
+				},
+				501,
+			);
+		}
+
+		const cacheKey = `cache:news:${symbol}`;
+		const cachedNews = await client.get(cacheKey);
+
+		if (cachedNews) {
+			return c.json({
+				success: true,
+				data: JSON.parse(cachedNews),
+				source: 'cache',
+			});
+		}
+
+		const market = await prisma.market.findUnique({
+			where: { symbol },
+			select: { title: true, category: { select: { categoryName: true } } },
+		});
+
+		if (!market) {
+			return c.json(
+				{
+					success: false,
+					message: 'Market not found',
+				},
+				404,
+			);
+		}
+
+		const timeoutPromise = new Promise((_, reject) =>
+			setTimeout(() => reject(new Error('Tavily request timed out')), 65000),
+		);
+
+		const searchPromise = tavilyClient.search(`"${market.title}" news`, {
+			searchDepth: 'fast',
+			topic: 'news',
+			includeImages: true,
+			maxResults: 5,
+		});
+
+		const response: any = await Promise.race([searchPromise, timeoutPromise]);
+
+		const parsedNews = response.results.map((result: any, idx: number) => ({
+			title: result.title,
+			link: result.url,
+			source: result.url.split('/')[2]?.replace('www.', '') || 'News',
+			thumbnail: result.image || response.images?.[idx] || '',
+		}));
+
+		if (parsedNews.length > 0) {
+			await client.set(cacheKey, JSON.stringify(parsedNews), 'EX', 2 * 60 * 60);
+		}
+
+		return c.json({
+			success: true,
+			message: 'Market news fetched successfully',
+			data: parsedNews,
+			source: 'tavily',
+		});
+	} catch (error: any) {
+		logger.error(
+			{
+				message: error.message,
+				status: error.status,
+			},
+			'Failed to fetch market news',
+		);
+		return c.json(
+			{
+				success: false,
+				message: 'Failed to fetch news',
+				error: error.message,
+			},
+			500,
+		);
 	}
 };

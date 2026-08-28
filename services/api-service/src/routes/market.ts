@@ -15,6 +15,7 @@ import {
 	generatePresignedUrlRoute,
 	splitShares,
 	mergeShares,
+	getMarketNews,
 } from '@/controllers/market';
 
 export const marketRoutes = new Hono();
@@ -33,3 +34,4 @@ marketRoutes.get('/:symbol', getMarketDetails);
 marketRoutes.get('/:symbol/klines', getMarketKlines);
 marketRoutes.get('/:symbol/trades', getMarketTrades);
 marketRoutes.get('/:symbol/stats', getMarketStats);
+marketRoutes.get('/:symbol/news-change', getMarketNews); // we will change it later before launch

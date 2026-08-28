@@ -102,7 +102,6 @@ export async function updateNotifications(c: Context) {
 	const {
 		emailNewMarket,
 		emailTradeExecuted,
-		emailPriceAlerts,
 		emailMarketResolved,
 		inAppNewMarket,
 		inAppTradeExecuted,
@@ -116,7 +115,6 @@ export async function updateNotifications(c: Context) {
 			update: {
 				emailNewMarket,
 				emailTradeExecuted,
-				emailPriceAlerts,
 				emailMarketResolved,
 				inAppNewMarket,
 				inAppTradeExecuted,
@@ -127,7 +125,6 @@ export async function updateNotifications(c: Context) {
 				userId: user.id,
 				emailNewMarket,
 				emailTradeExecuted,
-				emailPriceAlerts,
 				emailMarketResolved,
 				inAppNewMarket,
 				inAppTradeExecuted,
