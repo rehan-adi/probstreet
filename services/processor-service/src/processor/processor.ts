@@ -1,4 +1,5 @@
 import { DB_EVENTS } from '@/config/constants';
+import { sendNotification } from '@/libs/notification/dispatcher';
 import { updateStockPrice, updateTradersCount, handleMarketResolved } from '@/controllers/market';
 import {
 	recordTradeExecution,
@@ -40,6 +41,10 @@ export const processToDB = async (eventType: string, data: any) => {
 
 		case DB_EVENTS.SHARES_MERGED:
 			await handleSharesMerged(data);
+			break;
+
+		case DB_EVENTS.ARCHIVE_FAILED:
+			await sendNotification({ type: 'archive.failed', data });
 			break;
 
 		default:

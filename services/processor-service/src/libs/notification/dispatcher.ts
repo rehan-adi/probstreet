@@ -10,7 +10,12 @@ import { logger } from '@/libs/logger';
 // ─────────────────────────────────────────────────────────────────────────────
 
 type NotificationEventType =
-	'otp.send' | 'market.created' | 'trade.executed' | 'price.alert' | 'market.resolved';
+	| 'otp.send'
+	| 'market.created'
+	| 'trade.executed'
+	| 'price.alert'
+	| 'market.resolved'
+	| 'archive.failed';
 
 interface NotificationEvent {
 	type: NotificationEventType;

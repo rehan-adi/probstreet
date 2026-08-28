@@ -65,12 +65,21 @@ export const handleMarketResolved = async (data: any) => {
 
 		const payoutsToEngine: { userId: string; amount: number }[] = [];
 
+		const activeHolders = await prisma.position.findMany({
+			where: {
+				marketId,
+				OR: [{ yesQuantity: { gt: 0 } }, { noQuantity: { gt: 0 } }],
+			},
+		});
+
 		await prisma.$transaction(async (tx) => {
 			// Update Market result and status
-			await tx.market.update({
+			let resolvedMarketSymbol = '';
+			const resolvedMarket = await tx.market.update({
 				where: { id: marketId },
 				data: { result, status: 'CLOSED' },
 			});
+			resolvedMarketSymbol = resolvedMarket.symbol;
 
 			const holders = await tx.position.findMany({
 				where: { marketId },
@@ -112,6 +121,18 @@ export const handleMarketResolved = async (data: any) => {
 					payoutsToEngine.push({ userId: holder.userId, amount: payout });
 				}
 
+				await tx.position.update({
+					where: { id: holder.id },
+					data: {
+						yesQuantity: 0,
+						noQuantity: 0,
+						yesSellValue: result === 'YES' ? { increment: payout } : undefined,
+						noSellValue: result === 'NO' ? { increment: payout } : undefined,
+						// If CANCEL, payout is refunded, split across both if they had both, but for simplicity we can just add to yesSellValue to balance it out or add to both proportionally. Let just increment yesSellValue by payout for CANCEL.
+						...(result === 'CANCEL' && { yesSellValue: { increment: payout } }),
+					},
+				});
+
 				// Update Leaderboard score if market resolution is definitive (YES/NO)
 				if (result === 'YES' || result === 'NO') {
 					const totalInvested = Number(holder.yesInvested) + Number(holder.noInvested);
@@ -148,6 +169,43 @@ export const handleMarketResolved = async (data: any) => {
 			// await tx.position.deleteMany({
 			// 	where: { marketId },
 			// });
+
+			// Clean up any remaining zombie pending orders (in case engine missed them)
+			const pendingOrders = await tx.order.findMany({
+				where: { marketId, status: { in: ['PENDING', 'PARTIAL'] } },
+			});
+			for (const o of pendingOrders) {
+				const refund = Number(o.price) * (Number(o.quantity) - Number(o.filledQuantity));
+				if (o.orderType === 'BUY') {
+					await tx.wallet.updateMany({
+						where: { userId: o.userId },
+						data: { locked: { decrement: refund }, balance: { increment: refund } },
+					});
+					await tx.ledgerEntry.create({
+						data: {
+							fromAccount: 'EXCHANGE_ESCROW',
+							toAccount: o.userId,
+							amount: refund,
+							type: 'REFUND',
+							referenceId: marketId,
+						},
+					});
+				} else {
+					const field = o.stockType === 'YES' ? 'yes' : 'no';
+					const remainingShares = Number(o.quantity) - Number(o.filledQuantity);
+					await tx.position.updateMany({
+						where: { userId: o.userId, marketId },
+						data: {
+							[`${field}Locked`]: { decrement: remainingShares },
+							[`${field}Quantity`]: { increment: remainingShares },
+						},
+					});
+				}
+				await tx.order.update({
+					where: { id: o.id },
+					data: { status: 'CANCELLED' },
+				});
+			}
 		});
 
 		// Push deposits to the engine so memory balances stay in sync
@@ -164,13 +222,6 @@ export const handleMarketResolved = async (data: any) => {
 				}),
 			);
 		}
-
-		const activeHolders = await prisma.position.findMany({
-			where: {
-				marketId,
-				OR: [{ yesQuantity: { gt: 0 } }, { noQuantity: { gt: 0 } }],
-			},
-		});
 
 		if (activeHolders.length > 0) {
 			const market = await prisma.market.findUnique({ where: { id: marketId } });

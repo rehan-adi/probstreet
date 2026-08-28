@@ -512,7 +512,16 @@ export const handleOrderCancelled = async (data: any) => {
 
 		await prisma.$transaction(async (tx) => {
 			if (orderId) {
-				await tx.order.updateMany({
+				const order = await tx.order.findUnique({ where: { id: orderId } });
+				if (
+					!order ||
+					order.status === 'CANCELLED' ||
+					order.status === 'COMPLETED' ||
+					order.status === 'FAILED'
+				)
+					return;
+
+				await tx.order.update({
 					where: { id: orderId },
 					data: { status: 'CANCELLED' },
 				});
