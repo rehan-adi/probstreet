@@ -22,24 +22,24 @@ type MarketMessage struct {
 }
 
 type Market struct {
-	MarketId        string
-	Title           string
-	Symbol          string
-	YesPrice        float32
-	NoPrice         float32
-	Thumbnail       string
-	CategoryId      string
-	NumberOfTraders int16
-	Traders         map[string]struct{}
-	Volume          float64
-	Status          MarketStatus
-	OrderBook       *OrderBook
+	MarketId        string              `json:"marketId"`
+	Title           string              `json:"title"`
+	Symbol          string              `json:"symbol"`
+	YesPrice        float32             `json:"yesPrice"`
+	NoPrice         float32             `json:"noPrice"`
+	Thumbnail       string              `json:"thumbnail"`
+	CategoryId      string              `json:"categoryId"`
+	NumberOfTraders int16               `json:"numberOfTraders"`
+	Traders         map[string]struct{} `json:"-"`
+	Volume          float64             `json:"volume"`
+	Status          MarketStatus        `json:"status"`
+	OrderBook       *OrderBook          `json:"-"`
 
-	Overview Overview
-	Trades   []TradeExecutedEvent
-	Inbox    chan MarketMessage
-	Mu       sync.RWMutex
-	PreviousOrderBook AggregatedOrderBook
+	Overview          Overview            `json:"overview"`
+	Trades            []TradeExecutedEvent `json:"trades"`
+	Inbox             chan MarketMessage  `json:"-"`
+	Mu                sync.RWMutex        `json:"-"`
+	PreviousOrderBook AggregatedOrderBook `json:"-"`
 }
 
 type MarketStatus string

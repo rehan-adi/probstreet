@@ -166,6 +166,16 @@ func GetMarketDetails(payload types.QueuePayload) types.QueueResponse {
 		Int("NoOrders", len(orderBook.No)).
 		Msg("Fetched order book")
 
+	market.Mu.RLock()
+	vol := market.Volume
+	yesP := market.YesPrice
+	noP := market.NoPrice
+	statusStr := string(market.Status)
+	overview := market.Overview
+	tradesCopy := append([]types.TradeExecutedEvent(nil), market.Trades...)
+	numTraders := market.NumberOfTraders
+	market.Mu.RUnlock()
+
 	return types.QueueResponse{
 		ResponseId: payload.ResponseId,
 		Status:     types.Success,
@@ -191,17 +201,17 @@ func GetMarketDetails(payload types.QueuePayload) types.QueueResponse {
 			Title:           market.Title,
 			Symbol:          market.Symbol,
 			CategoryId:      market.CategoryId,
-			Volume:          market.Volume,
-			YesPrice:        market.YesPrice,
+			Volume:          vol,
+			YesPrice:        yesP,
 			Thumbnail:       market.Thumbnail,
-			EOS:             market.Overview.EOS,
-			Rules:           market.Overview.Rules,
-			NoPrice:         market.NoPrice,
-			Status:          string(market.Status),
+			EOS:             overview.EOS,
+			Rules:           overview.Rules,
+			NoPrice:         noP,
+			Status:          statusStr,
 			OrderBook:       orderBook,
-			Overview:        market.Overview,
-			Trades:          market.Trades,
-			NumberOfTraders: market.NumberOfTraders,
+			Overview:        overview,
+			Trades:          tradesCopy,
+			NumberOfTraders: numTraders,
 		},
 	}
 }

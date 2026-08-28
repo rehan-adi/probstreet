@@ -253,18 +253,14 @@ func (e *Engine) settleTradeBalances(order, matchOrder *types.Order, qty int, ex
 		}
 
 		buyerStock := buyer.Balance.StockBalance[order.Symbol]
-		sellerStock := seller.Balance.StockBalance[order.Symbol]
 
 		if buyerSide == types.Yes {
 			buyerStock.Yes += qty
-			sellerStock.Yes -= qty
 		} else {
 			buyerStock.No += qty
-			sellerStock.No -= qty
 		}
 
 		buyer.Balance.StockBalance[order.Symbol] = buyerStock
-		seller.Balance.StockBalance[order.Symbol] = sellerStock
 
 		tradeValue := executionPrice * float64(qty)
 		buyerFee := tradeValue * 0.0025
@@ -308,17 +304,9 @@ func (e *Engine) settleTradeBalances(order, matchOrder *types.Order, qty int, ex
 			yesSeller, noSeller = u2, u1
 		}
 
-		yStock := yesSeller.Balance.StockBalance[order.Symbol]
-		yStock.Yes -= qty
-		yesSeller.Balance.StockBalance[order.Symbol] = yStock
-
 		yesTradeValue := executionPrice * float64(qty)
 		yesFee := yesTradeValue * 0.0025
 		yesSeller.Balance.WalletBalance.Amount += (yesTradeValue - yesFee)
-
-		nStock := noSeller.Balance.StockBalance[order.Symbol]
-		nStock.No -= qty
-		noSeller.Balance.StockBalance[order.Symbol] = nStock
 
 		noTradeValue := (10.0 - executionPrice) * float64(qty)
 		noFee := noTradeValue * 0.0025

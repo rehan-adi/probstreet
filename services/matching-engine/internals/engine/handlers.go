@@ -86,12 +86,13 @@ func (e *Engine) handleOrder(msg types.MarketMessage, market *types.Market) {
 	}
 	e.UM.Unlock()
 
-	// Track Traders
+	market.Mu.Lock()
 	if _, exists := market.Traders[order.UserId]; !exists {
 		market.Traders[order.UserId] = struct{}{}
 		market.NumberOfTraders++
 		kafka.ProduceEventToDBProcessor("process_db", string(types.INCREASE_TRADERS_COUNT), map[string]interface{}{"marketId": order.MarketId, "count": 1})
 	}
+	market.Mu.Unlock()
 
 	// Match Engine execution
 	activities := e.ProcessLimitOrder(market, &order, isMarketOrder)
@@ -104,6 +105,7 @@ func (e *Engine) handleOrder(msg types.MarketMessage, market *types.Market) {
 		"timestamp": time.Now(),
 	})
 
+	market.Mu.Lock()
 	if len(activities) > 0 {
 		market.Trades = append(market.Trades, activities...)
 		if len(market.Trades) > 50 {
@@ -116,9 +118,7 @@ func (e *Engine) handleOrder(msg types.MarketMessage, market *types.Market) {
 	}
 
 	// Broadcast Orderbook update
-	market.Mu.RLock()
 	aggOrderBook := utils.AggregateOrderBook(market.OrderBook)
-	market.Mu.RUnlock()
 	probability := utils.GetYesProbability(aggOrderBook)
 	yesPrice := math.Round(probability*10*2) / 2
 	noPrice := math.Round((1-probability)*10*2) / 2
@@ -130,6 +130,9 @@ func (e *Engine) handleOrder(msg types.MarketMessage, market *types.Market) {
 			"marketId": order.MarketId, "yesPrice": yesPrice, "noPrice": noPrice,
 		})
 	}
+	currentVolume := market.Volume
+	currentTraders := market.NumberOfTraders
+	market.Mu.Unlock()
 
 	// Broadcast TICKER update (lightweight)
 	tickerPayload := map[string]interface{}{
@@ -137,8 +140,8 @@ func (e *Engine) handleOrder(msg types.MarketMessage, market *types.Market) {
 		"symbol":          order.Symbol,
 		"yesPrice":        yesPrice,
 		"noPrice":         noPrice,
-		"volume":          market.Volume,
-		"numberOfTraders": market.NumberOfTraders,
+		"volume":          currentVolume,
+		"numberOfTraders": currentTraders,
 	}
 	if tickerData, err := json.Marshal(tickerPayload); err == nil {
 		e.BroadcastMessage("stream:data", string(tickerData))
@@ -261,7 +264,7 @@ func (e *Engine) handleResolveMarket(msg types.MarketMessage, market *types.Mark
 
 	log.Info().Str("marketId", market.MarketId).Str("result", result).Msg("Market resolved and closed")
 	msg.ReplyChan <- true
-	
+
 	// Kick off background archival
 	e.ArchiveClosedMarket(market)
 }
