@@ -27,6 +27,7 @@ import AdminMarkets from '@/pages/admin/Markets';
 import LeaderboardPage from '@/pages/Leaderboard';
 import CreateEvent from '@/pages/admin/CreateEvent';
 import VerificationgePage from '@/pages/Verification';
+import OracleReview from '@/pages/admin/OracleReview';
 import ControlCentrePage from '@/pages/ControlCentre';
 import AuthModal from '@/components/modals/AuthModal';
 import AdminTransactions from '@/pages/admin/Transactions';
@@ -93,6 +94,7 @@ function AppContent() {
 						<Route path="/dashboard/markets/create" element={<CreateEvent />} />
 						<Route path="/dashboard/users" element={<AdminUsers />} />
 						<Route path="/dashboard/transactions" element={<AdminTransactions />} />
+						<Route path="/dashboard/oracle/review" element={<OracleReview />} />
 					</Route>
 					<Route path="*" element={<NotFoundPage />} />
 				</Routes>

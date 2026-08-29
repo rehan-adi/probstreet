@@ -16,6 +16,7 @@ import {
 	ExternalLink,
 	Menu,
 	X,
+	BrainCircuit,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
 import logo from '@/assets/images/logo.avif';
@@ -48,6 +49,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 			items: [
 				{ title: 'All Markets', href: '/dashboard/markets', icon: Activity },
 				{ title: 'Create Market', href: '/dashboard/markets/create', icon: PlusCircle },
+				{ title: 'Oracle Review', href: '/dashboard/oracle/review', icon: BrainCircuit },
 			],
 		},
 		{

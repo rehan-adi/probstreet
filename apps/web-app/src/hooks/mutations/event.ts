@@ -3,11 +3,13 @@ import { useMutation } from '@tanstack/react-query';
 
 type CreateEventPayload = {
 	title: string;
-	eos: string;
-	rules: string;
-	startTime: string;
+	eos?: string;
+	rules?: string;
+	startTime?: string;
 	endTime: string;
-	sourceOfTruth: string;
+	sourceOfTruth?: string;
+	resolutionMode?: 'MANUAL' | 'AUTOMATIC';
+	oracleConfig?: Record<string, any>;
 	categoryId: string;
 	thumbnail: string | null;
 };

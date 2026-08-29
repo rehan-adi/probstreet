@@ -2,11 +2,13 @@ import { api } from '@/lib/axios';
 
 export const createMarket = (form: {
 	title: string;
-	eos: string;
-	rules: string;
-	startTime: string;
+	eos?: string;
+	rules?: string;
+	startTime?: string;
 	endTime: string;
-	sourceOfTruth: string;
+	sourceOfTruth?: string;
+	resolutionMode?: 'MANUAL' | 'AUTOMATIC';
+	oracleConfig?: Record<string, any>;
 	categoryId: string;
 	thumbnail: string | null;
 }) => {
