@@ -401,6 +401,19 @@ export const withdraw = async (c: Context) => {
 			return c.json({ success: false, message: 'Payment method is required' }, 400);
 		}
 
+		const user = await prisma.user.findUnique({ where: { id: userId } });
+
+		if (!user) {
+			return c.json({ success: false, message: 'User not found' }, 404);
+		}
+
+		if (user.kycVerificationStatus !== 'VERIFIED') {
+			return c.json({
+				success: false,
+				message: 'KYC must be verified to withdraw funds'
+			}, 403);
+		}
+
 		const amount = Number(reqBody.amount);
 		const currentWalletAmount = Number(reqBody.currentWalletAmount);
 
