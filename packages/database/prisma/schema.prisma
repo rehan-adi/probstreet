@@ -100,6 +100,23 @@ enum MarketStatus {
   @@map("market_status")
 }
 
+enum ResolutionMode {
+  MANUAL
+  AUTOMATIC
+
+  @@map("resolution_mode")
+}
+
+enum OracleStatus {
+  PENDING
+  CHECKING
+  RESOLVED
+  AWAITING_ADMIN
+  FAILED
+
+  @@map("oracle_status")
+}
+
 enum FeeType {
   TRADE_FEE
   WITHDRAWAL_FEE
@@ -366,31 +383,36 @@ model Referral {
 }
 
 model Market {
-  id               String            @id @default(uuid())
-  title            String
-  symbol           String            @unique
-  yesPrice         Decimal           @map("yes_price") @db.Decimal(14, 2)
-  noPrice          Decimal           @map("no_price") @db.Decimal(14, 2)
-  startTime        DateTime          @map("start_time")
-  endTime          DateTime          @map("end_time")
-  result           String?
-  thumbnail        String?
-  categoryId       String            @map("category_id")
-  category         Category          @relation(fields: [categoryId], references: [id])
-  sourceOfTruth    String            @default("") @map("source_of_truth")
-  eos              String?
-  rules            String?
-  numberOfTraders  Int               @default(0) @map("number_of_traders")
-  positions        Position[]
-  orders           Order[]
-  transactions     Transaction[]
-  trades           Trade[]
-  watchlists       Watchlist[]
-  platformRevenues PlatformRevenue[]
-  priceAlerts      PriceAlert[]
-  status           MarketStatus      @default(OPEN)
-  volume           Decimal           @default(0.00) @db.Decimal(14, 2)
-  createdAt        DateTime          @default(now()) @map("created_at")
+  id                String            @id @default(uuid())
+  title             String
+  symbol            String            @unique
+  yesPrice          Decimal           @map("yes_price") @db.Decimal(14, 2)
+  noPrice           Decimal           @map("no_price") @db.Decimal(14, 2)
+  startTime         DateTime          @map("start_time")
+  endTime           DateTime          @map("end_time")
+  result            String?
+  thumbnail         String?
+  categoryId        String            @map("category_id")
+  category          Category          @relation(fields: [categoryId], references: [id])
+  sourceOfTruth     String            @default("") @map("source_of_truth")
+  eos               String?
+  rules             String?
+  numberOfTraders   Int               @default(0) @map("number_of_traders")
+  positions         Position[]
+  orders            Order[]
+  transactions      Transaction[]
+  trades            Trade[]
+  watchlists        Watchlist[]
+  platformRevenues  PlatformRevenue[]
+  priceAlerts       PriceAlert[]
+  status            MarketStatus      @default(OPEN)
+  volume            Decimal           @default(0.00) @db.Decimal(14, 2)
+  createdAt         DateTime          @default(now()) @map("created_at")
+  resolutionMode    ResolutionMode    @default(MANUAL) @map("resolution_mode")
+  oracleConfig      Json?             @map("oracle_config")
+  oracleStatus      OracleStatus?     @map("oracle_status")
+  oracleLastChecked DateTime?         @map("oracle_last_checked")
+  oracleLogs        OracleLog[]
 
   @@map("markets")
 }
@@ -515,4 +537,22 @@ model PriceAlert {
   @@index([marketId, isActive])
   @@index([userId])
   @@map("price_alerts")
+}
+
+model OracleLog {
+  id            String   @id @default(uuid())
+  marketId      String   @map("market_id")
+  market        Market   @relation(fields: [marketId], references: [id])
+  action        String
+  resolver      String?
+  rawData       Json?    @map("raw_data")
+  verdict       String?
+  rubricScore   Int?     @map("rubric_score")
+  rubricDetails Json?    @map("rubric_details")
+  reasoning     String?  @db.Text
+  error         String?  @db.Text
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([marketId])
+  @@map("oracle_logs")
 }
