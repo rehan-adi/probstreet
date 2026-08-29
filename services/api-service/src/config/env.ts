@@ -53,6 +53,8 @@ const envSchema = z.object({
 	GMAIL_APP_PASSWORD: z.string().min(1),
 
 	TAVILY_API_KEY: z.string().min(1),
+
+	GROQ_API_KEY: z.string().min(1),
 });
 
 const parsed = envSchema.safeParse(Bun.env);

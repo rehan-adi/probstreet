@@ -124,6 +124,9 @@ export const createMarket = async (c: Context) => {
 				thumbnail: data.thumbnail,
 				categoryId: data.categoryId,
 				sourceOfTruth: data.sourceOfTruth,
+				resolutionMode: data.resolutionMode,
+				oracleConfig: data.oracleConfig ? (data.oracleConfig as any) : undefined,
+				oracleStatus: data.resolutionMode === 'AUTOMATIC' ? 'PENDING' : null,
 			},
 		});
 

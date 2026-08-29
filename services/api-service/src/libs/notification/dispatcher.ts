@@ -1,7 +1,13 @@
 import { ENV } from '@/config/env';
 import { logger } from '@/libs/logger';
 
-type NotificationEventType = 'otp.send' | 'market.created' | 'trade.executed' | 'price.alert';
+type NotificationEventType =
+	| 'otp.send'
+	| 'market.created'
+	| 'trade.executed'
+	| 'price.alert'
+	| 'oracle.review'
+	| 'oracle.resolved';
 
 interface NotificationEvent {
 	type: NotificationEventType;

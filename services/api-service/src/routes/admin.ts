@@ -13,6 +13,7 @@ import {
 	updatePendingVerification,
 	getUserVerificationDetailsForAdmin,
 } from '@/controllers/verification';
+import { getOraclePending, confirmOracleResolution } from '@/controllers/oracle';
 
 export const aapiRoutes = new Hono();
 
@@ -21,6 +22,9 @@ aapiRoutes.use('*', authorization, isAdmin);
 aapiRoutes.get('/verification/pending', getPendingVerifications);
 aapiRoutes.post('/verification/verify', updatePendingVerification);
 aapiRoutes.get('/verification/:userId', getUserVerificationDetailsForAdmin);
+
+aapiRoutes.get('/oracle/pending', getOraclePending);
+aapiRoutes.post('/oracle/confirm', confirmOracleResolution);
 
 aapiRoutes.post('/markets/resolve', resolveMarket);
 aapiRoutes.get('/analytics/dashboard', getDashboardMetrics);

@@ -408,10 +408,13 @@ export const withdraw = async (c: Context) => {
 		}
 
 		if (user.kycVerificationStatus !== 'VERIFIED') {
-			return c.json({
-				success: false,
-				message: 'KYC must be verified to withdraw funds'
-			}, 403);
+			return c.json(
+				{
+					success: false,
+					message: 'KYC must be verified to withdraw funds',
+				},
+				403,
+			);
 		}
 
 		const amount = Number(reqBody.amount);

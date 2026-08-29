@@ -6,10 +6,13 @@ export const createMarketSchema = z
 			.string()
 			.min(3, { message: 'Title must be at least 3 characters' })
 			.max(100, { message: 'Title must be under 100 characters' }),
-		startTime: z.coerce.date(),
+		startTime: z.coerce.date().default(() => new Date()),
 		endTime: z.coerce.date(),
 		thumbnail: z.union([z.string().url(), z.literal(''), z.null()]).optional(),
 		categoryId: z.string().min(1, { message: 'Category ID is required' }),
+		resolutionMode: z.enum(['MANUAL', 'AUTOMATIC']).default('MANUAL'),
+		oracleUrl: z.string().url().optional().or(z.literal('')),
+		oracleConfig: z.record(z.string(), z.unknown()).optional(),
 		sourceOfTruth: z
 			.string()
 			.max(300, { message: 'Source must be under 300 characters' })
