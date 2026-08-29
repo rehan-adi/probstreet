@@ -6,6 +6,7 @@ export const envSchema = z.object({
 	WORKER_SECRET: z.string().min(1),
 	FIREBASE_SERVER_KEY: z.string().min(1),
 	STREAM_SERVICE_URL: z.string().url(),
+	FRONTEND_URL: z.string().url(),
 });
 
 export type ENV_CONFIG = z.infer<typeof envSchema>;

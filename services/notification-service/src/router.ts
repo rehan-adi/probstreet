@@ -1,16 +1,20 @@
 import { ENV_CONFIG } from '@/config/env';
 import { logger } from '@/libs/logger/logger';
 import { handlePriceAlert } from '@/handlers/price-alert';
+import { handleOracleReview } from '@/handlers/oracle-review';
 import { handleMarketCreated } from '@/handlers/market-created';
 import { handleTradeExecuted } from '@/handlers/trade-executed';
 import { handleArchiveFailed } from '@/handlers/archive-failed';
+import { handleOracleResolved } from '@/handlers/oracle-resolved';
 
 export type NotificationEventTypes =
 	| 'market.created'
 	| 'trade.executed'
 	| 'price.alert'
 	| 'market.resolved'
-	| 'engine.archive_failed';
+	| 'archive.failed'
+	| 'oracle.review'
+	| 'oracle.resolved';
 
 export interface NotificationEvent {
 	type: NotificationEventTypes;
@@ -36,8 +40,14 @@ export async function processEvent(env: ENV_CONFIG, event: NotificationEvent): P
 				const { handleMarketResolved } = await import('@/handlers/market-resolved');
 				await handleMarketResolved(env, prisma, event.data);
 				break;
-			case 'engine.archive_failed':
+			case 'archive.failed':
 				await handleArchiveFailed(env, event.data);
+				break;
+			case 'oracle.review':
+				await handleOracleReview(env, prisma, event.data);
+				break;
+			case 'oracle.resolved':
+				await handleOracleResolved(env, prisma, event.data);
 				break;
 			default:
 				logger.warn(`[worker] Unknown event type: ${(event as any).type}`);

@@ -15,7 +15,9 @@ type NotificationEventType =
 	| 'trade.executed'
 	| 'price.alert'
 	| 'market.resolved'
-	| 'archive.failed';
+	| 'archive.failed'
+	| 'oracle.review'
+	| 'oracle.resolved';
 
 interface NotificationEvent {
 	type: NotificationEventType;
