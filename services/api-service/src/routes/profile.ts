@@ -6,6 +6,7 @@ import {
 	removeFromWatchlist,
 	getWatchlist,
 	getUserTrades,
+	getPublicProfile,
 } from '@/controllers/profile';
 import { authorization } from '@/middlewares/authorization';
 
@@ -18,3 +19,5 @@ profileRoutes.post('/watchlist', authorization, addToWatchlist);
 profileRoutes.delete('/watchlist/:marketId', authorization, removeFromWatchlist);
 profileRoutes.get('/watchlist', authorization, getWatchlist);
 profileRoutes.get('/trades', authorization, getUserTrades);
+
+profileRoutes.get('/:username', getPublicProfile);

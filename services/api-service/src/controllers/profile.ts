@@ -1,6 +1,7 @@
 import { Context } from 'hono';
-import { prisma } from '@probstreet/database';
 import { logger } from '@/libs/logger';
+import { prisma } from '@probstreet/database';
+import { client as redis } from '@/libs/redis/connection';
 
 export const getProfile = async (c: Context) => {
 	try {
@@ -173,6 +174,102 @@ export const getUserTrades = async (c: Context) => {
 		return c.json({ success: true, data: trades });
 	} catch (error: any) {
 		logger.error({ context: 'GET_USER_TRADES', message: error.message });
+		return c.json({ success: false, message: 'Internal server error' }, 500);
+	}
+};
+
+export const getPublicProfile = async (c: Context) => {
+	try {
+		const { username } = c.req.param();
+
+		const user = await prisma.user.findUnique({
+			where: { username },
+			select: {
+				id: true,
+				username: true,
+				bio: true,
+				avatarUrl: true,
+				createdAt: true,
+			},
+		});
+
+		if (!user)
+			return c.json(
+				{
+					success: false,
+					message: 'User not found',
+				},
+				404,
+			);
+
+		const [tradeStats, openPositionsCount] = await Promise.all([
+			prisma.trade.aggregate({
+				where: {
+					OR: [
+						{
+							makerId: user.id,
+						},
+						{ takerId: user.id },
+					],
+				},
+				_count: { id: true },
+			}),
+
+			prisma.position.count({
+				where: {
+					userId: user.id,
+					OR: [{ yesQuantity: { gt: 0 } }, { noQuantity: { gt: 0 } }],
+				},
+			}),
+		]);
+
+		let netProfit = 0;
+
+		try {
+			const score = await redis.zscore('leaderboard:all_time', user.id);
+			netProfit = score ? parseFloat(score) : 0;
+		} catch {}
+
+		const positions = await prisma.position.findMany({
+			where: {
+				userId: user.id,
+				OR: [{ yesQuantity: { gt: 0 } }, { noQuantity: { gt: 0 } }],
+			},
+			take: 10,
+			include: {
+				market: {
+					select: {
+						id: true,
+						title: true,
+						symbol: true,
+						yesPrice: true,
+						noPrice: true,
+						thumbnail: true,
+						status: true,
+						endTime: true,
+					},
+				},
+			},
+		});
+
+		return c.json({
+			success: true,
+			data: {
+				id: user.id,
+				username: user.username,
+				bio: user.bio,
+				avatarUrl: user.avatarUrl,
+				joinedAt: user.createdAt,
+				stats: {
+					tradesCount: tradeStats._count.id,
+					openPositions: openPositionsCount,
+					netProfit: Math.round(netProfit * 100) / 100,
+				},
+				positions,
+			},
+		});
+	} catch (error: any) {
+		logger.error({ context: 'GET_PUBLIC_PROFILE', message: error.message });
 		return c.json({ success: false, message: 'Internal server error' }, 500);
 	}
 };

@@ -1184,3 +1184,198 @@ export const getMarketNews = async (c: Context) => {
 		);
 	}
 };
+
+const CHAT_RATE_LIMIT_SEC = 5;
+
+export const getMarketComments = async (c: Context) => {
+	try {
+		const symbol = c.req.param('symbol');
+		const cursor = c.req.query('cursor');
+
+		const market = await prisma.market.findUnique({
+			where: { symbol },
+			select: { id: true },
+		});
+
+		if (!market)
+			return c.json(
+				{
+					success: false,
+					message: 'Market not found',
+				},
+				404,
+			);
+
+		const comments = await prisma.marketComment.findMany({
+			where: {
+				marketId: market.id,
+				...(cursor ? { createdAt: { lt: new Date(cursor) } } : {}),
+			},
+			orderBy: { createdAt: 'desc' },
+			take: 50,
+			select: {
+				id: true,
+				message: true,
+				createdAt: true,
+				user: { select: { id: true, username: true, avatarUrl: true } },
+			},
+		});
+
+		return c.json({
+			success: true,
+			data: comments,
+			nextCursor: comments.length === 50 ? comments[0].createdAt.toISOString() : null,
+		});
+	} catch (error: any) {
+		logger.error({ context: 'GET_MARKET_COMMENTS', error: error.message });
+		return c.json(
+			{
+				success: false,
+				message: 'Internal server error',
+			},
+			500,
+		);
+	}
+};
+
+export const postMarketComment = async (c: Context) => {
+	try {
+		const user = c.get('user');
+
+		if (!user)
+			return c.json(
+				{
+					success: false,
+					message: 'Unauthorized',
+				},
+				401,
+			);
+
+		const symbol = c.req.param('symbol');
+		const { message } = await c.req.json<{ message: string }>();
+
+		if (!message || typeof message !== 'string' || !message.trim()) {
+			return c.json(
+				{
+					success: false,
+					message: 'Message cannot be empty',
+				},
+				400,
+			);
+		}
+
+		const trimmed = message.trim().slice(0, 280);
+
+		const rateLimitKey = `chat:rate:${user.id}:${symbol}`;
+		const limited = await client.get(rateLimitKey);
+
+		if (limited) {
+			return c.json(
+				{
+					success: false,
+					message: 'Slow down — 1 message per 5 seconds',
+				},
+				429,
+			);
+		}
+		await client.set(rateLimitKey, '1', 'EX', CHAT_RATE_LIMIT_SEC);
+
+		const market = await prisma.market.findUnique({ where: { symbol }, select: { id: true } });
+
+		if (!market)
+			return c.json(
+				{
+					success: false,
+					message: 'Market not found',
+				},
+				404,
+			);
+
+		const dbUser = await prisma.user.findUnique({
+			where: { id: user.id },
+			select: { username: true, avatarUrl: true },
+		});
+
+		const comment = await prisma.marketComment.create({
+			data: { marketId: market.id, userId: user.id, message: trimmed },
+		});
+
+		const payload = {
+			id: comment.id,
+			message: comment.message,
+			createdAt: comment.createdAt,
+			user: {
+				id: user.id,
+				username: dbUser?.username || 'Anonymous',
+				avatarUrl: dbUser?.avatarUrl || null,
+			},
+		};
+
+		await client.publish(`chat:${symbol}`, JSON.stringify(payload));
+
+		logger.info({ userId: user.id, symbol }, 'Chat message posted');
+		return c.json(
+			{
+				success: true,
+				data: payload,
+			},
+			201,
+		);
+	} catch (error: any) {
+		logger.error({ context: 'POST_MARKET_COMMENT', error: error.message });
+		return c.json(
+			{
+				success: false,
+				message: 'Internal server error',
+			},
+			500,
+		);
+	}
+};
+
+export const deleteMarketComment = async (c: Context) => {
+	try {
+		const user = c.get('user');
+		if (!user)
+			return c.json(
+				{
+					success: false,
+					message: 'Unauthorized',
+				},
+				401,
+			);
+
+		const commentId = c.req.param('commentId');
+
+		const comment = await prisma.marketComment.findUnique({
+			where: { id: commentId },
+			select: { userId: true },
+		});
+
+		if (!comment) {
+			return c.json(
+				{
+					success: false,
+					message: 'Comment not found',
+				},
+				404,
+			);
+		}
+
+		if (comment.userId !== user.id) {
+			return c.json({ success: false, message: 'Forbidden' }, 403);
+		}
+
+		await prisma.marketComment.delete({
+			where: { id: commentId },
+		});
+
+		return c.json({
+			success: true,
+			message: 'Comment removed',
+		});
+	} catch (error: any) {
+		logger.error({ context: 'DELETE_MARKET_COMMENT', error: error.message });
+		return c.json({ success: false, message: 'Internal server error' }, 500);
+	}
+};
