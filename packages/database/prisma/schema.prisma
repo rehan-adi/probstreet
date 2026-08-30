@@ -204,6 +204,7 @@ model User {
 
   platformRevenues PlatformRevenue[]
   priceAlerts      PriceAlert[]
+  marketComments   MarketComment[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -413,6 +414,7 @@ model Market {
   oracleStatus      OracleStatus?     @map("oracle_status")
   oracleLastChecked DateTime?         @map("oracle_last_checked")
   oracleLogs        OracleLog[]
+  marketComments    MarketComment[]
 
   @@map("markets")
 }
@@ -555,4 +557,19 @@ model OracleLog {
 
   @@index([marketId])
   @@map("oracle_logs")
+}
+
+model MarketComment {
+  id        String   @id @default(uuid())
+  marketId  String   @map("market_id")
+  userId    String   @map("user_id")
+  message   String   @db.VarChar(280)
+  isDeleted Boolean  @default(false) @map("is_deleted")
+  createdAt DateTime @default(now()) @map("created_at")
+  market    Market   @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([marketId, createdAt(sort: Desc)])
+  @@index([userId])
+  @@map("market_comments")
 }
