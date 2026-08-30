@@ -1,22 +1,22 @@
 import { api } from '@/lib/axios';
 import { socket } from '@/socket';
 import { useAuthStore } from '@/store/auth';
-import { useModalStore } from '@/store/modal';
 import { useParams } from 'react-router-dom';
-import pfpIcon from '@/assets/images/pfp.avif';
+import { useModalStore } from '@/store/modal';
 
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import Trollbox from '@/components/Trollbox';
 import PlaceOrder from '@/components/PlaceOrder';
 import MarketNews from '@/components/MarketNews';
 import TimelineSection from '@/components/Timeline';
 import UserHoldings from '@/components/UserHoldings';
 import ShareModal from '@/components/modals/ShareModal';
-import PriceAlertModal from '@/components/modals/PriceAlertModal';
 import downloadIcon from '@/assets/images/download.avif';
 import defaultThumbnail from '@/assets/images/logo.avif';
-import { Bookmark, Share2, RefreshCcw, BellRing } from 'lucide-react';
 import OrderbookLadder from '@/components/OrderbookLadder';
+import PriceAlertModal from '@/components/modals/PriceAlertModal';
+import { Bookmark, Share2, RefreshCcw, BellRing } from 'lucide-react';
 interface TradeExecutedEvent {
 	marketId: string;
 	makerId: string;
@@ -350,7 +350,7 @@ export default function EventDetails() {
 								<img
 									src={
 										!market.thumbnail ||
-										market.thumbnail.includes('34d989f64bf44f84bf3dfd398f6d2b67.png')
+											market.thumbnail.includes('34d989f64bf44f84bf3dfd398f6d2b67.png')
 											? defaultThumbnail
 											: market.thumbnail
 									}
@@ -413,11 +413,10 @@ export default function EventDetails() {
 								<button
 									key={tab}
 									onClick={() => setActiveBoxTab(tab.toLowerCase() as any)}
-									className={`flex-1 py-3.5 text-sm font-bold relative transition cursor-pointer ${
-										activeBoxTab === tab.toLowerCase()
-											? 'text-foreground'
-											: 'text-muted-foreground hover:text-foreground'
-									}`}
+									className={`flex-1 py-3.5 text-sm font-bold relative transition cursor-pointer ${activeBoxTab === tab.toLowerCase()
+										? 'text-foreground'
+										: 'text-muted-foreground hover:text-foreground'
+										}`}
 								>
 									{tab}
 									{activeBoxTab === tab.toLowerCase() && (
@@ -439,11 +438,10 @@ export default function EventDetails() {
 														setInnerTab(tab as any);
 														setTimeout(() => setResetScrollToken((prev) => prev + 1), 60);
 													}}
-													className={`py-2 text-sm cursor-pointer font-bold relative transition-colors ${
-														innerTab === tab
-															? 'text-foreground'
-															: 'text-muted-foreground hover:text-foreground'
-													}`}
+													className={`py-2 text-sm cursor-pointer font-bold relative transition-colors ${innerTab === tab
+														? 'text-foreground'
+														: 'text-muted-foreground hover:text-foreground'
+														}`}
 												>
 													Trade {tab.toUpperCase()}
 													{innerTab === tab && (
@@ -553,7 +551,7 @@ export default function EventDetails() {
 																	{(() => {
 																		const diff = Math.floor(
 																			(new Date().getTime() - new Date(trade.timestamp).getTime()) /
-																				1000,
+																			1000,
 																		);
 																		if (diff < 60) return `${diff}s ago`;
 																		if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
@@ -590,31 +588,46 @@ export default function EventDetails() {
 								<span className="text-muted-foreground font-semibold text-xs uppercase tracking-wider">
 									Source of Truth
 								</span>
-								<a
-									href="https://icc-cricket.com"
-									target="_blank"
-									rel="noopener noreferrer"
-									className="text-blue-500 font-medium hover:underline flex items-center gap-1 line-clamp-2"
-									title="Official ICC announcements and match results from icc-cricket.com"
-								>
-									Official ICC announcements and match results
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										width="12"
-										height="12"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="2"
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										className="shrink-0"
+								{market.overview?.SourceOfTruth &&
+									market.overview.SourceOfTruth.trim().startsWith('http') ? (
+									<a
+										href={market.overview.SourceOfTruth}
+										target="_blank"
+										rel="noopener noreferrer"
+										className="text-blue-500 font-medium hover:underline flex items-center gap-1.5 line-clamp-2"
+										title={market.overview.SourceOfTruth}
 									>
-										<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-										<polyline points="15 3 21 3 21 9" />
-										<line x1="10" y1="14" x2="21" y2="3" />
-									</svg>
-								</a>
+										<span className="truncate">
+											{(() => {
+												try {
+													return new URL(market.overview.SourceOfTruth).hostname;
+												} catch {
+													return market.overview.SourceOfTruth;
+												}
+											})()}
+										</span>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											width="13"
+											height="13"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											strokeWidth="2"
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											className="shrink-0"
+										>
+											<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+											<polyline points="15 3 21 3 21 9" />
+											<line x1="10" y1="14" x2="21" y2="3" />
+										</svg>
+									</a>
+								) : (
+									<span className="text-foreground font-medium">
+										{market.overview?.SourceOfTruth || 'Verified Official Sources'}
+									</span>
+								)}
 							</div>
 							<div className="flex flex-col gap-1.5 min-w-0">
 								<span className="text-muted-foreground font-semibold text-xs uppercase tracking-wider">
@@ -622,11 +635,13 @@ export default function EventDetails() {
 								</span>
 								<span className="text-foreground font-medium">
 									{market.overview?.StartDate
-										? new Date(market.overview.StartDate).toLocaleDateString(undefined, {
-												day: '2-digit',
-												month: 'short',
-												year: 'numeric',
-											})
+										? new Date(market.overview.StartDate).toLocaleString(undefined, {
+											day: '2-digit',
+											month: 'short',
+											year: 'numeric',
+											hour: '2-digit',
+											minute: '2-digit',
+										})
 										: '--'}
 								</span>
 							</div>
@@ -636,82 +651,41 @@ export default function EventDetails() {
 								</span>
 								<span className="text-foreground font-medium">
 									{market.overview?.EndDate
-										? new Date(market.overview.EndDate).toLocaleDateString(undefined, {
-												day: '2-digit',
-												month: 'short',
-												year: 'numeric',
-											})
+										? new Date(market.overview.EndDate).toLocaleString(undefined, {
+											day: '2-digit',
+											month: 'short',
+											year: 'numeric',
+											hour: '2-digit',
+											minute: '2-digit',
+										})
 										: '--'}
 								</span>
 							</div>
 						</div>
 
 						<div className="space-y-6">
-							<div>
-								<h3 className="text-foreground mb-2 text-sm font-bold">Event Overview</h3>
-								<p className="text-sm font-semibold text-black">{market.overview.eos}</p>
-							</div>
-							<div>
-								<h3 className="text-foreground mb-2 text-sm font-bold">Rules</h3>
-								<p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
-									{market.overview?.Rules}
-								</p>
-							</div>
+							{market.overview?.eos && (
+								<div>
+									<h3 className="text-foreground mb-2 text-sm font-bold">
+										Event Overview & Statistics
+									</h3>
+									<p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap">
+										{market.overview.eos}
+									</p>
+								</div>
+							)}
+							{market.overview?.Rules && (
+								<div>
+									<h3 className="text-foreground mb-2 text-sm font-bold">Rules</h3>
+									<p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
+										{market.overview.Rules}
+									</p>
+								</div>
+							)}
 						</div>
 					</div>
 
-					{/* Comments Section */}
-					<div className="mb-12 bg-card p-6 border border-border rounded-xl shadow-sm">
-						<h2 className="text-lg font-bold mb-6 text-foreground">Comments</h2>
-						<div className="flex gap-4 items-start mb-8">
-							<img
-								src={pfpIcon}
-								alt="You"
-								className="w-10 h-10 rounded-full border border-border shrink-0"
-							/>
-							<div className="flex-1">
-								<textarea
-									placeholder="Add a comment..."
-									className="w-full bg-background border border-border rounded-xl p-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring resize-none text-foreground placeholder:text-muted-foreground"
-									rows={2}
-								/>
-								<div className="flex justify-end mt-3">
-									<button className="bg-foreground text-background font-bold text-sm px-6 py-2 rounded-lg hover:opacity-90 transition">
-										Post
-									</button>
-								</div>
-							</div>
-						</div>
-
-						<div className="space-y-6">
-							{/* Mock Comment 1 */}
-							<div className="flex gap-4">
-								<div className="w-10 h-10 rounded-full bg-linear-to-tr from-purple-500 to-orange-400 shrink-0"></div>
-								<div>
-									<div className="flex items-center gap-2.5 mb-1.5">
-										<span className="font-bold text-sm text-foreground">fmfwd</span>
-										<span className="text-[10px] font-bold text-green-600 bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20">
-											17.5K Yes
-										</span>
-										<span className="text-xs font-semibold text-muted-foreground">11h ago</span>
-									</div>
-									<p className="text-sm text-foreground">turn gay since I do copytrading!</p>
-								</div>
-							</div>
-
-							{/* Mock Comment 2 */}
-							<div className="flex gap-4">
-								<div className="w-10 h-10 rounded-full bg-linear-to-tr from-yellow-600 to-red-400 shrink-0"></div>
-								<div>
-									<div className="flex items-center gap-2.5 mb-1.5">
-										<span className="font-bold text-sm text-foreground">socialwolf3115</span>
-										<span className="text-xs font-semibold text-muted-foreground">17h ago</span>
-									</div>
-									<p className="text-sm text-foreground">copy trading hits while im sleeping</p>
-								</div>
-							</div>
-						</div>
-					</div>
+					<Trollbox symbol={market.symbol} />
 				</div>
 
 				<div className="w-[30%] max-[1160px]:w-[35%] max-[970px]:hidden lg:sticky lg:top-32 self-start max-h-[calc(100vh-130px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] scrollbar-none pb-10">
@@ -735,13 +709,12 @@ export default function EventDetails() {
 									</p>
 									<div className="inline-flex items-center justify-center gap-3">
 										<span
-											className={`text-4xl font-black px-6 py-2 rounded-xl shadow-xs uppercase tracking-tight ${
-												(market.result || '').toUpperCase() === 'YES'
-													? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-													: (market.result || '').toUpperCase() === 'NO'
-														? 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
-														: 'bg-muted text-foreground'
-											}`}
+											className={`text-4xl font-black px-6 py-2 rounded-xl shadow-xs uppercase tracking-tight ${(market.result || '').toUpperCase() === 'YES'
+												? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+												: (market.result || '').toUpperCase() === 'NO'
+													? 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
+													: 'bg-muted text-foreground'
+												}`}
 										>
 											{market.result || 'Settled'}
 										</span>
@@ -826,9 +799,8 @@ export default function EventDetails() {
 				<div className="hidden max-[970px]:flex items-center justify-between px-6 py-4 bg-card border-t border-border bottom-0 fixed w-full z-50">
 					<div className="flex items-center gap-2">
 						<span
-							className={`w-2.5 h-2.5 rounded-full ${
-								(market.result || '').toUpperCase() === 'YES' ? 'bg-emerald-500' : 'bg-red-500'
-							}`}
+							className={`w-2.5 h-2.5 rounded-full ${(market.result || '').toUpperCase() === 'YES' ? 'bg-emerald-500' : 'bg-red-500'
+								}`}
 						/>
 						<span className="text-xs font-bold uppercase text-muted-foreground">
 							Market Resolved
@@ -837,11 +809,10 @@ export default function EventDetails() {
 					<div className="flex items-center gap-2">
 						<span className="text-xs font-medium text-muted-foreground">Winner:</span>
 						<span
-							className={`text-xs font-black uppercase px-3 py-1 rounded-md ${
-								(market.result || '').toUpperCase() === 'YES'
-									? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-									: 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
-							}`}
+							className={`text-xs font-black uppercase px-3 py-1 rounded-md ${(market.result || '').toUpperCase() === 'YES'
+								? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+								: 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
+								}`}
 						>
 							{market.result || 'Settled'}
 						</span>
@@ -931,6 +902,11 @@ export default function EventDetails() {
 				onClose={() => setIsShareModalOpen(false)}
 				title={market.title}
 				url={window.location.href}
+				yesPrice={market.yesPrice}
+				noPrice={market.noPrice}
+				category={market.category}
+				volume={market.volume}
+				traders={market.traders}
 			/>
 
 			{market && (
