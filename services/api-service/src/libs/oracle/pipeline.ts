@@ -65,7 +65,31 @@ export async function runResolutionPipeline(market: Market): Promise<PipelineRes
 			}
 		}
 
-		// 3. Fallback to Tavily Search if no evidence yet
+		// 3. Deterministic check for Crypto markets (never call AI/Tavily for crypto)
+		const text = `${market.title} ${market.symbol}`.toUpperCase();
+		const isCrypto =
+			text.includes('BITCOIN') ||
+			text.includes('BTC') ||
+			text.includes('ETHEREUM') ||
+			text.includes('ETH') ||
+			text.includes('SOLANA') ||
+			text.includes('SOL') ||
+			text.includes('DOGE') ||
+			text.includes('RIPPLE') ||
+			text.includes('XRP') ||
+			config?.resolver === 'crypto_price';
+
+		if (isCrypto) {
+			// Crypto markets are resolved by the dedicated crypto-resolver cron.
+			// Never enter the AI/Tavily pipeline for crypto.
+			return {
+				resolved: false,
+				source: 'deterministic',
+				error: 'Crypto markets are resolved by the crypto-resolver cron, not the oracle pipeline.',
+			};
+		}
+
+		// 4. Fallback to Tavily Search if no evidence yet (only for non-crypto news events)
 		if (!evidenceStr || evidenceStr.trim().length === 0) {
 			logger.info({ marketId: market.id }, 'Fetching evidence via Tavily search');
 			const query = `Has the event occurred: ${market.title} ${market.rules || ''}`;

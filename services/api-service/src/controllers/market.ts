@@ -10,6 +10,7 @@ import { s3Client } from '@/libs/aws/client';
 import { prisma } from '@probstreet/database';
 import { pushToQueue } from '@/libs/redis/queue';
 import { client } from '@/libs/redis/connection';
+import { fetchLiveMarketData } from '@/libs/live';
 import { tavilyClient } from '@/libs/tavily/client';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { createMarketSchema } from '@/validations/market';
@@ -127,8 +128,49 @@ export const createMarket = async (c: Context) => {
 				resolutionMode: data.resolutionMode,
 				oracleConfig: data.oracleConfig ? (data.oracleConfig as any) : undefined,
 				oracleStatus: data.resolutionMode === 'AUTOMATIC' ? 'PENDING' : null,
+				cryptoMarketType: data.cryptoMarketType,
 			},
 		});
+
+		const coinPair = resolveBinanceSymbol(newMarket.title, newMarket.symbol);
+		const isCryptoMarket =
+			!!coinPair ||
+			category.categoryName.toLowerCase().includes('crypto') ||
+			(data.oracleConfig as any)?.resolver === 'crypto_price';
+
+		if (isCryptoMarket && coinPair) {
+			try {
+				const controller = new AbortController();
+				const timeoutId = setTimeout(() => controller.abort(), 4000);
+				const binanceRes = await fetch(
+					`https://api.binance.com/api/v3/ticker/price?symbol=${coinPair}`,
+					{ signal: controller.signal },
+				);
+				clearTimeout(timeoutId);
+
+				if (binanceRes.ok) {
+					const binanceData = (await binanceRes.json()) as any;
+					const startPrice = parseFloat(binanceData.price);
+
+					let marketType = data.cryptoMarketType;
+
+					await prisma.market.update({
+						where: { id: newMarket.id },
+						data: {
+							cryptoMarketType: marketType,
+							startPrice,
+							trackedHigh: startPrice,
+							trackedLow: startPrice,
+						},
+					});
+				}
+			} catch (err: any) {
+				logger.warn(
+					{ err: err.message, symbol: coinPair },
+					'Failed to fetch start price from Binance',
+				);
+			}
+		}
 
 		const yesPrice = parseFloat(newMarket.yesPrice.toString());
 		const noPrice = parseFloat(newMarket.noPrice.toString());
@@ -567,6 +609,8 @@ export const getMarketDetails = async (c: Context) => {
 					status: true,
 					result: true,
 					numberOfTraders: true,
+					startPrice: true,
+					cryptoMarketType: true,
 					category: {
 						select: { categoryName: true },
 					},
@@ -610,6 +654,8 @@ export const getMarketDetails = async (c: Context) => {
 									category: marketDetails?.category?.categoryName || 'Unknown',
 									volume: archivedData.Volume || 0,
 									traders: archivedData.NumberOfTraders || marketDetails?.numberOfTraders || 0,
+									startPrice: marketDetails?.startPrice || null,
+									cryptoMarketType: marketDetails?.cryptoMarketType || null,
 									orderbook: archivedData.OrderBook || { yes: [], no: [] },
 									trades: archivedData.Trades || [],
 								},
@@ -651,6 +697,8 @@ export const getMarketDetails = async (c: Context) => {
 						category: marketDetails?.category?.categoryName || 'Unknown',
 						volume: volume,
 						traders: tradersCount,
+						startPrice: marketDetails.startPrice,
+						cryptoMarketType: marketDetails.cryptoMarketType,
 					},
 					source: 'db',
 				},
@@ -692,6 +740,8 @@ export const getMarketDetails = async (c: Context) => {
 				select: {
 					status: true,
 					result: true,
+					startPrice: true,
+					cryptoMarketType: true,
 					category: { select: { categoryName: true } },
 				},
 			});
@@ -708,6 +758,8 @@ export const getMarketDetails = async (c: Context) => {
 				response.data.volume = volume;
 				response.data.traders = tradersCount;
 				response.data.category = categoryName;
+				response.data.startPrice = m?.startPrice || null;
+				response.data.cryptoMarketType = m?.cryptoMarketType || null;
 			}
 		}
 
@@ -883,8 +935,12 @@ export const getMarketKlines = async (c: Context) => {
 			success: true,
 			data: klines,
 		});
-	} catch (error) {
-		logger.error({ error }, 'Error in getMarketTrades');
+	} catch (error: any) {
+		if (error.code === 'P2010' || (error.message && error.message.includes('does not exist'))) {
+			// Table doesn't exist yet, just return empty klines gracefully
+			return c.json({ success: true, data: [] });
+		}
+		logger.error({ error }, 'Error in getMarketKlines');
 		return c.json({ success: false, message: 'Failed to fetch klines' }, 500);
 	}
 };
@@ -1182,6 +1238,168 @@ export const getMarketNews = async (c: Context) => {
 			},
 			500,
 		);
+	}
+};
+
+export const getMarketLiveStatus = async (c: Context) => {
+	const symbol = c.req.param('symbol');
+
+	if (!symbol) {
+		return c.json({ success: false, message: 'Symbol is required' }, 400);
+	}
+
+	try {
+		const cacheKey = `market:live:${symbol}`;
+		const cached = await client.get(cacheKey);
+		if (cached) {
+			return c.json({
+				success: true,
+				data: JSON.parse(cached),
+				cached: true,
+			});
+		}
+
+		const market = await prisma.market.findUnique({
+			where: { symbol },
+			include: { category: true },
+		});
+
+		if (!market) {
+			return c.json({ success: false, message: 'Market not found' }, 404);
+		}
+
+		const liveData = await fetchLiveMarketData(market);
+
+		// Instant auto-resolution from frontend has been removed for security and reliability.
+		// All market resolution is now handled exclusively by the secure backend cron job.
+		// Cache for 5 seconds to strictly protect upstream API limits
+		await client.set(cacheKey, JSON.stringify(liveData), 'EX', 5);
+
+		return c.json({
+			success: true,
+			data: liveData,
+		});
+	} catch (error: any) {
+		logger.error({ error: error.message, symbol }, 'Error fetching market live status');
+		return c.json({ success: false, message: 'Internal server error' }, 500);
+	}
+};
+
+// Function removed: autoResolveMarket is replaced by backend cron to prevent frontend-triggered wicks.
+
+// Binance klines proxy — no Redis cache, direct passthrough to Binance public API.
+// Binance /api/v3/klines rate limit: 2400 weight/min (each request = 1 weight for limit≤100).
+// At 5s poll interval with 100 users we'd use ~1200/min — well within limits.
+// No caching here since klines are fetched infrequently (on page load + timeframe change).
+const COIN_SYMBOL_MAP: Record<string, string> = {
+	BTC: 'BTCUSDT',
+	BITCOIN: 'BTCUSDT',
+	ETH: 'ETHUSDT',
+	ETHEREUM: 'ETHUSDT',
+	SOL: 'SOLUSDT',
+	SOLANA: 'SOLUSDT',
+	XRP: 'XRPUSDT',
+	RIPPLE: 'XRPUSDT',
+	DOGE: 'DOGEUSDT',
+	DOGECOIN: 'DOGEUSDT',
+	BNB: 'BNBUSDT',
+	ADA: 'ADAUSDT',
+	CARDANO: 'ADAUSDT',
+	AVAX: 'AVAXUSDT',
+	AVALANCHE: 'AVAXUSDT',
+	LINK: 'LINKUSDT',
+	CHAINLINK: 'LINKUSDT',
+	DOT: 'DOTUSDT',
+	POLKADOT: 'DOTUSDT',
+};
+
+function resolveBinanceSymbol(marketTitle: string, marketSymbol: string): string | null {
+	const text = `${marketTitle} ${marketSymbol}`.toUpperCase();
+	for (const [keyword, pair] of Object.entries(COIN_SYMBOL_MAP)) {
+		if (text.includes(keyword)) return pair;
+	}
+	return null;
+}
+
+export const getMarketProxyKlines = async (c: Context) => {
+	const symbol = c.req.param('symbol');
+	const interval = c.req.query('interval') || '1m';
+	const limit = Math.min(Number(c.req.query('limit') || 60), 500);
+
+	const VALID_INTERVALS = [
+		'1m',
+		'3m',
+		'5m',
+		'15m',
+		'30m',
+		'1h',
+		'2h',
+		'4h',
+		'6h',
+		'12h',
+		'1d',
+		'1w',
+	];
+	if (!VALID_INTERVALS.includes(interval)) {
+		return c.json(
+			{ success: false, message: `Invalid interval. Use one of: ${VALID_INTERVALS.join(', ')}` },
+			400,
+		);
+	}
+
+	try {
+		const market = await prisma.market.findUnique({
+			where: { symbol },
+			select: { title: true, symbol: true, status: true },
+		});
+
+		if (!market) {
+			return c.json({ success: false, message: 'Market not found' }, 404);
+		}
+
+		const binancePair = resolveBinanceSymbol(market.title, market.symbol);
+		if (!binancePair) {
+			return c.json({ success: false, message: 'No crypto asset detected for this market' }, 422);
+		}
+
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+		const res = await fetch(
+			`https://api.binance.com/api/v3/klines?symbol=${binancePair}&interval=${interval}&limit=${limit}`,
+			{ signal: controller.signal },
+		);
+		clearTimeout(timeoutId);
+
+		if (!res.ok) {
+			logger.warn({ binancePair, interval, status: res.status }, 'Binance klines fetch failed');
+			return c.json({ success: false, message: 'Failed to fetch klines from upstream' }, 502);
+		}
+
+		const raw = (await res.json()) as any[];
+
+		// Binance kline format: [openTime, open, high, low, close, volume, closeTime, ...]
+		const klines = raw.map((k) => ({
+			time: k[0], // open timestamp ms
+			open: parseFloat(k[1]),
+			high: parseFloat(k[2]),
+			low: parseFloat(k[3]),
+			close: parseFloat(k[4]),
+			volume: parseFloat(k[5]),
+		}));
+
+		return c.json({
+			success: true,
+			data: klines,
+			coin: binancePair.replace('USDT', ''),
+			binancePair,
+		});
+	} catch (error: any) {
+		if (error.name === 'AbortError') {
+			return c.json({ success: false, message: 'Upstream timeout fetching klines' }, 504);
+		}
+		logger.error({ error: error.message, symbol }, 'Error in getMarketProxyKlines');
+		return c.json({ success: false, message: 'Internal server error' }, 500);
 	}
 };
 

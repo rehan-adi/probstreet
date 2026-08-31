@@ -13,6 +13,7 @@ export const createMarketSchema = z
 		resolutionMode: z.enum(['MANUAL', 'AUTOMATIC']).default('MANUAL'),
 		oracleUrl: z.string().url().optional().or(z.literal('')),
 		oracleConfig: z.record(z.string(), z.unknown()).optional(),
+		cryptoMarketType: z.enum(['TOUCH', 'DIRECTION']).optional(),
 		sourceOfTruth: z
 			.string()
 			.max(300, { message: 'Source must be under 300 characters' })
