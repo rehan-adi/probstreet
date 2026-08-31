@@ -60,6 +60,7 @@ const CreateEvent = () => {
 	const [cryptoAsset, setCryptoAsset] = useState('bitcoin');
 	const [cryptoCondition, setCryptoCondition] = useState<'gt' | 'lt'>('gt');
 	const [cryptoTargetPrice, setCryptoTargetPrice] = useState('');
+	const [cryptoMarketType, setCryptoMarketType] = useState<'TOUCH' | 'DIRECTION'>('TOUCH');
 
 	// Custom API state
 	const [customApiUrl, setCustomApiUrl] = useState('');
@@ -139,16 +140,18 @@ const CreateEvent = () => {
 			let resolutionMode: 'MANUAL' | 'AUTOMATIC' = 'MANUAL';
 			let sourceOfTruth = '';
 			let oracleConfig: Record<string, any> | undefined = undefined;
+			let selectedCryptoMarketType: 'TOUCH' | 'DIRECTION' | undefined = undefined;
 
 			if (resolutionType === 'CRYPTO_PRICE') {
 				resolutionMode = 'AUTOMATIC';
-				sourceOfTruth = `https://api.coingecko.com/api/v3/simple/price?ids=${cryptoAsset}&vs_currencies=usd`;
+				sourceOfTruth = `https://api.binance.com/api/v3/ticker/price?symbol=${cryptoAsset}USDT`;
 				oracleConfig = {
 					resolver: 'crypto_price',
 					resultPath: `${cryptoAsset}.usd`,
 					condition: cryptoCondition,
 					targetValue: Number(cryptoTargetPrice),
 				};
+				selectedCryptoMarketType = cryptoMarketType;
 			} else if (resolutionType === 'AI_SEARCH') {
 				resolutionMode = 'AUTOMATIC';
 				sourceOfTruth = '';
@@ -179,6 +182,7 @@ const CreateEvent = () => {
 					sourceOfTruth,
 					resolutionMode,
 					oracleConfig,
+					cryptoMarketType: selectedCryptoMarketType,
 					categoryId: form.categoryId,
 					thumbnail: uploadedKey,
 				},
@@ -438,7 +442,7 @@ const CreateEvent = () => {
 											<span>Crypto Price Parameters</span>
 										</div>
 
-										<div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+										<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
 											<div>
 												<label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">
 													Asset
@@ -453,6 +457,24 @@ const CreateEvent = () => {
 																{c.name}
 															</SelectItem>
 														))}
+													</SelectContent>
+												</Select>
+											</div>
+
+											<div>
+												<label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">
+													Market Type
+												</label>
+												<Select
+													value={cryptoMarketType}
+													onValueChange={(v: 'TOUCH' | 'DIRECTION') => setCryptoMarketType(v)}
+												>
+													<SelectTrigger className="w-full bg-white dark:bg-[#121214] border-gray-200 dark:border-white/10 rounded-lg">
+														<SelectValue />
+													</SelectTrigger>
+													<SelectContent className="bg-white dark:bg-[#1C1C1E]">
+														<SelectItem value="TOUCH">Touch (Hit Target)</SelectItem>
+														<SelectItem value="DIRECTION">Direction (At Expiry)</SelectItem>
 													</SelectContent>
 												</Select>
 											</div>

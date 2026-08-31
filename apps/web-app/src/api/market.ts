@@ -26,3 +26,15 @@ export const splitShares = (symbol: string, quantity: number) => {
 export const mergeShares = (symbol: string, quantity: number) => {
 	return api.post(`/market/${symbol}/merge`, { quantity });
 };
+
+export const getMarketLiveStatus = (symbol: string) => {
+	return api.get(`/market/${symbol}/live`);
+};
+
+export const getMarketProxyKlines = (
+	symbol: string,
+	interval: string = '1m',
+	limit: number = 60,
+) => {
+	return api.get(`/market/${symbol}/proxy-klines`, { params: { interval, limit } });
+};

@@ -5,17 +5,18 @@ import { useParams } from 'react-router-dom';
 import { useModalStore } from '@/store/modal';
 
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Trollbox from '@/components/Trollbox';
 import PlaceOrder from '@/components/PlaceOrder';
 import MarketNews from '@/components/MarketNews';
 import TimelineSection from '@/components/Timeline';
 import UserHoldings from '@/components/UserHoldings';
 import ShareModal from '@/components/modals/ShareModal';
+import PriceAlertModal from '@/components/modals/PriceAlertModal';
+import LiveMarketTracker from '@/components/LiveMarketTracker';
 import downloadIcon from '@/assets/images/download.avif';
 import defaultThumbnail from '@/assets/images/logo.avif';
 import OrderbookLadder from '@/components/OrderbookLadder';
-import PriceAlertModal from '@/components/modals/PriceAlertModal';
 import { Bookmark, Share2, RefreshCcw, BellRing } from 'lucide-react';
 interface TradeExecutedEvent {
 	marketId: string;
@@ -53,11 +54,13 @@ interface Market {
 	sourceOfTruth?: string;
 	status?: string;
 	result?: string;
+	startPrice?: number;
+	cryptoMarketType?: 'TOUCH' | 'DIRECTION';
 	overview: {
 		SourceOfTruth?: string;
 		StartDate?: string;
 		EndDate?: string;
-		eos?: string;
+		EOS?: string;
 		Rules?: string;
 	};
 }
@@ -97,6 +100,7 @@ export default function EventDetails() {
 	const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 	const [isPriceAlertModalOpen, setIsPriceAlertModalOpen] = useState(false);
 	const [resetScrollToken, setResetScrollToken] = useState(0);
+	const [isCryptoMarket, setIsCryptoMarket] = useState(false);
 
 	useEffect(() => {
 		if (!symbol) return;
@@ -259,7 +263,7 @@ export default function EventDetails() {
 		};
 	}, [symbol]);
 
-	useEffect(() => {
+	const fetchMarketDetails = useCallback(() => {
 		if (!symbol) return;
 		api
 			.get(`/market/${symbol}`)
@@ -272,6 +276,10 @@ export default function EventDetails() {
 			.catch((err) => console.error('Error fetching market details:', err))
 			.finally(() => setLoading(false));
 	}, [symbol, isAuthenticated]);
+
+	useEffect(() => {
+		fetchMarketDetails();
+	}, [fetchMarketDetails]);
 
 	const checkBookmark = async (marketId: string) => {
 		try {
@@ -344,51 +352,73 @@ export default function EventDetails() {
 		<div className="w-full bg-background min-h-screen flex items-start justify-center text-foreground transition-colors">
 			<div className="flex gap-8 max-w-7xl mx-auto w-full px-6 pt-4 md:pt-8 flex-col lg:flex-row relative">
 				<div className="w-full lg:w-[65%] pb-20">
-					<div className="flex justify-between items-start mb-8 gap-4">
-						<div className="flex items-start gap-4">
-							<div className="w-16 h-16 md:w-18 md:h-18 shrink-0 rounded-xl overflow-hidden border border-border shadow-sm">
-								<img
-									src={
-										!market.thumbnail ||
+					{!isCryptoMarket && (
+						<div className="flex justify-between items-start mb-8 gap-4">
+							<div className="flex items-start gap-4">
+								<div className="w-16 h-16 md:w-18 md:h-18 shrink-0 rounded-xl overflow-hidden border border-border shadow-sm">
+									<img
+										src={
+											!market.thumbnail ||
 											market.thumbnail.includes('34d989f64bf44f84bf3dfd398f6d2b67.png')
-											? defaultThumbnail
-											: market.thumbnail
-									}
-									alt={market.title}
-									className="w-full h-full object-cover bg-white dark:bg-[#262626]"
-								/>
-							</div>
-							<div>
-								<div className="flex items-center gap-2 mb-2">
-									<span className="text-xs font-semibold uppercase tracking-wide">
-										{market.category || 'Event'}
-									</span>
+												? defaultThumbnail
+												: market.thumbnail
+										}
+										alt={market.title}
+										className="w-full h-full object-cover bg-white dark:bg-[#262626]"
+									/>
 								</div>
-								<h1 className="md:text-xl text-lg font-bold leading-tight">{market.title}</h1>
+								<div>
+									<div className="flex items-center gap-2 mb-2">
+										<span className="text-xs font-semibold uppercase tracking-wide">
+											{market.category || 'Event'}
+										</span>
+									</div>
+									<h1 className="md:text-xl text-lg font-bold leading-tight">{market.title}</h1>
+								</div>
+							</div>
+
+							<div className="flex gap-2 shrink-0">
+								<button
+									onClick={toggleBookmark}
+									className="p-2 border cursor-pointer border-border rounded-lg bg-card text-foreground hover:bg-muted transition shadow-sm"
+								>
+									<Bookmark size={18} fill={isBookmarked ? 'currentColor' : 'none'} />
+								</button>
+								<button
+									onClick={() => setIsShareModalOpen(true)}
+									className="p-2 border cursor-pointer border-border rounded-lg bg-card text-foreground hover:bg-muted transition shadow-sm"
+								>
+									<Share2 size={18} />
+								</button>
+								<button
+									onClick={() => setIsPriceAlertModalOpen(true)}
+									className="p-2 border cursor-pointer border-border rounded-lg bg-card text-foreground hover:bg-muted transition shadow-sm hover:text-blue-600"
+								>
+									<BellRing size={18} />
+								</button>
 							</div>
 						</div>
+					)}
 
-						<div className="flex gap-2 shrink-0">
-							<button
-								onClick={toggleBookmark}
-								className="p-2 border cursor-pointer border-border rounded-lg bg-card text-foreground hover:bg-muted transition shadow-sm"
-							>
-								<Bookmark size={18} fill={isBookmarked ? 'currentColor' : 'none'} />
-							</button>
-							<button
-								onClick={() => setIsShareModalOpen(true)}
-								className="p-2 border cursor-pointer border-border rounded-lg bg-card text-foreground hover:bg-muted transition shadow-sm"
-							>
-								<Share2 size={18} />
-							</button>
-							<button
-								onClick={() => setIsPriceAlertModalOpen(true)}
-								className="p-2 border cursor-pointer border-border rounded-lg bg-card text-foreground hover:bg-muted transition shadow-sm hover:text-blue-600"
-							>
-								<BellRing size={18} />
-							</button>
-						</div>
-					</div>
+					<LiveMarketTracker
+						symbol={market.symbol}
+						yesPrice={market.yesPrice}
+						noPrice={market.noPrice}
+						category={market.category}
+						endTime={market.endTime || market.overview?.EndDate}
+						title={market.title}
+						volume={market.volume}
+						thumbnail={market.thumbnail}
+						marketStatus={market.status}
+						startPrice={market.startPrice}
+						cryptoMarketType={market.cryptoMarketType}
+						isBookmarked={isBookmarked}
+						onToggleBookmark={toggleBookmark}
+						onShare={() => setIsShareModalOpen(true)}
+						onPriceAlert={() => setIsPriceAlertModalOpen(true)}
+						onCryptoDetected={() => setIsCryptoMarket(true)}
+						onMarketResolved={fetchMarketDetails}
+					/>
 
 					<div className="mb-6">
 						<TimelineSection
@@ -413,10 +443,11 @@ export default function EventDetails() {
 								<button
 									key={tab}
 									onClick={() => setActiveBoxTab(tab.toLowerCase() as any)}
-									className={`flex-1 py-3.5 text-sm font-bold relative transition cursor-pointer ${activeBoxTab === tab.toLowerCase()
-										? 'text-foreground'
-										: 'text-muted-foreground hover:text-foreground'
-										}`}
+									className={`flex-1 py-3.5 text-sm font-bold relative transition cursor-pointer ${
+										activeBoxTab === tab.toLowerCase()
+											? 'text-foreground'
+											: 'text-muted-foreground hover:text-foreground'
+									}`}
 								>
 									{tab}
 									{activeBoxTab === tab.toLowerCase() && (
@@ -438,10 +469,11 @@ export default function EventDetails() {
 														setInnerTab(tab as any);
 														setTimeout(() => setResetScrollToken((prev) => prev + 1), 60);
 													}}
-													className={`py-2 text-sm cursor-pointer font-bold relative transition-colors ${innerTab === tab
-														? 'text-foreground'
-														: 'text-muted-foreground hover:text-foreground'
-														}`}
+													className={`py-2 text-sm cursor-pointer font-bold relative transition-colors ${
+														innerTab === tab
+															? 'text-foreground'
+															: 'text-muted-foreground hover:text-foreground'
+													}`}
 												>
 													Trade {tab.toUpperCase()}
 													{innerTab === tab && (
@@ -551,7 +583,7 @@ export default function EventDetails() {
 																	{(() => {
 																		const diff = Math.floor(
 																			(new Date().getTime() - new Date(trade.timestamp).getTime()) /
-																			1000,
+																				1000,
 																		);
 																		if (diff < 60) return `${diff}s ago`;
 																		if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
@@ -588,8 +620,34 @@ export default function EventDetails() {
 								<span className="text-muted-foreground font-semibold text-xs uppercase tracking-wider">
 									Source of Truth
 								</span>
-								{market.overview?.SourceOfTruth &&
-									market.overview.SourceOfTruth.trim().startsWith('http') ? (
+								{market.cryptoMarketType ? (
+									<a
+										href="https://www.binance.com/"
+										target="_blank"
+										rel="noopener noreferrer"
+										className="text-blue-500 font-medium hover:underline flex items-center gap-1.5 line-clamp-2"
+										title="Binance Spot API"
+									>
+										<span className="truncate">Binance Spot API</span>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											width="13"
+											height="13"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											strokeWidth="2"
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											className="shrink-0"
+										>
+											<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+											<polyline points="15 3 21 3 21 9" />
+											<line x1="10" y1="14" x2="21" y2="3" />
+										</svg>
+									</a>
+								) : market.overview?.SourceOfTruth &&
+								  market.overview.SourceOfTruth.trim().startsWith('http') ? (
 									<a
 										href={market.overview.SourceOfTruth}
 										target="_blank"
@@ -635,13 +693,14 @@ export default function EventDetails() {
 								</span>
 								<span className="text-foreground font-medium">
 									{market.overview?.StartDate
-										? new Date(market.overview.StartDate).toLocaleString(undefined, {
-											day: '2-digit',
-											month: 'short',
-											year: 'numeric',
-											hour: '2-digit',
-											minute: '2-digit',
-										})
+										? new Date(market.overview.StartDate).toLocaleString('en-IN', {
+												timeZone: 'Asia/Kolkata',
+												day: '2-digit',
+												month: 'short',
+												year: 'numeric',
+												hour: '2-digit',
+												minute: '2-digit',
+											})
 										: '--'}
 								</span>
 							</div>
@@ -651,33 +710,34 @@ export default function EventDetails() {
 								</span>
 								<span className="text-foreground font-medium">
 									{market.overview?.EndDate
-										? new Date(market.overview.EndDate).toLocaleString(undefined, {
-											day: '2-digit',
-											month: 'short',
-											year: 'numeric',
-											hour: '2-digit',
-											minute: '2-digit',
-										})
+										? new Date(market.overview.EndDate).toLocaleString('en-IN', {
+												timeZone: 'Asia/Kolkata',
+												day: '2-digit',
+												month: 'short',
+												year: 'numeric',
+												hour: '2-digit',
+												minute: '2-digit',
+											})
 										: '--'}
 								</span>
 							</div>
 						</div>
 
 						<div className="space-y-6">
-							{market.overview?.eos && (
+							{market.overview?.EOS && (
 								<div>
 									<h3 className="text-foreground mb-2 text-sm font-bold">
 										Event Overview & Statistics
 									</h3>
 									<p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap">
-										{market.overview.eos}
+										{market.overview.EOS}
 									</p>
 								</div>
 							)}
 							{market.overview?.Rules && (
 								<div>
 									<h3 className="text-foreground mb-2 text-sm font-bold">Rules</h3>
-									<p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
+									<p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap">
 										{market.overview.Rules}
 									</p>
 								</div>
@@ -694,32 +754,33 @@ export default function EventDetails() {
 							<div className="bg-card border border-border rounded-2xl p-6 shadow-sm overflow-hidden relative">
 								<div className="flex items-center justify-between pb-4 border-b border-border">
 									<div className="flex items-center gap-2">
-										<span className="text-xs font-black uppercase tracking-wider text-muted-foreground">
+										<span className="text-xs font-semibold uppercase tracking-wide text-black dark:text-white">
 											Market Concluded
 										</span>
 									</div>
-									<span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+									<span className="text-xs font-semibold px-3 py-1 rounded-full bg-muted text-black dark:text-white">
 										Resolved
 									</span>
 								</div>
 
 								<div className="py-6 text-center">
-									<p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">
+									<p className="text-xs font-semibold uppercase tracking-widest text-black dark:text-white mb-4">
 										Winning Outcome
 									</p>
 									<div className="inline-flex items-center justify-center gap-3">
 										<span
-											className={`text-4xl font-black px-6 py-2 rounded-xl shadow-xs uppercase tracking-tight ${(market.result || '').toUpperCase() === 'YES'
-												? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-												: (market.result || '').toUpperCase() === 'NO'
-													? 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
-													: 'bg-muted text-foreground'
-												}`}
+											className={`text-4xl font-bold px-6 py-2 rounded-xl shadow-xs uppercase tracking-tight ${
+												(market.result || '').toUpperCase() === 'YES'
+													? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+													: (market.result || '').toUpperCase() === 'NO'
+														? 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
+														: 'bg-muted text-foreground'
+											}`}
 										>
 											{market.result || 'Settled'}
 										</span>
 									</div>
-									<p className="text-xs text-muted-foreground mt-4 leading-relaxed max-w-xs mx-auto">
+									<p className="text-xs text-black dark:text-white mt-6 leading-relaxed max-w-xs mx-auto">
 										Trading has concluded for this market. All winning shares have been settled at
 										₹10.00 each.
 									</p>
@@ -799,8 +860,9 @@ export default function EventDetails() {
 				<div className="hidden max-[970px]:flex items-center justify-between px-6 py-4 bg-card border-t border-border bottom-0 fixed w-full z-50">
 					<div className="flex items-center gap-2">
 						<span
-							className={`w-2.5 h-2.5 rounded-full ${(market.result || '').toUpperCase() === 'YES' ? 'bg-emerald-500' : 'bg-red-500'
-								}`}
+							className={`w-2.5 h-2.5 rounded-full ${
+								(market.result || '').toUpperCase() === 'YES' ? 'bg-emerald-500' : 'bg-red-500'
+							}`}
 						/>
 						<span className="text-xs font-bold uppercase text-muted-foreground">
 							Market Resolved
@@ -809,10 +871,11 @@ export default function EventDetails() {
 					<div className="flex items-center gap-2">
 						<span className="text-xs font-medium text-muted-foreground">Winner:</span>
 						<span
-							className={`text-xs font-black uppercase px-3 py-1 rounded-md ${(market.result || '').toUpperCase() === 'YES'
-								? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-								: 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
-								}`}
+							className={`text-xs font-black uppercase px-3 py-1 rounded-md ${
+								(market.result || '').toUpperCase() === 'YES'
+									? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+									: 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
+							}`}
 						>
 							{market.result || 'Settled'}
 						</span>

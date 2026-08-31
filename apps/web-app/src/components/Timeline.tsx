@@ -95,6 +95,15 @@ export default function TimelineChart({
 		const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
 
 		const chart = createChart(chartContainerRef.current, {
+			localization: {
+				timeFormatter: (timestamp: number) => {
+					return new Date(timestamp * 1000).toLocaleString('en-IN', {
+						timeZone: 'Asia/Kolkata',
+						hour: '2-digit',
+						minute: '2-digit',
+					});
+				},
+			},
 			layout: {
 				background: { type: ColorType.Solid, color: 'transparent' },
 				textColor: textColor,
@@ -268,7 +277,7 @@ export default function TimelineChart({
 	};
 
 	return (
-		<Card className="bg-background rounded-2xl border shadow-none relative overflow-hidden group">
+		<Card className="bg-white dark:bg-[#090C1A] rounded-2xl border shadow-none relative overflow-hidden group">
 			<div className="absolute top-0 left-0 w-full h-px bg-linear-to-r from-transparent via-border to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
 			<div className="flex items-center justify-between py-1 px-4">

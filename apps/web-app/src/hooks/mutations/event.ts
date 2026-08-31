@@ -11,6 +11,7 @@ type CreateEventPayload = {
 	resolutionMode?: 'MANUAL' | 'AUTOMATIC';
 	oracleConfig?: Record<string, any>;
 	categoryId: string;
+	cryptoMarketType?: 'TOUCH' | 'DIRECTION';
 	thumbnail: string | null;
 };
 
