@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import type { IChartApi, ISeriesApi, Time } from 'lightweight-charts';
 import { createChart, ColorType, AreaSeries } from 'lightweight-charts';
-import { ArrowRightLeft, Clock, Users, TrendingUp, Settings2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ArrowRightLeft, Clock, Users, TrendingUp, Settings2 } from 'lucide-react';
 
 interface TimelineProps {
 	symbol: string;
@@ -52,8 +52,7 @@ export default function TimelineChart({
 
 				const data = rawData
 					.map((d: any) => ({
-						time: (Math.floor(new Date(d.time).getTime() / 1000) -
-							new Date().getTimezoneOffset() * 60) as Time,
+						time: Math.floor(new Date(d.time).getTime() / 1000) as Time,
 						value: view === 'yes' ? Number(d.close) : 10 - Number(d.close),
 					}))
 					.sort((a: any, b: any) => (a.time as number) - (b.time as number));
@@ -119,6 +118,14 @@ export default function TimelineChart({
 			timeScale: {
 				borderVisible: false,
 				timeVisible: true,
+				secondsVisible: false,
+				tickMarkFormatter: (time: number) => {
+					return new Date(time * 1000).toLocaleString('en-IN', {
+						timeZone: 'Asia/Kolkata',
+						hour: '2-digit',
+						minute: '2-digit',
+					});
+				},
 			},
 			crosshair: {
 				vertLine: {
@@ -245,8 +252,7 @@ export default function TimelineChart({
 		// Real-time update
 		if (seriesRef.current) {
 			const value = view === 'yes' ? yesPrice : noPrice;
-			const currentTime = (Math.floor(Date.now() / 1000) -
-				new Date().getTimezoneOffset() * 60) as Time;
+			const currentTime = Math.floor(Date.now() / 1000) as Time;
 
 			// We try to update, if lightweight charts throws an error because of time being older, we catch it
 			try {

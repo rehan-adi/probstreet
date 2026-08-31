@@ -5,18 +5,18 @@ import { useParams } from 'react-router-dom';
 import { useModalStore } from '@/store/modal';
 
 import { motion } from 'framer-motion';
-import { useEffect, useState, useCallback } from 'react';
 import Trollbox from '@/components/Trollbox';
 import PlaceOrder from '@/components/PlaceOrder';
 import MarketNews from '@/components/MarketNews';
 import TimelineSection from '@/components/Timeline';
 import UserHoldings from '@/components/UserHoldings';
 import ShareModal from '@/components/modals/ShareModal';
-import PriceAlertModal from '@/components/modals/PriceAlertModal';
-import LiveMarketTracker from '@/components/LiveMarketTracker';
 import downloadIcon from '@/assets/images/download.avif';
+import { useEffect, useState, useCallback } from 'react';
 import defaultThumbnail from '@/assets/images/logo.avif';
 import OrderbookLadder from '@/components/OrderbookLadder';
+import LiveMarketTracker from '@/components/LiveMarketTracker';
+import PriceAlertModal from '@/components/modals/PriceAlertModal';
 import { Bookmark, Share2, RefreshCcw, BellRing } from 'lucide-react';
 interface TradeExecutedEvent {
 	marketId: string;
@@ -392,7 +392,7 @@ export default function EventDetails() {
 								</button>
 								<button
 									onClick={() => setIsPriceAlertModalOpen(true)}
-									className="p-2 border cursor-pointer border-border rounded-lg bg-card text-foreground hover:bg-muted transition shadow-sm hover:text-blue-600"
+									className="p-2 border cursor-pointer border-border rounded-lg bg-card text-foreground hover:bg-muted transition shadow-sm"
 								>
 									<BellRing size={18} />
 								</button>
