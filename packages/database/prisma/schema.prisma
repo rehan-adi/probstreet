@@ -95,9 +95,17 @@ enum StockType {
 
 enum MarketStatus {
   OPEN
+  RESOLVING
   CLOSED
 
   @@map("market_status")
+}
+
+enum CryptoMarketType {
+  TOUCH
+  DIRECTION
+
+  @@map("crypto_market_type")
 }
 
 enum ResolutionMode {
@@ -413,6 +421,12 @@ model Market {
   oracleConfig      Json?             @map("oracle_config")
   oracleStatus      OracleStatus?     @map("oracle_status")
   oracleLastChecked DateTime?         @map("oracle_last_checked")
+  cryptoMarketType  CryptoMarketType? @map("crypto_market_type")
+  startPrice        Decimal?          @map("start_price") @db.Decimal(18, 8)
+  trackedHigh       Decimal?          @map("tracked_high") @db.Decimal(18, 8)
+  trackedLow        Decimal?          @map("tracked_low") @db.Decimal(18, 8)
+  wickConfirmCount  Int               @default(0) @map("wick_confirm_count")
+  wickFirstSeenAt   DateTime?         @map("wick_first_seen_at")
   oracleLogs        OracleLog[]
   marketComments    MarketComment[]
 
