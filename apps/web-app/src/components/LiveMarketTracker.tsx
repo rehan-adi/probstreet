@@ -390,6 +390,118 @@ export default function LiveMarketTracker({
 	}, [timeframe, isDark, isCrypto]);
 
 	if (!liveData) return null;
+
+	if (liveData.type === 'SPORTS') {
+		const m = liveData.match;
+		if (!m) return null;
+
+		return (
+			<div className="mb-6 w-full overflow-hidden bg-card rounded-xl border border-border shadow-sm">
+				<div className="flex items-center justify-between px-4 pt-4">
+					<div className="flex items-center gap-1.5 text-sm font-medium">
+						<span className="text-muted-foreground">Sports</span>
+						<span className="opacity-50">•</span>
+						<span className="font-semibold text-foreground">{m.league}</span>
+					</div>
+					<div className="flex items-center gap-1">
+						<button
+							onClick={onToggleBookmark}
+							className="p-2 rounded-lg hover:bg-muted transition-colors cursor-pointer text-muted-foreground hover:text-foreground"
+						>
+							<Bookmark size={18} fill={isBookmarked ? 'currentColor' : 'none'} />
+						</button>
+						<button
+							onClick={onShare}
+							className="p-2 rounded-lg hover:bg-muted transition-colors cursor-pointer text-muted-foreground hover:text-foreground"
+						>
+							<Share2 size={18} />
+						</button>
+					</div>
+				</div>
+
+				<div className="flex flex-col sm:flex-row items-center justify-center p-6 sm:p-10 gap-6 sm:gap-12 relative">
+					{/* Home Team */}
+					<div className="flex flex-col items-center gap-3 z-10 w-24 sm:w-32 text-center relative">
+						{liveData.targetOutcome === 'home_win' && (
+							<div className="absolute inset-0 bg-emerald-500/20 blur-2xl rounded-full -z-10" />
+						)}
+						<div
+							className={cn(
+								'w-16 h-16 sm:w-20 sm:h-20 bg-background rounded-full flex items-center justify-center p-2 shadow-sm border',
+								liveData.targetOutcome === 'home_win'
+									? 'border-emerald-500 shadow-emerald-500/30'
+									: 'border-border',
+							)}
+						>
+							<img
+								src={m.homeTeam.crest}
+								alt={m.homeTeam.name}
+								className="w-full h-full object-contain"
+							/>
+						</div>
+						<span className="font-bold text-foreground text-sm sm:text-base leading-tight">
+							{m.homeTeam.shortName || m.homeTeam.name}
+						</span>
+						{liveData.targetOutcome === 'home_win' && (
+							<span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">
+								Target
+							</span>
+						)}
+					</div>
+
+					{/* Score & Status */}
+					<div className="flex flex-col items-center gap-2 z-10">
+						<div
+							className={cn(
+								'px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider',
+								liveData.isLive
+									? 'bg-red-500/10 text-red-500 border border-red-500/20'
+									: 'bg-muted text-muted-foreground',
+							)}
+						>
+							{liveData.isLive && <span className="animate-pulse mr-1.5">●</span>}
+							{liveData.status === 'LIVE' ? (m.minute ? m.minute + "'" : 'LIVE') : liveData.status}
+						</div>
+						<div className="text-4xl sm:text-5xl font-black tracking-tight text-foreground flex items-center gap-3 sm:gap-4">
+							<span>{m.homeTeam.score}</span>
+							<span className="text-muted-foreground/30 text-2xl sm:text-3xl">-</span>
+							<span>{m.awayTeam.score}</span>
+						</div>
+					</div>
+
+					{/* Away Team */}
+					<div className="flex flex-col items-center gap-3 z-10 w-24 sm:w-32 text-center relative">
+						{liveData.targetOutcome === 'away_win' && (
+							<div className="absolute inset-0 bg-emerald-500/20 blur-2xl rounded-full -z-10" />
+						)}
+						<div
+							className={cn(
+								'w-16 h-16 sm:w-20 sm:h-20 bg-background rounded-full flex items-center justify-center p-2 shadow-sm border',
+								liveData.targetOutcome === 'away_win'
+									? 'border-emerald-500 shadow-emerald-500/30'
+									: 'border-border',
+							)}
+						>
+							<img
+								src={m.awayTeam.crest}
+								alt={m.awayTeam.name}
+								className="w-full h-full object-contain"
+							/>
+						</div>
+						<span className="font-bold text-foreground text-sm sm:text-base leading-tight">
+							{m.awayTeam.shortName || m.awayTeam.name}
+						</span>
+						{liveData.targetOutcome === 'away_win' && (
+							<span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">
+								Target
+							</span>
+						)}
+					</div>
+				</div>
+			</div>
+		);
+	}
+
 	if (liveData.type !== 'CRYPTO') return null;
 
 	const c = liveData.crypto!;
