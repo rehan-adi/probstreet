@@ -31,6 +31,12 @@ export function startOracleResolverCron() {
 			});
 
 			for (const market of markets) {
+				const config = market.oracleConfig as any;
+
+				if (config && (config.resolver === 'crypto_price' || config.resolver === 'sports_match')) {
+					continue;
+				}
+
 				logger.info({ marketId: market.id }, 'Triggering oracle resolution pipeline');
 
 				await prisma.market.update({

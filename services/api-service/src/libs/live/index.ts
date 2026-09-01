@@ -139,6 +139,8 @@ export async function fetchLiveMarketData(market: any): Promise<any> {
 			const headers: Record<string, string> = {
 				Accept: 'application/json',
 			};
+			const config = market.oracleConfig as any;
+
 			if (market.sourceOfTruth.includes('football-data.org') && ENV.FOOTBALL_DATA_API_KEY) {
 				headers['X-Auth-Token'] = ENV.FOOTBALL_DATA_API_KEY;
 			}
@@ -208,6 +210,7 @@ export async function fetchLiveMarketData(market: any): Promise<any> {
 								score: scoreAway,
 							},
 						},
+						targetOutcome: config?.condition,
 						odds: defaultOdds,
 					};
 				}

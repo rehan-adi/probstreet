@@ -55,6 +55,8 @@ const envSchema = z.object({
 	TAVILY_API_KEY: z.string().min(1),
 
 	GROQ_API_KEY: z.string().min(1),
+
+	FOOTBALL_DATA_API_KEY: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(Bun.env);
