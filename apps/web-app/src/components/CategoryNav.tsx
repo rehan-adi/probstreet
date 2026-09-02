@@ -49,7 +49,7 @@ export default function CategoryNav() {
 						>
 							{cat.categoryName}
 							{selectedCategoryName === cat.categoryName && (
-								<span className="absolute left-0 right-0 bottom-0 h-[2px] bg-black dark:bg-white transition-colors" />
+								<span className="absolute left-0 right-0 bottom-0 h-0.5 bg-black dark:bg-white transition-colors" />
 							)}
 						</button>
 					))}
