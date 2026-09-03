@@ -23,7 +23,7 @@ export default function BottomNavbar({
 					`flex flex-col items-center gap-1 transition-colors ${isActive ? 'text-black dark:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white'}`
 				}
 			>
-				<Home size={22} className="stroke-[2]" />
+				<Home size={22} className="stroke-2" />
 				<span className="text-[10px] font-normal text-gray-900 dark:text-gray-100">
 					{t('Home')}
 				</span>
@@ -33,7 +33,7 @@ export default function BottomNavbar({
 				onClick={onOpenSearch}
 				className={`flex flex-col items-center gap-1 transition-colors text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white`}
 			>
-				<Search size={22} className="stroke-[2]" />
+				<Search size={22} className="stroke-2" />
 				<span className="text-[10px] font-normal text-gray-900 dark:text-gray-100">
 					{t('Search')}
 				</span>
@@ -46,7 +46,7 @@ export default function BottomNavbar({
 						`flex flex-col items-center gap-1 transition-colors ${isActive ? 'text-black dark:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white'}`
 					}
 				>
-					<img src={walletIcon} alt="Wallet" className="w-[22px] h-[22px] opacity-80" />
+					<img src={walletIcon} alt="Wallet" className="w-5.5 h-5.5 opacity-80" />
 					<span className="text-[10px] font-normal text-gray-900 dark:text-gray-100">
 						{t('Wallet')}
 					</span>
@@ -56,7 +56,7 @@ export default function BottomNavbar({
 					onClick={onOpenMenu}
 					className="flex flex-col items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors"
 				>
-					<Menu size={22} className="stroke-[2]" />
+					<Menu size={22} className="stroke-2" />
 					<span className="text-[10px] font-normal text-gray-900 dark:text-gray-100">
 						{t('More')}
 					</span>
